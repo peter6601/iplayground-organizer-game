@@ -139,6 +139,9 @@
   .goal-list { margin: 14px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
   .goal-list li { font-size: 14px; color: var(--soft); padding: 10px 12px; background: var(--panel-2); border: 1px solid #262626; border-radius: 10px; }
   .goal-list li b { color: var(--neon); }
+  .callout { margin-top: 10px; padding: 11px 14px; border-radius: 10px; background: var(--neon-faint);
+    border: 1px solid var(--neon-dim); font-size: 15px; font-weight: 700; color: var(--ink); }
+  .callout b { color: var(--neon); }
   .cheer { margin-top: 16px; font-size: 16px; font-weight: 800; color: var(--neon); }
 
   /* ── log ── */
@@ -259,7 +262,7 @@
             <span class="cost">1 AP</span>
           </button>
           <button class="act-btn" id="actAnnounce">
-            📋 公布議程 <small id="announceSub">未公布講者一次亮相</small>
+            📋 公布議程 <small id="announceSub">陣容開始每週發酵</small>
             <span class="cost">1 AP</span>
           </button>
         </div>
@@ -272,6 +275,7 @@
         <div class="goals" id="goals"></div>
         <div class="hud-label" style="margin-bottom:6px;">一般講者 Tag 多樣性（全亮 = 報名加成）</div>
         <div class="cats" id="cats"></div>
+        <div class="staff-line" id="agendaLine"></div>
         <div class="staff-line" id="staffLine"></div>
       </div>
     </div>
@@ -319,7 +323,9 @@
       <li>🌈 講者主題湊滿 <b>6 大 tag</b>（有報名加成）</li>
       <li>🎟 報名衝上 <b>350 滿員</b>——低於 200 人就失敗</li>
     </ul>
-    <p class="desc">每週用行動點邀講者、招募工作人員、宣傳售票、公布議程（講者不公布不會帶來報名！），每週還會翻一張事件卡。</p>
+    <div class="callout">⚠️ 人數至少要過 <b>200 位</b>喔！</div>
+    <div class="callout">🌈 要盡量湊齊<b>不同屬性講者</b>喔！</div>
+    <p class="desc">每週用行動點邀講者、招募工作人員、宣傳售票、公布議程。<b>公布議程後，講者陣容會「每週持續」帶來報名</b>——越早公布、發酵的週數越多（複利）；但陣容越大、每週的加成數字越高。太早公布人太少、太晚公布來不及，抓好時機！每週還會翻一張事件卡。</p>
     <p class="cheer" id="cheerLine">總召麻煩你了，相信你可以！</p>
     <div class="btn-row"><button class="btn" id="introStart">開始籌備 →</button></div>
   </div>
@@ -367,7 +373,7 @@
     <p class="eyebrow">📋 議程公布</p>
     <h3>講者陣容亮相！</h3>
     <div class="ann-rows" id="annRows"></div>
-    <div class="ann-total"><span>新增報名</span><span class="vl" id="annTotal"></span></div>
+    <div class="ann-total"><span>議程效應</span><span class="vl" id="annTotal"></span></div>
     <p class="ann-note" id="annNote"></p>
     <div class="btn-row"><button class="btn" id="annOk">太好了 →</button></div>
   </div>
@@ -400,7 +406,6 @@ const CAT_KEYS = ['ai', 'arch', 'uiux', 'swift', 'cross', 'product'];
 const RARITY_LABELS = { SR: 'SR · 40min 主講', R: 'R · 20min 講者', N: 'N · Lightning', W: 'W · Workshop' };
 const TYPE_LABELS = { regular: '一般講者', workshop: 'Workshop', lightning: 'Lightning' };
 const REG_CAP = 350, REG_FAIL = 200, TOTAL_WEEKS = 9;
-const COVERAGE_BONUS = 30;
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -449,18 +454,38 @@ function log(msg, cls) {
   while (el.children.length > 50) el.lastChild.remove();
 }
 
-/* ═══════════ 擲骰公式 ═══════════ */
-function announceRoll(card) {
-  if (card.rarity === 'SR') { const d = dice(2); return { base: 20, dice: d, total: 20 + sum(d) }; }
-  if (card.rarity === 'R')  { const d = dice(2); return { base: 13, dice: d, total: 13 + sum(d) }; }
-  if (card.rarity === 'W')  { const d = dice(1); return { base: 8,  dice: d, total: 8 + sum(d) }; }
-  const d = dice(1); return { base: 4, dice: d, total: 4 + sum(d) }; // N
-}
+/* ═══════════ 議程效應（公布後每週持續發酵） ═══════════ */
+function d3() { return 1 + Math.floor(Math.random() * 3); }
+const WEEKLY_BASE = { SR: 3, R: 2, W: 1, N: 0 };            // 每週 = base + 1d3
+const WEEKLY_RANGE = { SR: '4~6', R: '3~5', W: '2~4', N: '1~3' };
+const WEEKLY_AVG = { SR: 5, R: 4, W: 3, N: 2 };
+function weeklyRoll(card) { return WEEKLY_BASE[card.rarity] + d3(); }
 function announceHint(card) {
-  if (card.rarity === 'SR') return '公布議程後：20 + 2d6 人報名';
-  if (card.rarity === 'R')  return '公布議程後：13 + 2d6 人報名';
-  if (card.rarity === 'W')  return '公布議程後：8 + 1d6 人報名';
-  return '公布議程後：4 + 1d6 人報名';
+  return `公布議程後：每週 +${WEEKLY_RANGE[card.rarity]} 報名，持續發酵到活動日`;
+}
+/* 陣容加成：已公布講者越多，每週乘數越高；6 大 tag 湊齊再 ×1.2 */
+function lineupMult() {
+  const n = S.roster.filter(r => r.announced).length;
+  let m = Math.min(1.3, 1 + 0.04 * Math.max(0, n - 1));
+  if (S.covBonusGiven) m *= 1.2;
+  return m;
+}
+function estimateWeekly() {
+  const ann = S.roster.filter(r => r.announced);
+  if (!ann.length) return 0;
+  return Math.round(ann.reduce((s, r) => s + WEEKLY_AVG[SPEAKER_CARDS[r.idx].rarity], 0) * lineupMult());
+}
+/* 每週開始（與活動日）結算一次議程效應 */
+function agendaTick(label) {
+  const ann = S.roster.filter(r => r.announced);
+  if (!ann.length) return 0;
+  const m = lineupMult();
+  let raw = 0;
+  ann.forEach(r => { const v = weeklyRoll(SPEAKER_CARDS[r.idx]); raw += v; r.contrib += v; });
+  const gain = Math.round(raw * m);
+  S.reg += gain; clampReg();
+  log(`📈 ${label}：${ann.length} 位已公布講者持續發酵，報名 +${gain}（陣容乘數 ×${m.toFixed(2)}）`, 'good');
+  return gain;
 }
 
 /* ═══════════ 事件卡 ═══════════ */
@@ -538,25 +563,29 @@ function runCancelEvent() {
 
   S.roster.splice(ri, 1);
   let msg = `講者 <b>${esc(vCard.name)}</b> 臨時有要事，無法出席……`;
-  if (victim.announced) { S.reg -= victim.contrib; clampReg(); }
+
+  // 已公布的講者取消 → 一波失望退票；未來的發酵也沒了
+  let refund = 0;
+  if (victim.announced) {
+    const d = dice(2);
+    refund = sum(d);
+    S.reg -= refund; clampReg();
+  }
 
   if (backup) {
     if (victim.announced) {
-      const roll = announceRoll(SPEAKER_CARDS[backup.idx]);
-      backup.announced = true;
-      backup.contrib = Math.round(roll.total * 0.75);
-      S.reg += backup.contrib; clampReg();
-      msg += `<br><br>好在 <b>${esc(SPEAKER_CARDS[backup.idx].name)}</b> 臨危受命救場（緊急公布，報名 +${backup.contrib}）！`;
-      log(`😱 ${esc(vCard.name)} 取消 → ${esc(SPEAKER_CARDS[backup.idx].name)} 備援救場（+${backup.contrib}）`, 'good');
+      backup.announced = true;   // 備援緊急遞補，接手每週發酵
+      msg += `<br><br>失望退票 −${refund}。好在 <b>${esc(SPEAKER_CARDS[backup.idx].name)}</b> 臨危受命救場，緊急公布遞補，議程效應不中斷！`;
+      log(`😱 ${esc(vCard.name)} 取消（退票 −${refund}）→ ${esc(SPEAKER_CARDS[backup.idx].name)} 備援救場`, 'good');
     } else {
       msg += `<br><br>好在還有 <b>${esc(SPEAKER_CARDS[backup.idx].name)}</b> 可以補位，議程沒有開天窗。`;
       log(`😱 ${esc(vCard.name)} 取消，${esc(SPEAKER_CARDS[backup.idx].name)} 補位`, 'bad');
     }
   } else {
     msg += victim.announced
-      ? `<br><br>沒有備援講者……已公布的場次開天窗，報名 −${victim.contrib}。`
+      ? `<br><br>沒有備援講者……失望退票 −${refund}，之後也少了他的每週發酵。`
       : `<br><br>沒有備援講者，只能默默把議程表改掉。`;
-    log(`😱 講者取消：失去 ${esc(vCard.name)}${victim.announced ? `（報名 −${victim.contrib}）` : ''}`, 'bad');
+    log(`😱 講者取消：失去 ${esc(vCard.name)}${victim.announced ? `（退票 −${refund}）` : ''}`, 'bad');
   }
   return msg;
 }
@@ -568,6 +597,9 @@ function startWeek() {
   S.speakerDrawLimit = 3;
   S.promoHalved = S.promoHalvedNextWeek;
   S.promoHalvedNextWeek = false;
+
+  // 議程效應：已公布的講者陣容每週持續帶來報名
+  agendaTick(`第 ${S.week} 週議程效應`);
 
   // pity：第 7 週起缺 workshop / lightning 就鎖定下一抽
   if (S.week >= 7 && !S.forcedType) {
@@ -687,32 +719,21 @@ function actAnnounce() {
   if (!canAnnounce()) return;
   S.ap -= 1;
   const batch = S.roster.filter(r => !r.announced);
-  const combo = Math.min(1.5, 1 + 0.08 * (batch.length - 1));
-  const late = S.week >= 9 ? 0.5 : S.week >= 8 ? 0.75 : 1;
+  batch.forEach(r => { r.announced = true; });
 
-  const rows = [];
-  let total = 0;
-  batch.forEach(r => {
-    const c = SPEAKER_CARDS[r.idx];
-    const roll = announceRoll(c);
-    r.announced = true;
-    r.contrib = Math.round(roll.total * combo * late);
-    total += r.contrib;
-    rows.push({ name: c.name, rarity: c.rarity, detail: `${roll.base}+${roll.dice.join('+')} → ${r.contrib}` });
-  });
-  S.reg += total; clampReg();
-
-  // 一般講者 tag 全湊齊 → 一次性加成
+  // 一般講者 tag 全湊齊 → 議程效應永久 ×1.2
   let covLine = '';
   if (!S.covBonusGiven && regularCats().size === CAT_KEYS.length) {
     S.covBonusGiven = true;
-    S.reg += COVERAGE_BONUS; clampReg();
-    covLine = `🌈 主題多樣性爆棚！6 大 tag 全湊齊：報名再 +${COVERAGE_BONUS}`;
+    covLine = '🌈 主題多樣性爆棚！6 大 tag 全湊齊：議程效應永久 ×1.2';
     log(covLine, 'good');
   }
 
-  log(`📋 公布議程：${batch.length} 位講者亮相，報名 +${total}${covLine ? `，多樣性加成 +${COVERAGE_BONUS}` : ''}`, 'good');
-  showAnnounceModal(rows, total, combo, late, covLine);
+  const annCount = S.roster.filter(r => r.announced).length;
+  const est = estimateWeekly();
+  const remainTicks = TOTAL_WEEKS - S.week + 1;   // 含活動日湧入
+  log(`📋 公布議程：${batch.length} 位講者亮相（陣容 ${annCount} 位）→ 每週約 +${est} 報名開始發酵`, 'good');
+  showAnnounceModal(batch, est, remainTicks, covLine);
   render();
 }
 
@@ -804,14 +825,16 @@ $('collStaff').addEventListener('click', e => {
   const idx = S.staff[+m.dataset.i]; if (idx != null) showStaffCard(STAFF_CARDS[idx], true);
 });
 
-function showAnnounceModal(rows, total, combo, late, covLine) {
-  $('annRows').innerHTML = rows.map(r =>
-    `<div class="ann-row"><span class="nm"><span class="badge rar-${r.rarity}">${r.rarity}</span> ${esc(r.name)}</span><span class="vl">${esc(r.detail)}</span></div>`
-  ).join('');
-  $('annTotal').textContent = `+${total + (covLine ? COVERAGE_BONUS : 0)}`;
-  let note = `批次公布 ${rows.length} 張 → 話題加成 ×${combo.toFixed(2)}`;
-  if (late < 1) note += `；太晚公布，轉化打折 ×${late}`;
-  if (covLine) note += `。${covLine}`;
+function showAnnounceModal(batch, est, remainTicks, covLine) {
+  $('annRows').innerHTML = batch.map(r => {
+    const c = SPEAKER_CARDS[r.idx];
+    return `<div class="ann-row"><span class="nm"><span class="badge rar-${c.rarity}">${c.rarity}</span> ${esc(c.name)}</span><span class="vl">每週 +${WEEKLY_RANGE[c.rarity]}</span></div>`;
+  }).join('');
+  $('annTotal').textContent = `約 +${est}／週`;
+  let note = `陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`;
+  if (remainTicks <= 2) note += ' 有點晚了……能吃到的複利不多！';
+  else note += ' 陣容越大、每週越多——繼續邀人再公布也會疊上去。';
+  if (covLine) note += ` ${covLine}`;
   $('annNote').textContent = note;
   $('annOverlay').classList.add('show');
 }
@@ -819,6 +842,7 @@ $('annOk').addEventListener('click', () => $('annOverlay').classList.remove('sho
 
 /* ═══════════ 結算 ═══════════ */
 function finale() {
+  agendaTick('活動日湧入');   // 最後一波：活動當天現場報名
   S.over = true;
   const reg = S.reg, regular = countType('regular'), ws = countType('workshop'), lt = countType('lightning');
   const cov = regularCats().size, intl = intlCount();
@@ -1136,6 +1160,11 @@ function render() {
   $('inviteSub').textContent = S.freeDraws > 0 ? `免費抽卡 ×${S.freeDraws}！` : `本週剩 ${Math.max(0, remain)} 次`;
   const unann = S.roster.filter(r => !r.announced).length;
   $('announceSub').textContent = unann ? `${unann} 位講者待公布` : '沒有待公布講者';
+  // 議程效應
+  const annCount = S.roster.filter(r => r.announced).length;
+  $('agendaLine').innerHTML = annCount
+    ? `📈 議程效應：每週約 <b>+${estimateWeekly()}</b>（陣容 ${annCount} 位 × ${lineupMult().toFixed(2)}${S.covBonusGiven ? ' · 🌈已含多樣性加成' : ''}）`
+    : '📈 議程效應：尚未公布議程——講者公布後才會每週帶來報名';
   // 提示（鎖卡型 / 缺必要類型）
   $('pityHint').innerHTML = S.forcedType
     ? `<span class="warn">🎯 ${esc(S.forcedReason)}：下一抽鎖定「${TYPE_LABELS[S.forcedType]}」</span>`
