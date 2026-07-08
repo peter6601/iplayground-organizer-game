@@ -154,7 +154,6 @@
     display: grid; place-items: center; border: 2px solid #333; }
   .mini .ph img { width: 100%; height: 100%; object-fit: cover; }
   .mini .ph .mono { font-weight: 800; color: var(--neon); font-size: 20px; }
-  .mini.sr .ph { border-color: var(--gold); }
   .mini.w .ph { border-color: var(--purple); }
   .mini.staffc .ph { border-radius: 50%; }
   .mini .nm { font-size: 11px; color: var(--soft); line-height: 1.3; word-break: break-all; }
@@ -209,14 +208,10 @@
     border: 2px solid var(--neon-dim); margin-bottom: 12px; display: grid; place-items: center; }
   .card-photo img { width: 100%; height: 100%; object-fit: cover; }
   .card-photo .monogram { font-size: 40px; font-weight: 800; color: var(--neon); }
-  .modal.rar-SR .card-photo { border-color: var(--gold); box-shadow: 0 0 18px rgba(255,184,0,.35); }
-  .modal.rar-W  .card-photo { border-color: var(--purple); box-shadow: 0 0 18px rgba(192,132,252,.35); }
+  .modal.rar-W .card-photo { border-color: var(--purple); box-shadow: 0 0 18px rgba(192,132,252,.35); }
   .badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 2px; }
   .badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid #333; color: var(--soft); }
-  .badge.rar-SR { color: var(--gold); border-color: rgba(255,184,0,.5); }
-  .badge.rar-R  { color: var(--blue); border-color: rgba(125,211,252,.4); }
-  .badge.rar-N  { color: #999; }
-  .badge.rar-W  { color: var(--purple); border-color: rgba(192,132,252,.5); }
+  .badge.rar-W { color: var(--purple); border-color: rgba(192,132,252,.5); }
   .badge.intl { color: var(--neon); border-color: var(--neon-dim); }
   .card-talk { margin: 10px 0 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
   .card-effect { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--neon-faint);
@@ -503,19 +498,16 @@ const CAT_LABELS = {
 const CAT_KEYS = ['ai', 'arch', 'uiux', 'swift', 'cross', 'product'];
 const catL = k => CAT_LABELS[k][lang] || CAT_LABELS[k].zh;
 
-const RARITY_LABELS = {
-  SR: { zh: 'SR · 40min 主講', en: 'SR · 40-min Keynote' },
-  R:  { zh: 'R · 20min 講者',  en: 'R · 20-min Talk' },
-  N:  { zh: 'N · Lightning',   en: 'N · Lightning' },
-  W:  { zh: 'W · Workshop',    en: 'W · Workshop' },
-};
-const rarL = r => RARITY_LABELS[r][lang];
 const TYPE_LABELS = {
   regular:   { zh: '一般講者', en: 'Regular Talk' },
   workshop:  { zh: 'Workshop', en: 'Workshop' },
   lightning: { zh: 'Lightning', en: 'Lightning' },
 };
 const typeL = t => TYPE_LABELS[t][lang];
+/* 講者不分等級，數值只看類型（雙棲卡以一般講者計） */
+function typeKey(c) { return c.types.includes('regular') ? 'R' : c.types.includes('workshop') ? 'W' : 'N'; }
+function primaryType(c) { return c.types.includes('regular') ? 'regular' : c.types.includes('workshop') ? 'workshop' : 'lightning'; }
+const typeBadges = c => c.types.map(t => typeL(t)).join(' + ');
 
 const nm = c => (lang === 'en' && c.name_en) ? c.name_en : c.name;
 const tk = c => (lang === 'en' && c.talk_en) ? c.talk_en : c.talk;
@@ -571,13 +563,13 @@ function log(msg, cls) {
 
 /* ═══════════ 議程效應（公布後每週持續發酵） ═══════════ */
 function d3() { return 1 + Math.floor(Math.random() * 3); }
-const WEEKLY_BASE = { SR: 3, R: 2, W: 1, N: 0 };
-const WEEKLY_RANGE = { SR: '4~6', R: '3~5', W: '2~4', N: '1~3' };
-const WEEKLY_AVG = { SR: 5, R: 4, W: 3, N: 2 };
-function weeklyRoll(card) { return WEEKLY_BASE[card.rarity] + d3(); }
+const WEEKLY_BASE = { R: 2, W: 1, N: 0 };
+const WEEKLY_RANGE = { R: '3~5', W: '2~4', N: '1~3' };
+const WEEKLY_AVG = { R: 4, W: 3, N: 2 };
+function weeklyRoll(card) { return WEEKLY_BASE[typeKey(card)] + d3(); }
 function announceHint(card) {
-  return L(`公布議程後：每週 +${WEEKLY_RANGE[card.rarity]} 報名，持續發酵到活動日`,
-           `Once announced: +${WEEKLY_RANGE[card.rarity]} signups every week until showtime`);
+  return L(`公布議程後：每週 +${WEEKLY_RANGE[typeKey(card)]} 報名，持續發酵到活動日`,
+           `Once announced: +${WEEKLY_RANGE[typeKey(card)]} signups every week until showtime`);
 }
 function lineupMult() {
   const n = S.roster.filter(r => r.announced).length;
@@ -588,7 +580,7 @@ function lineupMult() {
 function estimateWeekly() {
   const ann = S.roster.filter(r => r.announced);
   if (!ann.length) return 0;
-  return Math.round(ann.reduce((s, r) => s + WEEKLY_AVG[SPEAKER_CARDS[r.idx].rarity], 0) * lineupMult());
+  return Math.round(ann.reduce((s, r) => s + WEEKLY_AVG[typeKey(SPEAKER_CARDS[r.idx])], 0) * lineupMult());
 }
 function agendaTick(label) {
   const ann = S.roster.filter(r => r.announced);
@@ -988,8 +980,8 @@ function actInvite() {
     S.speakerPool = S.speakerPool.filter(i => i !== winnerIdx);
     S.roster.push({ idx: winnerIdx, announced: false, contrib: 0 });
     const c = SPEAKER_CARDS[winnerIdx];
-    log(L(`🎤 邀請成功：<b>${esc(nm(c))}</b>（${rarL(c.rarity)}）${usedFree ? ' · 免費' : ''}`,
-          `🎤 Invited: <b>${esc(nm(c))}</b> (${rarL(c.rarity)})${usedFree ? ' · free' : ''}`), 'good');
+    log(L(`🎤 邀請成功：<b>${esc(nm(c))}</b>（${typeBadges(c)}）${usedFree ? ' · 免費' : ''}`,
+          `🎤 Invited: <b>${esc(nm(c))}</b> (${typeBadges(c)})${usedFree ? ' · free' : ''}`), 'good');
     showSpeakerCard(c);
     render();
   });
@@ -1116,7 +1108,8 @@ function showAnnounceModal(batch, est, remainTicks, covLine) {
   $('annOk').textContent = L('太好了 →', 'Awesome →');
   $('annRows').innerHTML = batch.map(r => {
     const c = SPEAKER_CARDS[r.idx];
-    return `<div class="ann-row"><span class="nm"><span class="badge rar-${c.rarity}">${c.rarity}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[c.rarity]}</span></div>`;
+    const tk2 = typeKey(c);
+    return `<div class="ann-row"><span class="nm"><span class="badge ${tk2 === 'W' ? 'rar-W' : ''}">${typeL(primaryType(c))}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[tk2]}</span></div>`;
   }).join('');
   $('annTotal').textContent = L(`約 +${est}／週`, `~+${est}/week`);
   let note = L(`陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`,
@@ -1146,12 +1139,11 @@ function fillPhoto(el, photo, name) {
 }
 function showSpeakerCard(c, rosterEntry) {
   const fromColl = !!rosterEntry;
-  $('cardModal').className = `modal rar-${c.rarity}`;
+  $('cardModal').className = `modal${typeKey(c) === 'W' ? ' rar-W' : ''}`;
   $('cardEyebrow').textContent = fromColl ? L('📇 講者卡', '📇 Speaker Card') : L('🎉 抽中講者卡', '🎉 Speaker Card Drawn!');
   fillPhoto($('cardPhoto'), c.photo, nm(c));
   $('cardName').textContent = nm(c);
-  const badges = [`<span class="badge rar-${c.rarity}">${rarL(c.rarity)}</span>`];
-  c.types.forEach(t => { if (c.types.length > 1) badges.push(`<span class="badge">${typeL(t)}</span>`); });
+  const badges = c.types.map(t => `<span class="badge ${t === 'workshop' ? 'rar-W' : ''}">${typeL(t)}</span>`);
   c.cats.forEach(k => badges.push(`<span class="badge">${catL(k)}</span>`));
   if (c.intl) badges.push(`<span class="badge intl">${L('🌐 國際講者', '🌐 International')}</span>`);
   $('cardBadges').innerHTML = badges.join('');
@@ -1194,7 +1186,7 @@ function renderCollection() {
   $('collStCount').textContent = S.staff.length ? `×${S.staff.length}` : '';
   $('collSpeakers').innerHTML = S.roster.map((r, i) => {
     const c = SPEAKER_CARDS[r.idx];
-    const cls = c.rarity === 'SR' ? 'sr' : c.rarity === 'W' ? 'w' : '';
+    const cls = typeKey(c) === 'W' ? 'w' : '';
     return `<div class="mini ${cls}" data-i="${i}">
       ${miniPh(c.photo, nm(c))}
       <div class="nm">${esc(nm(c))}</div>
@@ -1295,18 +1287,16 @@ function currentPool() { return wheelMode === 'speaker' ? S.speakerPool : S.staf
 function poolName(i) { return wheelMode === 'speaker' ? nm(SPEAKER_CARDS[i]) : STAFF_CARDS[i].name; }
 function segFill(i, poolIdx) {
   if (wheelMode === 'staff') return i % 2 ? '#1A1A1A' : '#111111';
-  const r = SPEAKER_CARDS[poolIdx].rarity;
-  if (r === 'SR') return 'rgba(255,184,0,0.16)';
-  if (r === 'W')  return 'rgba(192,132,252,0.16)';
-  if (r === 'N')  return '#161616';
+  const t = typeKey(SPEAKER_CARDS[poolIdx]);
+  if (t === 'W') return 'rgba(192,132,252,0.16)';
+  if (t === 'N') return '#161616';
   return i % 2 ? '#1A1A1A' : '#111111';
 }
 function labelColor(poolIdx) {
   if (wheelMode === 'staff') return '#FFFFFF';
-  const r = SPEAKER_CARDS[poolIdx].rarity;
-  if (r === 'SR') return '#FFB800';
-  if (r === 'W')  return '#C084FC';
-  if (r === 'N')  return '#AAAAAA';
+  const t = typeKey(SPEAKER_CARDS[poolIdx]);
+  if (t === 'W') return '#C084FC';
+  if (t === 'N') return '#AAAAAA';
   return '#FFFFFF';
 }
 function sizeCanvas() {
