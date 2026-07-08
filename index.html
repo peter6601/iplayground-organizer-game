@@ -169,6 +169,20 @@
   .cheer { margin-top: 16px; font-size: 16px; font-weight: 800; color: var(--neon); }
   .intro-top { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 
+  /* 首頁 */
+  .title-screen { text-align: center; }
+  .t-logo { font-size: 14px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .t-logo .yr { color: var(--neon); }
+  .title-screen h3 { font-size: 26px; line-height: 1.3; }
+  .title-screen h3 .neon { color: var(--neon); }
+  .t-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .t-menu, .t-diff { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .t-menu .btn, .t-diff .btn { width: 100%; flex: none; }
+  .diff-opt { text-align: left; line-height: 1.5; }
+  .diff-opt small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .diff-opt.sel { border-color: var(--neon); color: var(--neon); }
+  .diff-opt.sel small { color: var(--soft); }
+
   /* 日誌 */
   .log { max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
   .log p { margin: 0; font-size: 13px; color: var(--soft); line-height: 1.5; }
@@ -282,8 +296,28 @@
   <footer id="footer"></footer>
 </div>
 
+<!-- 首頁 -->
+<div class="overlay show" id="titleOverlay">
+  <div class="modal title-screen">
+    <div class="t-logo">iPLAYGROUND <span class="yr">SIM</span></div>
+    <h3 id="tTitle"></h3>
+    <div class="t-sub" id="tSub"></div>
+    <div class="t-menu" id="tMenu">
+      <button class="btn" id="tStart"></button>
+      <button class="btn ghost" id="tLang"></button>
+      <button class="btn ghost" id="tDiff"></button>
+    </div>
+    <div class="t-diff" id="tDiffMenu" style="display:none;">
+      <button class="btn ghost diff-opt" id="dEasy"></button>
+      <button class="btn ghost diff-opt" id="dNormal"></button>
+      <button class="btn ghost diff-opt" id="dHard"></button>
+      <button class="btn ghost" id="tDiffBack"></button>
+    </div>
+  </div>
+</div>
+
 <!-- 開場：輸入名字 -->
-<div class="overlay show" id="introOverlay">
+<div class="overlay" id="introOverlay">
   <div class="modal" id="introStep1">
     <div class="intro-top"><button class="lang-btn" id="introLang">EN</button></div>
     <p class="eyebrow" id="iEyebrow1"></p>
@@ -765,11 +799,35 @@ function setForced(type, reason) {
   log(L(`🎯 ${reason}：下一抽鎖定「${typeL(type)}」`, `🎯 ${reason}: next draw locked to "${typeL(type)}"`), 'good');
 }
 function eventPhase() { return S.week <= 3 ? 'early' : S.week <= 6 ? 'mid' : 'late'; }
+
+/* 難度：加權事件機率（低=好事多壞事少、高=反之） */
+let difficulty = localStorage.getItem('ipg_diff') || 'normal';
+const EVENT_KIND = {
+  sponsor: 'good', self_submit: 'good', boost_share: 'good', earlybird: 'good',
+  viral: 'good', volunteer: 'good', bento: 'good', designate: 'good',
+  quiet: 'neutral', drama: 'neutral',
+  cfp_cold: 'bad', rival: 'bad', ticket_down: 'bad', flu: 'bad',
+  typhoon: 'bad', refund: 'bad', cancel: 'bad',
+};
+function eventWeight(ev) {
+  const kind = EVENT_KIND[ev.id] || 'neutral';
+  if (difficulty === 'easy') return kind === 'good' ? 2 : kind === 'bad' ? 0.5 : 1;
+  if (difficulty === 'hard') return kind === 'good' ? 0.5 : kind === 'bad' ? 2 : 1;
+  return 1;
+}
+function diffName() { return { easy: L('低', 'Easy'), normal: L('中', 'Normal'), hard: L('高', 'Hard') }[difficulty]; }
+
 function pickEvent() {
   const ph = eventPhase();
   let pool = EVENTS.filter(e => (e.phase === ph || e.phase === 'any') && e.id !== S.lastEventId);
   if (!S.roster.length) pool = pool.filter(e => e.id !== 'cancel');
-  return pool[Math.floor(Math.random() * pool.length)];
+  const total = pool.reduce((s, e) => s + eventWeight(e), 0);
+  let roll = Math.random() * total;
+  for (const e of pool) {
+    roll -= eventWeight(e);
+    if (roll <= 0) return e;
+  }
+  return pool[pool.length - 1];
 }
 
 /* 講者取消（純文字版，走訊息窗） */
@@ -1132,7 +1190,7 @@ function finale() {
   const fin = $('finaleOverlay');
   const rows = [];
   $('finEyebrow').textContent = L('活動日', 'Event Day');
-  $('finRestart').textContent = L('再辦一場 →', 'Run it back →');
+  $('finRestart').textContent = L('回到首頁 →', 'Back to title →');
 
   const reqOk = regular >= 3 && ws >= 1 && lt >= 1;
   const firstFail = localStorage.getItem('ipg_boost') !== '1';
@@ -1486,6 +1544,19 @@ function applyLang() {
   $('collStL').innerHTML = L('🙋 工作人員卡 ', '🙋 Staff cards ') + '<span id="collStCount"></span>';
   $('rotateMsg').textContent = L('請將手機轉成橫向遊玩體驗最佳！', 'Rotate your phone to landscape for the best experience!');
   $('rotateDismiss').textContent = L('仍要直式繼續', 'Continue in portrait anyway');
+  // 首頁
+  $('tTitle').innerHTML = L('如何成功舉辦一場<br><span class="neon">iPlayground</span>', 'How to Host a Successful<br><span class="neon">iPlayground</span>');
+  $('tSub').textContent = L('肉鴿抽卡 × 研討會主辦模擬', 'A roguelike deck-drawing conference organizer sim');
+  $('tStart').textContent = L('▶ 開始', '▶ Start');
+  $('tLang').textContent = L('🌐 中 / EN', '🌐 中 / EN');
+  $('tDiff').textContent = L(`⚙️ 難度：${diffName()}`, `⚙️ Difficulty: ${diffName()}`);
+  $('dEasy').innerHTML = L('低<small>好事件變多、壞事件變少——輕鬆辦一場</small>', 'Easy<small>More good events, fewer bad ones — a gentle ride</small>');
+  $('dNormal').innerHTML = L('中<small>標準機率——總召的日常</small>', 'Normal<small>Standard odds — an organizer\'s everyday life</small>');
+  $('dHard').innerHTML = L('高<small>壞事件變多、好事件變少——地獄籌備期</small>', 'Hard<small>More bad events, fewer good ones — organizer hell</small>');
+  $('tDiffBack').textContent = L('← 返回', '← Back');
+  ['dEasy', 'dNormal', 'dHard'].forEach((id, i) => {
+    $(id).classList.toggle('sel', ['easy', 'normal', 'hard'][i] === difficulty);
+  });
   $('footer').innerHTML = L(
     '資料來源：iplayground/SessionData <span class="neon">2026</span> · 輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> · 本遊戲為粉絲作品，非官方',
     'Data: iplayground/SessionData <span class="neon">2026</span> · Wheel engine from <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">Speaker Roulette</a> · Fan-made, unofficial');
@@ -1542,6 +1613,31 @@ function toggleLang() {
 }
 $('langToggle').addEventListener('click', toggleLang);
 $('introLang').addEventListener('click', toggleLang);
+
+/* 首頁 */
+$('tStart').addEventListener('click', () => {
+  $('titleOverlay').classList.remove('show');
+  $('introOverlay').classList.add('show');
+  $('nameInput').focus();
+});
+$('tLang').addEventListener('click', toggleLang);
+$('tDiff').addEventListener('click', () => {
+  $('tMenu').style.display = 'none';
+  $('tDiffMenu').style.display = '';
+});
+$('tDiffBack').addEventListener('click', () => {
+  $('tDiffMenu').style.display = 'none';
+  $('tMenu').style.display = '';
+});
+[['dEasy', 'easy'], ['dNormal', 'normal'], ['dHard', 'hard']].forEach(([id, d]) => {
+  $(id).addEventListener('click', () => {
+    difficulty = d;
+    localStorage.setItem('ipg_diff', d);
+    applyLang();   // 更新難度標籤與選取狀態
+    $('tDiffMenu').style.display = 'none';
+    $('tMenu').style.display = '';
+  });
+});
 
 function submitName() {
   playerName = $('nameInput').value.trim() || L('神秘', 'Mystery');
