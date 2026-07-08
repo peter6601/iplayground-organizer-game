@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPlayground 主辦模擬器</title>
+<meta name="description" content="肉鴿抽卡小遊戲：扮演 iPlayground 總召，9 週內湊齊講者陣容、宣傳售票，成功舉辦一場 350 人滿員的研討會！">
+<style>
+  :root {
+    --bg: #000000;
+    --panel: #111111;
+    --panel-2: #1A1A1A;
+    --ink: #FFFFFF;
+    --muted: #666666;
+    --soft: #D9D9D9;
+    --neon: #D7FF00;
+    --neon-dim: rgba(215, 255, 0, 0.28);
+    --neon-faint: rgba(215, 255, 0, 0.10);
+    --gold: #FFB800;
+    --purple: #C084FC;
+    --blue: #7DD3FC;
+    --red: #FF5D5D;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, system-ui, "PingFang TC", "Noto Sans TC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); }
+  body { margin: 0; font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  .frame { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  /* ── masthead ── */
+  .masthead { display: flex; flex-direction: column; gap: 8px; padding-bottom: 18px; border-bottom: 1px solid #1A1A1A; margin-bottom: 20px; }
+  .brandline { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .logo { font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+  .logo .yr { color: var(--neon); }
+  .role-tag { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+  .role-tag b { color: var(--neon); }
+  h1 { margin: 0; font-size: clamp(26px, 4.6vw, 44px); font-weight: 800; letter-spacing: -0.015em; line-height: 1.08; }
+  h1 .neon { color: var(--neon); }
+
+  /* ── HUD ── */
+  .hud { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; }
+  .hud-row { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  .weeks { display: flex; gap: 6px; align-items: center; }
+  .wk { width: 26px; height: 26px; border-radius: 6px; background: var(--panel); border: 1px solid #222;
+        display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .wk.cur { background: var(--neon); color: #000; border-color: var(--neon); box-shadow: 0 0 12px var(--neon-dim); }
+  .wk.done { color: #333; text-decoration: line-through; }
+  .hud-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .ap-pips { display: flex; gap: 5px; align-items: center; }
+  .pip { width: 14px; height: 14px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 8px var(--neon-dim); }
+  .pip.used { background: #222; box-shadow: none; }
+  .reg-wrap { flex: 1 1 260px; min-width: 240px; }
+  .reg-bar { position: relative; height: 22px; border-radius: 11px; background: var(--panel); border: 1px solid #222; overflow: hidden; }
+  .reg-fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, #5a6b00, var(--neon)); transition: width .5s ease; }
+  .reg-fail-line { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--red); left: 57.14%; opacity: .8; }
+  .reg-num { font-size: 13px; margin-top: 4px; color: var(--soft); font-variant-numeric: tabular-nums; }
+  .reg-num .cap { color: var(--muted); }
+  .reg-num .fail-hint { color: var(--red); }
+
+  /* ── layout ── */
+  .arena { display: grid; grid-template-columns: minmax(320px, 480px) minmax(300px, 1fr); gap: 36px; align-items: start; }
+  @media (max-width: 900px) { .arena { grid-template-columns: 1fr; gap: 28px; } }
+
+  /* ── wheel ── */
+  .wheel-col { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .wheel-wrap { position: relative; width: 100%; max-width: 480px; aspect-ratio: 1; }
+  canvas#wheel { width: 100%; height: 100%; display: block; }
+  .pointer { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 0; height: 0;
+    border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--neon);
+    filter: drop-shadow(0 0 8px var(--neon-dim)); z-index: 2; }
+  .wheel-mode { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .wheel-mode b { color: var(--neon); }
+  .wheel-hint { font-size: 13px; color: var(--soft); text-align: center; min-height: 20px; }
+  .wheel-hint .warn { color: var(--gold); }
+
+  /* ── actions ── */
+  .panel { background: var(--panel); border: 1px solid #1e1e1e; border-radius: 14px; padding: 16px; }
+  .panel h2 { margin: 0 0 12px; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) { .actions { grid-template-columns: 1fr; } }
+  .act-btn { position: relative; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; text-align: left;
+    background: var(--panel-2); color: var(--ink); border: 1px solid #262626; border-radius: 10px; padding: 12px 14px;
+    font-family: var(--sans); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color .15s, transform .1s; }
+  .act-btn small { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .act-btn .cost { position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 700; color: var(--neon);
+    border: 1px solid var(--neon-dim); border-radius: 999px; padding: 2px 8px; }
+  .act-btn:hover:not(:disabled) { border-color: var(--neon-dim); }
+  .act-btn:active:not(:disabled) { transform: scale(.98); }
+  .act-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .act-btn.primary { border-color: var(--neon-dim); background: linear-gradient(180deg, #1c2402, var(--panel-2)); }
+  .endweek { margin-top: 10px; width: 100%; background: transparent; color: var(--soft); border: 1px dashed #333; border-radius: 10px;
+    padding: 11px; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; }
+  .endweek:hover { border-color: var(--neon-dim); color: var(--ink); }
+  .endweek:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ── roster ── */
+  .goals { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .goal { font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid #2a2a2a; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .goal.ok { color: #000; background: var(--neon); border-color: var(--neon); font-weight: 700; }
+  .cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .cat { font-size: 12px; padding: 4px 9px; border-radius: 6px; border: 1px solid #2a2a2a; color: #555; }
+  .cat.on { color: var(--neon); border-color: var(--neon-dim); background: var(--neon-faint); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid #2a2a2a; color: var(--soft); }
+  .chip.sr { border-color: rgba(255,184,0,.5); color: var(--gold); }
+  .chip.w  { border-color: rgba(192,132,252,.5); color: var(--purple); }
+  .chip.n  { color: #999; }
+  .chip.unannounced { opacity: .45; }
+  .chip .st { font-size: 10px; margin-left: 4px; }
+  .staff-line { font-size: 13px; color: var(--soft); margin-top: 10px; }
+  .staff-line b { color: var(--neon); }
+
+  /* ── log ── */
+  .log { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+  .log p { margin: 0; font-size: 13px; color: var(--soft); line-height: 1.5; }
+  .log p .wkb { color: var(--muted); font-size: 11px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+  .log p.good { color: var(--neon); }
+  .log p.bad { color: var(--red); }
+
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── overlays ── */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; place-items: center; z-index: 50; padding: 20px; }
+  .overlay.show { display: grid; }
+  .modal { width: min(480px, 94vw); max-height: 88vh; overflow-y: auto; background: var(--panel); border: 1px solid #262626;
+    border-radius: 18px; padding: 26px; animation: pop .28s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal .eyebrow { margin: 0 0 8px; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--neon); }
+  .modal h3 { margin: 0 0 6px; font-size: 24px; font-weight: 800; line-height: 1.15; }
+  .modal p.desc { margin: 8px 0 0; font-size: 14px; color: var(--soft); line-height: 1.7; }
+  .modal .btn-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .btn { flex: 1; background: var(--neon); color: #000; border: 0; border-radius: 10px; padding: 12px 16px;
+    font-family: var(--sans); font-size: 15px; font-weight: 800; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--soft); border: 1px solid #333; font-weight: 600; }
+  .btn:active { transform: scale(.98); }
+
+  /* card reveal */
+  .card-photo { width: 108px; height: 108px; border-radius: 14px; overflow: hidden; background: var(--panel-2);
+    border: 2px solid var(--neon-dim); margin-bottom: 12px; display: grid; place-items: center; }
+  .card-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .card-photo .monogram { font-size: 40px; font-weight: 800; color: var(--neon); }
+  .modal.rar-SR .card-photo { border-color: var(--gold); box-shadow: 0 0 18px rgba(255,184,0,.35); }
+  .modal.rar-W  .card-photo { border-color: var(--purple); box-shadow: 0 0 18px rgba(192,132,252,.35); }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 2px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid #333; color: var(--soft); }
+  .badge.rar-SR { color: var(--gold); border-color: rgba(255,184,0,.5); }
+  .badge.rar-R  { color: var(--blue); border-color: rgba(125,211,252,.4); }
+  .badge.rar-N  { color: #999; }
+  .badge.rar-W  { color: var(--purple); border-color: rgba(192,132,252,.5); }
+  .badge.intl { color: var(--neon); border-color: var(--neon-dim); }
+  .card-talk { margin: 10px 0 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .card-effect { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--neon-faint);
+    border: 1px solid var(--neon-dim); font-size: 13px; color: var(--ink); line-height: 1.6; }
+
+  /* announce rows */
+  .ann-rows { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .ann-row { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding-bottom: 8px; border-bottom: 1px dashed #222; }
+  .ann-row .nm { color: var(--soft); }
+  .ann-row .vl { color: var(--neon); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ann-total { display: flex; justify-content: space-between; margin-top: 12px; font-size: 17px; font-weight: 800; }
+  .ann-total .vl { color: var(--neon); }
+  .ann-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* event modal icon */
+  .ev-icon { font-size: 44px; line-height: 1; margin-bottom: 10px; }
+
+  /* finale */
+  .finale h3 { font-size: 30px; }
+  .grade { font-size: 88px; font-weight: 900; color: var(--neon); line-height: 1; margin: 12px 0; text-shadow: 0 0 30px var(--neon-dim); }
+  .grade.fail { color: var(--red); text-shadow: none; font-size: 54px; }
+  .score-rows { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .score-rows div { display: flex; justify-content: space-between; font-size: 14px; color: var(--soft); font-variant-numeric: tabular-nums; }
+  .score-rows div b { color: var(--ink); }
+  .slogan { margin-top: 18px; font-size: 22px; font-weight: 800; color: var(--neon); text-align: center; }
+
+  canvas#confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
+  footer { margin-top: 40px; font-size: 12px; color: var(--muted); }
+  footer .neon { color: var(--neon); }
+  footer a { color: var(--soft); }
+</style>
+</head>
+<body>
+<div class="frame">
+  <header class="masthead">
+    <div class="brandline">
+      <span class="logo">iPLAYGROUND <span class="yr">SIM</span></span>
+      <span class="role-tag">你是 <b>總召</b> · 距離活動日 9 週</span>
+    </div>
+    <h1>如何成功舉辦一場 <span class="neon">iPlayground</span></h1>
+  </header>
+
+  <div class="hud">
+    <div class="hud-row">
+      <div>
+        <div class="hud-label">週次</div>
+        <div class="weeks" id="weeks"></div>
+      </div>
+      <div>
+        <div class="hud-label">行動點</div>
+        <div class="ap-pips" id="apPips"></div>
+      </div>
+      <div class="reg-wrap">
+        <div class="hud-label">報名人數</div>
+        <div class="reg-bar">
+          <div class="reg-fill" id="regFill"></div>
+          <div class="reg-fail-line" title="200 人及格線"></div>
+        </div>
+        <div class="reg-num"><span id="regNum">0</span><span class="cap"> / 350</span> <span class="fail-hint">（低於 200 = 失敗）</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arena">
+    <div class="wheel-col">
+      <div class="wheel-mode" id="wheelMode">轉盤待命中</div>
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <canvas id="wheel" aria-label="抽卡轉盤"></canvas>
+      </div>
+      <div class="wheel-hint" id="wheelHint"></div>
+    </div>
+
+    <div class="right-col">
+      <div class="panel">
+        <h2>本週行動</h2>
+        <div class="actions">
+          <button class="act-btn primary" id="actInvite">
+            🎤 邀請講者 <small id="inviteSub">轉輪盤抽講者卡</small>
+            <span class="cost">1 AP</span>
+          </button>
+          <button class="act-btn" id="actStaff">
+            🙋 招募工作人員 <small id="staffSub">每 3 位 → 每週 +1 AP</small>
+            <span class="cost">1 AP</span>
+          </button>
+          <button class="act-btn" id="actPromo">
+            📣 宣傳售票 <small id="promoSub">2d6 ＋ 已公布講者加成</small>
+            <span class="cost">1 AP</span>
+          </button>
+          <button class="act-btn" id="actAnnounce">
+            📋 公布議程 <small id="announceSub">未公布講者一次亮相</small>
+            <span class="cost">1 AP</span>
+          </button>
+        </div>
+        <button class="endweek" id="endWeek">⏭ 結束本週</button>
+      </div>
+
+      <div class="panel">
+        <h2>講者陣容</h2>
+        <div class="goals" id="goals"></div>
+        <div class="hud-label" style="margin-bottom:6px;">一般講者 Tag 多樣性（全亮 = 報名加成）</div>
+        <div class="cats" id="cats"></div>
+        <div class="chips" id="rosterChips"></div>
+        <div class="staff-line" id="staffLine"></div>
+      </div>
+
+      <div class="panel">
+        <h2>籌備日誌</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    資料來源：iplayground/SessionData <span class="neon">2026</span> ·
+    輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> ·
+    本遊戲為粉絲作品，非官方
+  </footer>
+</div>
+
+<!-- 開場 -->
+<div class="overlay show" id="introOverlay">
+  <div class="modal">
+    <p class="eyebrow">Mission Briefing</p>
+    <h3>總召，交給你了 🫡</h3>
+    <p class="desc">
+      距離 iPlayground 活動日還有 <b>9 週</b>。每週有限的行動點要花在：<br><br>
+      🎤 <b>邀請講者</b>（每週最多 3 次）——轉輪盤抽講者卡<br>
+      🙋 <b>招募工作人員</b>——每 3 位每週多 1 行動點<br>
+      📣 <b>宣傳售票</b>——把報名人數往上推<br>
+      📋 <b>公布議程</b>——講者不公布不會帶來報名！一次公布越多張，話題加成越高，但拖太晚會來不及發酵<br><br>
+      🎯 目標：<b>一般講者 ≥3、Workshop ≥1、Lightning Talk ≥1</b>，湊滿 6 種主題 tag，把報名衝到 <b>350 滿員</b>。低於 200 人就……明年再見。<br><br>
+      每週還會發生一張<b>事件卡</b>，祝你好運。
+    </p>
+    <div class="btn-row"><button class="btn" id="introStart">開始籌備 →</button></div>
+  </div>
+</div>
+
+<!-- 事件卡 -->
+<div class="overlay" id="eventOverlay">
+  <div class="modal">
+    <p class="eyebrow" id="evEyebrow">第 ? 週 · 事件卡</p>
+    <div class="ev-icon" id="evIcon">🌀</div>
+    <h3 id="evName"></h3>
+    <p class="desc" id="evDesc"></p>
+    <div class="btn-row" id="evBtns"></div>
+  </div>
+</div>
+
+<!-- 抽卡結果 -->
+<div class="overlay" id="cardOverlay">
+  <div class="modal" id="cardModal">
+    <p class="eyebrow" id="cardEyebrow">🎉 抽中講者卡</p>
+    <div class="card-photo" id="cardPhoto"></div>
+    <h3 id="cardName"></h3>
+    <div class="badges" id="cardBadges"></div>
+    <p class="card-talk" id="cardTalk"></p>
+    <div class="card-effect" id="cardEffect"></div>
+    <div class="btn-row"><button class="btn" id="cardOk">收下 →</button></div>
+  </div>
+</div>
+
+<!-- 公布議程結果 -->
+<div class="overlay" id="annOverlay">
+  <div class="modal">
+    <p class="eyebrow">📋 議程公布</p>
+    <h3>講者陣容亮相！</h3>
+    <div class="ann-rows" id="annRows"></div>
+    <div class="ann-total"><span>新增報名</span><span class="vl" id="annTotal"></span></div>
+    <p class="ann-note" id="annNote"></p>
+    <div class="btn-row"><button class="btn" id="annOk">太好了 →</button></div>
+  </div>
+</div>
+
+<!-- 結算 -->
+<div class="overlay" id="finaleOverlay">
+  <div class="modal finale">
+    <p class="eyebrow" id="finEyebrow">活動日</p>
+    <h3 id="finTitle"></h3>
+    <div class="grade" id="finGrade"></div>
+    <p class="desc" id="finDesc"></p>
+    <div class="score-rows" id="finScores"></div>
+    <div class="slogan" id="finSlogan"></div>
+    <div class="btn-row"><button class="btn" id="finRestart">再辦一場 →</button></div>
+  </div>
+</div>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+/*__DATA_START__*/
+const SPEAKER_CARDS = [{"name":"Rudrank Riyam","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"Apple platforms developer, writer, and open-source maintainer","talk":"For Agents, By Agents: Building AI Tools That Maintain Themselves","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_rudrank.JPG"},{"name":"Minkyung Kim","rarity":"SR","types":["regular"],"cats":["product","uiux"],"intl":true,"title":"Learning Lead at  Apple Developer Academy @ POSTECH","talk":"Designing Adaptive UX Through Learning Theory & AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_mk.jpeg"},{"name":"JungMin Ahn","rarity":"SR","types":["regular"],"cats":["arch"],"intl":true,"title":"I am an iOS developer focused on productivity, scalable architecture, and sharing practical engineering insights through talks and presentations.","talk":"Lessons from Operating Large-Scale Modular iOS Projects with Tuist","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_JungMin.jpg"},{"name":"Vic","rarity":"R","types":["regular"],"cats":["uiux"],"intl":false,"title":"共同看見獨特的彼此","talk":"當觸控失效時，你的 App 還能順利使用嗎？","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Vic.JPG"},{"name":"范聖佑","rarity":"SR","types":["regular"],"cats":["arch","cross"],"intl":false,"title":"讓 Kotlin 成為 iOS 開發者的第二把刀，在跨平台與 AI 時代拓展出更多可能。","talk":"從 Swift 到 Kotlin Multiplatform：iOS 開發者的跨平台二刀流","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Shengyou.JPG"},{"name":"Denken","rarity":"R","types":["regular"],"cats":["cross"],"intl":false,"title":"從工程師落跑去做國際標準","talk":"年齡保證框架，兼談數位憑證皮夾","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_denken.png"},{"name":"Bobson","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"Twinkle AI Astronaut","talk":"Tweet AI to the Edge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Bobson.jpeg"},{"name":"李易修","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"91APP senior manager","talk":"從看不見到看得懂：ccxray 與 AI Agent 的可觀測性","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_justin.jpg"},{"name":"彭成瑋 Ervis","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Senior iOS Engineer","talk":"從一張看不懂的日本收據開始：一人開發者如何用 AI 與回饋系統把 Side Project 長成產品","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ErvisPeng.jpeg"},{"name":"楊宥榛","rarity":"R","types":["regular"],"cats":["product"],"intl":false,"title":"No pain no gain.","talk":"iOS 工程師 2026 職場生存指南：資深外商獵頭視角","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Annie.jpeg"},{"name":"高見龍","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"喜歡寫程式而且希望可以寫一輩子程式的電腦阿宅！","talk":"SDD 是口號，還是真的可以用？","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kaochenlong.jpg"},{"name":"海總理","rarity":"R","types":["regular"],"cats":["ai"],"intl":false,"title":"AI Alchemist","talk":"把自己抽出迴圈：讓程式獨自升級","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%B5%B7%E7%B8%BD%E7%90%86.jpg"},{"name":"彼得潘","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"愛瘋一切為蘋果的彼得潘","talk":"從 Vibe Coding 學會的 macOS CLI 魔法指令","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_PeterPan.jpg"},{"name":"Kevin","rarity":"W","types":["workshop"],"cats":["ai"],"intl":false,"title":"致力於研究AI 的應用， 並把AI 實用在Edge端","talk":"Stitch x Antigravity 實戰指南：讓 AI 助你從視覺設計精準落地 iOS App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kevinChiu.jpg"},{"name":"13","rarity":"R","types":["regular","workshop"],"cats":["ai","uiux"],"intl":false,"title":"喜歡分享，不賣焦慮。Love being inspired and sharing inspiration.","talk":"Core People：以人為本，打造更體貼的 App 體驗","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_13.jpg"},{"name":"Hedula","rarity":"W","types":["workshop"],"cats":["ai","swift"],"intl":false,"title":"Hedula Expert Design Unique Leading Arise","talk":"我不會 Swift，但我做了一個 AI 怪獸對戰遊戲","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hedula.jpeg"},{"name":"Harry","rarity":"W","types":["workshop"],"cats":["ai","product"],"intl":false,"title":"AI Advocate & Indie Developer","talk":"在 AI 時代尋找真實","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Harry.jpeg"},{"name":"星野恵瑠","rarity":"SR","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Co-Author of Introduction to iOS Apps Design Patterns","talk":"為什麼你並不需要ViewModel","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%98%9F%E9%87%8E%E6%81%B5%E7%91%A0.png"},{"name":"Gyuri Kim","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"iOS Engineer at Babitalk","talk":"The Bottleneck Was Me: AI-Native Workflows for Large Codebases","photo":""},{"name":"freddi","rarity":"R","types":["regular"],"cats":["swift","uiux"],"intl":true,"title":"iOS engineer at Yappli","talk":"Swift 程式碼為什麼能運作？ 從平台、Runtime 與編譯器理解 Swift","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_freddi.jpg"},{"name":"Thiago Komeno","rarity":"R","types":["regular"],"cats":["product"],"intl":true,"title":"Software Developer","talk":"How to Win the Swift Student Challenge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_komeno.jpg"},{"name":"Hana 花水木","rarity":"R","types":["regular"],"cats":["ai","product"],"intl":false,"title":"獎金獵人共同創辦人","talk":"App 上架之後呢？用 AI Agent 自動化行銷、客服與產品迭代","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hana.png"},{"name":"梯口","rarity":"SR","types":["regular"],"cats":["cross"],"intl":false,"title":"Site Reliability Engineer, CNCF Ambassador","talk":"不寫 Swift 也能貢獻 Apple Container：一位雲端原生工程師的開源實戰","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%A2%AF%E5%8F%A3.jpg"},{"name":"qcl","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Software Engineer @ Google","talk":"Xcode 沒內建我愛用的 Coding Agent？iOS 開發的 Agentic Workflow 策略","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_qcl.png"},{"name":"Alex Hu","rarity":"R","types":["regular"],"cats":["ai","arch","product"],"intl":false,"title":"資深 iOS 開發者 ｜ 曾任新加坡航空","talk":"把 AI 當資淺工程師帶:一個人用 agent 把 iOS App 做到上架的工程紀律","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_AlexHu.jpg"},{"name":"Dex","rarity":"R","types":["regular"],"cats":["arch","swift"],"intl":false,"title":"iOS Dev","talk":"是時候了！將RxSwift 程式碼全部改寫成 Swift Concurrency吧！","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_dex.jpeg"},{"name":"鄭宇哲","rarity":"R","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Garmin Advanced Software Engineer","talk":"@ContentBuilder Is All You Need","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_UJ.jpg"},{"name":"Joy","rarity":"R","types":["regular"],"cats":["ai","swift","uiux"],"intl":false,"title":"iOS Engineer","talk":"讓 Apple Intelligence 理解你的 App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Joy.png"},{"name":"劉信","rarity":"N","types":["lightning"],"cats":["product","uiux"],"intl":false,"title":"Independent iOS Developer & Learning Engineer","talk":"坑很深：做寫字練習 App 比想像更費工","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E4%BF%A1.jpg"},{"name":"Jess","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Product Builder","talk":"當 Vibe Coding 不再是最大的問題，Nibble 的產品探索旅程","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_jess.jpg"},{"name":"劉育承","rarity":"N","types":["lightning"],"cats":["ai","cross","uiux"],"intl":false,"title":"Software Developer","talk":"用 SwiftUI 打造 iOS / Android 跨平台 AI 美國選舉雷達：從新聞自動摘要到人工審核的 Mobile AI App 實戰","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E8%82%B2%E6%89%BF.png"},{"name":"Ethan","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Wink CTO","talk":"開發 AI Dating Agent 的血淚史：那些好笑、奇怪又令人害怕的教訓","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ethan.jpg"},{"name":"Yu Takahashi","rarity":"N","types":["lightning"],"cats":["swift"],"intl":false,"title":"Japanese Software Engineer","talk":"為什麼 Swift Macro 無法在 #Preview 中使用？","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Takahashi.jpg"}];
+const STAFF_CARDS = [{"name":"Ethan Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_Ethan.jpg"},{"name":"UJ Cheng","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_ujcheng.jpg"},{"name":"Andy Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_andy.png"},{"name":"Will Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_will.jpg"},{"name":"Kyle Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_kyle.jpeg"},{"name":"Hokila Jan","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_hokila.jpg"},{"name":"David Kuo","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_david.jpeg"},{"name":"Joy","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_joyChen.jpg"},{"name":"Michelle Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_michelleChen.jpeg"},{"name":"Hao Lee","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2025/v1/images/staff/staff_hao.jpeg"},{"name":"DinDin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2025/v1/images/staff/staff_DinDin.jpg"},{"name":"Dawei Hao","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_DaweiHao.jpg"},{"name":"Jeff Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_jeffLin.jpg"},{"name":"Tank Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_tankLin.jpg"},{"name":"Terry Kuo","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_terryKuo.jpg"}];
+/*__DATA_END__*/
+
+/* ═══════════ 常數 ═══════════ */
+const CAT_LABELS = { ai: '🤖 AI／Agent', arch: '🏗 架構／工程', uiux: '🎨 UI/UX／無障礙', swift: '🐦 Swift／底層', cross: '🔀 跨平台／系統', product: '💼 產品／職涯' };
+const CAT_KEYS = ['ai', 'arch', 'uiux', 'swift', 'cross', 'product'];
+const RARITY_LABELS = { SR: 'SR · 40min 主講', R: 'R · 20min 講者', N: 'N · Lightning', W: 'W · Workshop' };
+const TYPE_LABELS = { regular: '一般講者', workshop: 'Workshop', lightning: 'Lightning' };
+const REG_CAP = 350, REG_FAIL = 200, TOTAL_WEEKS = 9;
+const COVERAGE_BONUS = 30;
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ═══════════ 遊戲狀態 ═══════════ */
+let S;
+function newGame() {
+  S = {
+    week: 1, ap: 3, reg: 0,
+    drawsThisWeek: 0, speakerDrawLimit: 3, freeDraws: 0,
+    speakerPool: SPEAKER_CARDS.map((_, i) => i),
+    staffPool: STAFF_CARDS.map((_, i) => i),
+    roster: [],           // {idx, announced, contrib}
+    staff: [],            // indices into STAFF_CARDS
+    promoBoost: false, promoHalved: false, promoHalvedNextWeek: false,
+    forcedType: null,     // 'regular' | 'workshop' | 'lightning'
+    forcedReason: '',
+    covBonusGiven: false,
+    lastEventId: null,
+    over: false,
+  };
+}
+
+/* ═══════════ 工具 ═══════════ */
+const $ = id => document.getElementById(id);
+function d6() { return 1 + Math.floor(Math.random() * 6); }
+function dice(n) { const r = []; for (let i = 0; i < n; i++) r.push(d6()); return r; }
+function sum(a) { return a.reduce((x, y) => x + y, 0); }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function clampReg() { S.reg = Math.max(0, Math.min(REG_CAP, S.reg)); }
+
+function weeklyApBase() { return Math.min(5, 3 + Math.floor(S.staff.length / 3)); }
+function countType(t) { return S.roster.filter(r => SPEAKER_CARDS[r.idx].types.includes(t)).length; }
+function regularCats() {
+  const set = new Set();
+  S.roster.forEach(r => { const c = SPEAKER_CARDS[r.idx]; if (c.types.includes('regular')) c.cats.forEach(x => set.add(x)); });
+  return set;
+}
+function intlCount() { return S.roster.filter(r => SPEAKER_CARDS[r.idx].intl).length; }
+
+function log(msg, cls) {
+  const p = document.createElement('p');
+  if (cls) p.className = cls;
+  p.innerHTML = `<span class="wkb">W${S.week}</span>${msg}`;
+  const el = $('log');
+  el.prepend(p);
+  while (el.children.length > 50) el.lastChild.remove();
+}
+
+/* ═══════════ 擲骰公式 ═══════════ */
+function announceRoll(card) {
+  if (card.rarity === 'SR') { const d = dice(2); return { base: 20, dice: d, total: 20 + sum(d) }; }
+  if (card.rarity === 'R')  { const d = dice(2); return { base: 13, dice: d, total: 13 + sum(d) }; }
+  if (card.rarity === 'W')  { const d = dice(1); return { base: 8,  dice: d, total: 8 + sum(d) }; }
+  const d = dice(1); return { base: 4, dice: d, total: 4 + sum(d) }; // N
+}
+function announceHint(card) {
+  if (card.rarity === 'SR') return '公布議程後：20 + 2d6 人報名';
+  if (card.rarity === 'R')  return '公布議程後：13 + 2d6 人報名';
+  if (card.rarity === 'W')  return '公布議程後：8 + 1d6 人報名';
+  return '公布議程後：4 + 1d6 人報名';
+}
+
+/* ═══════════ 事件卡 ═══════════ */
+const EVENTS = [
+  { id: 'quiet', phase: 'any', icon: '🌤', name: '風平浪靜', desc: '沒有大事發生的一週。專心籌備吧！',
+    apply() {} },
+  { id: 'sponsor', phase: 'any', icon: '💰', name: '贊助商注資', desc: '贊助商臨時加碼！本週行動點 +2。',
+    apply() { S.ap += 2; log('💰 贊助商注資：本週行動點 +2', 'good'); } },
+  { id: 'designate', phase: 'any', icon: '🎯', name: '指定邀請', desc: '議程組人脈大爆發——你可以指定下一次抽講者的卡型！',
+    choices: [
+      { label: '🎤 一般講者', run() { setForced('regular', '指定邀請'); } },
+      { label: '🛠 Workshop', run() { setForced('workshop', '指定邀請'); } },
+      { label: '⚡ Lightning', run() { setForced('lightning', '指定邀請'); } },
+    ] },
+  { id: 'cfp_cold', phase: 'early', icon: '😨', name: 'CFP 冷清', desc: '這週投稿信箱靜悄悄……本週邀請講者上限 3 → 2。',
+    apply() { S.speakerDrawLimit = 2; log('😨 CFP 冷清：本週邀請上限 2 次', 'bad'); } },
+  { id: 'self_submit', phase: 'early', icon: '🙋‍♂️', name: '講者主動投稿', desc: '有講者自己敲門！獲得一次免費抽講者（不佔上限、不花行動點）。',
+    apply() { S.freeDraws += 1; log('🙋‍♂️ 講者主動投稿：免費抽講者 ×1', 'good'); } },
+  { id: 'boost_share', phase: 'mid', icon: '📢', name: '大神轉發', desc: '圈內大神轉發了你的貼文——下一次宣傳效果 ×2！',
+    apply() { S.promoBoost = true; log('📢 大神轉發：下次宣傳 ×2', 'good'); } },
+  { id: 'earlybird', phase: 'mid', icon: '🐦', name: '早鳥完售', desc: '早鳥票完售，話題發酵！',
+    apply() { const d = dice(3); S.reg += sum(d); clampReg(); log(`🐦 早鳥完售：報名 +${sum(d)}（3d6：${d.join('+')}）`, 'good'); } },
+  { id: 'viral', phase: 'mid', icon: '🔥', name: '社群爆紅', desc: '你的宣傳貼文被瘋轉！',
+    apply() { const d = dice(2); S.reg += sum(d); clampReg(); log(`🔥 社群爆紅：報名 +${sum(d)}（2d6：${d.join('+')}）`, 'good'); } },
+  { id: 'rival', phase: 'mid', icon: '🥊', name: '隔壁研討會同天', desc: '另一場研討會宣布跟你同一天……本週宣傳效果減半。',
+    apply() { S.promoHalved = true; log('🥊 撞檔：本週宣傳效果減半', 'bad'); } },
+  { id: 'ticket_down', phase: 'mid', icon: '💥', name: '售票系統掛掉', desc: '搶修一整天……本週行動點 −1。',
+    apply() { S.ap = Math.max(0, S.ap - 1); log('💥 售票系統掛掉：本週行動點 −1', 'bad'); } },
+  { id: 'drama', phase: 'mid', icon: '⚡', name: '社群論戰', desc: 'iOS 圈吵起來了，話題正熱。要蹭這波流量嗎？',
+    choices: [
+      { label: '🔥 蹭！（報名 +2d6，下週宣傳減半）', run() { const d = dice(2); S.reg += sum(d); clampReg(); S.promoHalvedNextWeek = true; log(`⚡ 蹭上論戰：報名 +${sum(d)}，但下週宣傳減半`, 'good'); } },
+      { label: '🧘 保持中立', run() { log('🧘 社群論戰：選擇保持中立'); } },
+    ] },
+  { id: 'flu', phase: 'late', icon: '🤧', name: '流行性感冒', desc: '流感大流行，一波退票……',
+    apply() { const d = dice(2); S.reg -= sum(d); clampReg(); log(`🤧 流感：報名 −${sum(d)}（2d6）`, 'bad'); } },
+  { id: 'typhoon', phase: 'late', icon: '🌀', name: '颱風警報', desc: '颱風生成中，路徑直指活動日……',
+    apply() { const n = S.week >= 9 ? 4 : 2; const d = dice(n); S.reg -= sum(d); clampReg(); log(`🌀 颱風警報：報名 −${sum(d)}（${n}d6）`, 'bad'); } },
+  { id: 'refund', phase: 'late', icon: '🎫', name: '退票潮', desc: '不明原因的一小波退票。',
+    apply() { const d = dice(1); S.reg -= sum(d); clampReg(); log(`🎫 退票潮：報名 −${sum(d)}`, 'bad'); } },
+  { id: 'volunteer', phase: 'late', icon: '💪', name: '志工大量報名', desc: '社群夥伴來支援——免費獲得一位工作人員！',
+    apply() {
+      if (S.staffPool.length) {
+        const i = S.staffPool.splice(Math.floor(Math.random() * S.staffPool.length), 1)[0];
+        S.staff.push(i);
+        log(`💪 志工支援：${esc(STAFF_CARDS[i].name)} 加入（工作人員 ${S.staff.length} 位）`, 'good');
+      } else { S.reg += 5; clampReg(); log('💪 志工支援：人手已滿，改幫忙發傳單（報名 +5）', 'good'); }
+    } },
+  { id: 'bento', phase: 'late', icon: '🍱', name: '便當廠商加菜', desc: '口碑小加分！',
+    apply() { const d = dice(1); S.reg += sum(d); clampReg(); log(`🍱 便當加菜：報名 +${sum(d)}`, 'good'); } },
+  { id: 'cancel', phase: 'late', icon: '😱', name: '講者臨時取消', desc: '', apply() {} }, // 動態處理
+];
+
+function setForced(type, reason) {
+  S.forcedType = type; S.forcedReason = reason;
+  log(`🎯 ${reason}：下一抽鎖定「${TYPE_LABELS[type]}」`, 'good');
+}
+
+function eventPhase() { return S.week <= 3 ? 'early' : S.week <= 6 ? 'mid' : 'late'; }
+
+function pickEvent() {
+  const ph = eventPhase();
+  let pool = EVENTS.filter(e => (e.phase === ph || e.phase === 'any') && e.id !== S.lastEventId);
+  // 沒講者時取消事件無意義
+  if (!S.roster.length) pool = pool.filter(e => e.id !== 'cancel');
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* 講者取消：有備援（同型未公布的其他講者）就救場 */
+function runCancelEvent() {
+  const ri = Math.floor(Math.random() * S.roster.length);
+  const victim = S.roster[ri];
+  const vCard = SPEAKER_CARDS[victim.idx];
+  const vType = vCard.types.includes('workshop') ? 'workshop' : vCard.types.includes('lightning') ? 'lightning' : 'regular';
+  const backup = S.roster.find(r => r !== victim && !r.announced && SPEAKER_CARDS[r.idx].types.includes(vType));
+
+  S.roster.splice(ri, 1);
+  let msg = `講者 <b>${esc(vCard.name)}</b> 臨時有要事，無法出席……`;
+  if (victim.announced) { S.reg -= victim.contrib; clampReg(); }
+
+  if (backup) {
+    if (victim.announced) {
+      const roll = announceRoll(SPEAKER_CARDS[backup.idx]);
+      backup.announced = true;
+      backup.contrib = Math.round(roll.total * 0.75);
+      S.reg += backup.contrib; clampReg();
+      msg += `<br><br>好在 <b>${esc(SPEAKER_CARDS[backup.idx].name)}</b> 臨危受命救場（緊急公布，報名 +${backup.contrib}）！`;
+      log(`😱 ${esc(vCard.name)} 取消 → ${esc(SPEAKER_CARDS[backup.idx].name)} 備援救場（+${backup.contrib}）`, 'good');
+    } else {
+      msg += `<br><br>好在還有 <b>${esc(SPEAKER_CARDS[backup.idx].name)}</b> 可以補位，議程沒有開天窗。`;
+      log(`😱 ${esc(vCard.name)} 取消，${esc(SPEAKER_CARDS[backup.idx].name)} 補位`, 'bad');
+    }
+  } else {
+    msg += victim.announced
+      ? `<br><br>沒有備援講者……已公布的場次開天窗，報名 −${victim.contrib}。`
+      : `<br><br>沒有備援講者，只能默默把議程表改掉。`;
+    log(`😱 講者取消：失去 ${esc(vCard.name)}${victim.announced ? `（報名 −${victim.contrib}）` : ''}`, 'bad');
+  }
+  return msg;
+}
+
+/* ═══════════ 每週流程 ═══════════ */
+function startWeek() {
+  S.ap = weeklyApBase();
+  S.drawsThisWeek = 0;
+  S.speakerDrawLimit = 3;
+  S.promoHalved = S.promoHalvedNextWeek;
+  S.promoHalvedNextWeek = false;
+
+  // pity：第 7 週起缺 workshop / lightning 就鎖定下一抽
+  if (S.week >= 7 && !S.forcedType) {
+    if (countType('workshop') === 0 && S.speakerPool.some(i => SPEAKER_CARDS[i].types.includes('workshop'))) {
+      setForced('workshop', '議程組緊急協調');
+    } else if (countType('lightning') === 0 && S.speakerPool.some(i => SPEAKER_CARDS[i].types.includes('lightning'))) {
+      setForced('lightning', '議程組緊急協調');
+    }
+  }
+
+  render();
+  if (S.week >= 2) showEvent(pickEvent());
+}
+
+function endWeek() {
+  if (spinning || S.over) return;
+  if (S.week >= TOTAL_WEEKS) { finale(); return; }
+  S.week += 1;
+  startWeek();
+}
+
+/* ═══════════ 事件 UI ═══════════ */
+function showEvent(ev) {
+  S.lastEventId = ev.id;
+  $('evEyebrow').textContent = `第 ${S.week} 週 · 事件卡`;
+  $('evIcon').textContent = ev.icon;
+  $('evName').textContent = ev.name;
+  const btns = $('evBtns');
+  btns.innerHTML = '';
+  if (ev.id === 'cancel') {
+    $('evDesc').innerHTML = runCancelEvent();
+    const b = document.createElement('button');
+    b.className = 'btn'; b.textContent = '嗚……知道了';
+    b.onclick = () => { hideEvent(); };
+    btns.appendChild(b);
+  } else if (ev.choices) {
+    $('evDesc').innerHTML = esc(ev.desc);
+    ev.choices.forEach(ch => {
+      const b = document.createElement('button');
+      b.className = 'btn'; b.style.flexBasis = '100%'; b.textContent = ch.label;
+      b.onclick = () => { ch.run(); hideEvent(); };
+      btns.appendChild(b);
+    });
+  } else {
+    $('evDesc').innerHTML = esc(ev.desc);
+    const b = document.createElement('button');
+    b.className = 'btn'; b.textContent = '知道了';
+    b.onclick = () => { ev.apply(); hideEvent(); };
+    btns.appendChild(b);
+  }
+  $('eventOverlay').classList.add('show');
+}
+function hideEvent() { $('eventOverlay').classList.remove('show'); render(); }
+
+/* ═══════════ 行動 ═══════════ */
+function canInvite() {
+  return !S.over && !spinning && S.speakerPool.length > 0 &&
+    (S.freeDraws > 0 || (S.ap >= 1 && S.drawsThisWeek < S.speakerDrawLimit));
+}
+function actInvite() {
+  if (!canInvite()) return;
+  const usedFree = S.freeDraws > 0;
+  if (usedFree) S.freeDraws -= 1; else { S.ap -= 1; S.drawsThisWeek += 1; }
+
+  // 決定 winner：pity / 指定邀請優先
+  let candidates = S.speakerPool;
+  if (S.forcedType) {
+    const sub = S.speakerPool.filter(i => SPEAKER_CARDS[i].types.includes(S.forcedType));
+    if (sub.length) candidates = sub;
+    S.forcedType = null; S.forcedReason = '';
+  }
+  const winnerIdx = candidates[Math.floor(Math.random() * candidates.length)];
+  spinWheel('speaker', winnerIdx, () => {
+    S.speakerPool = S.speakerPool.filter(i => i !== winnerIdx);
+    S.roster.push({ idx: winnerIdx, announced: false, contrib: 0 });
+    const c = SPEAKER_CARDS[winnerIdx];
+    log(`🎤 邀請成功：<b>${esc(c.name)}</b>（${RARITY_LABELS[c.rarity]}）${usedFree ? ' · 免費' : ''}`, 'good');
+    showSpeakerCard(c);
+    render();
+  });
+  render();
+}
+
+function canStaff() { return !S.over && !spinning && S.ap >= 1 && S.staffPool.length > 0; }
+function actStaff() {
+  if (!canStaff()) return;
+  S.ap -= 1;
+  const winnerIdx = S.staffPool[Math.floor(Math.random() * S.staffPool.length)];
+  spinWheel('staff', winnerIdx, () => {
+    S.staffPool = S.staffPool.filter(i => i !== winnerIdx);
+    S.staff.push(winnerIdx);
+    const c = STAFF_CARDS[winnerIdx];
+    log(`🙋 招募成功：<b>${esc(c.name)}</b>（工作人員 ${S.staff.length} 位）`, 'good');
+    showStaffCard(c);
+    render();
+  });
+  render();
+}
+
+function canPromo() { return !S.over && !spinning && S.ap >= 1; }
+function actPromo() {
+  if (!canPromo()) return;
+  S.ap -= 1;
+  const d = dice(2);
+  const announced = S.roster.filter(r => r.announced).length;
+  let gain = sum(d) + 2 * announced;
+  let note = `2d6（${d.join('+')}）＋ 已公布講者 ${announced}×2`;
+  if (S.promoBoost) { gain *= 2; note += ' · 大神轉發 ×2'; S.promoBoost = false; }
+  if (S.promoHalved) { gain = Math.floor(gain / 2); note += ' · 撞檔減半'; }
+  S.reg += gain; clampReg();
+  log(`📣 宣傳售票：報名 +${gain}（${note}）`, 'good');
+  render();
+}
+
+function canAnnounce() { return !S.over && !spinning && S.ap >= 1 && S.roster.some(r => !r.announced); }
+function actAnnounce() {
+  if (!canAnnounce()) return;
+  S.ap -= 1;
+  const batch = S.roster.filter(r => !r.announced);
+  const combo = Math.min(1.5, 1 + 0.08 * (batch.length - 1));
+  const late = S.week >= 9 ? 0.5 : S.week >= 8 ? 0.75 : 1;
+
+  const rows = [];
+  let total = 0;
+  batch.forEach(r => {
+    const c = SPEAKER_CARDS[r.idx];
+    const roll = announceRoll(c);
+    r.announced = true;
+    r.contrib = Math.round(roll.total * combo * late);
+    total += r.contrib;
+    rows.push({ name: c.name, rarity: c.rarity, detail: `${roll.base}+${roll.dice.join('+')} → ${r.contrib}` });
+  });
+  S.reg += total; clampReg();
+
+  // 一般講者 tag 全湊齊 → 一次性加成
+  let covLine = '';
+  if (!S.covBonusGiven && regularCats().size === CAT_KEYS.length) {
+    S.covBonusGiven = true;
+    S.reg += COVERAGE_BONUS; clampReg();
+    covLine = `🌈 主題多樣性爆棚！6 大 tag 全湊齊：報名再 +${COVERAGE_BONUS}`;
+    log(covLine, 'good');
+  }
+
+  log(`📋 公布議程：${batch.length} 位講者亮相，報名 +${total}${covLine ? `，多樣性加成 +${COVERAGE_BONUS}` : ''}`, 'good');
+  showAnnounceModal(rows, total, combo, late, covLine);
+  render();
+}
+
+/* ═══════════ modal：抽卡結果 ═══════════ */
+function fillPhoto(el, photo, name) {
+  el.querySelectorAll('img, .monogram').forEach(x => x.remove());
+  if (photo) {
+    const img = document.createElement('img');
+    img.src = photo; img.alt = name;
+    img.onerror = () => { img.remove(); mono(); };
+    el.appendChild(img);
+  } else mono();
+  function mono() {
+    const m = document.createElement('div');
+    m.className = 'monogram'; m.textContent = [...name][0].toUpperCase();
+    el.appendChild(m);
+  }
+}
+function showSpeakerCard(c) {
+  $('cardModal').className = `modal rar-${c.rarity}`;
+  $('cardEyebrow').textContent = '🎉 抽中講者卡';
+  fillPhoto($('cardPhoto'), c.photo, c.name);
+  $('cardName').textContent = c.name;
+  const badges = [`<span class="badge rar-${c.rarity}">${RARITY_LABELS[c.rarity]}</span>`];
+  c.types.forEach(t => { if (c.types.length > 1) badges.push(`<span class="badge">${TYPE_LABELS[t]}</span>`); });
+  c.cats.forEach(k => badges.push(`<span class="badge">${CAT_LABELS[k]}</span>`));
+  if (c.intl) badges.push('<span class="badge intl">🌐 國際講者</span>');
+  $('cardBadges').innerHTML = badges.join('');
+  $('cardTalk').innerHTML = `《${esc(c.talk)}》${c.title ? `<br>${esc(c.title)}` : ''}`;
+  $('cardEffect').textContent = announceHint(c) + (c.types.length > 1 ? '（雙棲卡：同時計入兩種講者名額！）' : '');
+  $('cardOverlay').classList.add('show');
+}
+function showStaffCard(c) {
+  $('cardModal').className = 'modal';
+  $('cardEyebrow').textContent = '🙌 招募到工作人員';
+  fillPhoto($('cardPhoto'), c.photo, c.name);
+  $('cardName').textContent = c.name;
+  const isDinDin = /dindin/i.test(c.name);
+  $('cardBadges').innerHTML = isDinDin
+    ? '<span class="badge intl">🏠 地主卡 · 場地組組長</span>'
+    : '<span class="badge">🙋 工作人員</span>';
+  $('cardTalk').textContent = isDinDin ? '「等等，這不是我自己嗎？」——你抽到了你自己。' : '';
+  const next = 3 - (S.staff.length % 3);
+  $('cardEffect').textContent = S.staff.length % 3 === 0
+    ? `戰力 +1！目前 ${S.staff.length} 位 → 每週行動點 +${Math.floor(S.staff.length / 3)}`
+    : `戰力 +1！目前 ${S.staff.length} 位，再 ${next} 位 → 每週行動點再 +1`;
+  $('cardOverlay').classList.add('show');
+}
+$('cardOk').addEventListener('click', () => $('cardOverlay').classList.remove('show'));
+
+function showAnnounceModal(rows, total, combo, late, covLine) {
+  $('annRows').innerHTML = rows.map(r =>
+    `<div class="ann-row"><span class="nm"><span class="badge rar-${r.rarity}">${r.rarity}</span> ${esc(r.name)}</span><span class="vl">${esc(r.detail)}</span></div>`
+  ).join('');
+  $('annTotal').textContent = `+${total + (covLine ? COVERAGE_BONUS : 0)}`;
+  let note = `批次公布 ${rows.length} 張 → 話題加成 ×${combo.toFixed(2)}`;
+  if (late < 1) note += `；太晚公布，轉化打折 ×${late}`;
+  if (covLine) note += `。${covLine}`;
+  $('annNote').textContent = note;
+  $('annOverlay').classList.add('show');
+}
+$('annOk').addEventListener('click', () => $('annOverlay').classList.remove('show'));
+
+/* ═══════════ 結算 ═══════════ */
+function finale() {
+  S.over = true;
+  const reg = S.reg, regular = countType('regular'), ws = countType('workshop'), lt = countType('lightning');
+  const cov = regularCats().size, intl = intlCount();
+  const fin = $('finaleOverlay');
+  const rows = [];
+
+  const reqOk = regular >= 3 && ws >= 1 && lt >= 1;
+  if (!reqOk) {
+    $('finTitle').textContent = '議程開天窗……';
+    $('finGrade').textContent = 'FAIL';
+    $('finGrade').className = 'grade fail';
+    $('finDesc').innerHTML = `講者陣容沒湊齊，活動辦不起來。<br>一般講者 ${regular}/3 · Workshop ${ws}/1 · Lightning ${lt}/1`;
+    $('finScores').innerHTML = '';
+    $('finSlogan').textContent = '明年捲土重來……';
+  } else if (reg < REG_FAIL) {
+    $('finTitle').textContent = '現場冷冷清清……';
+    $('finGrade').textContent = 'FAIL';
+    $('finGrade').className = 'grade fail';
+    $('finDesc').innerHTML = `只來了 <b>${reg}</b> 人（及格線 ${REG_FAIL}）。講者很棒，但世界還不知道。`;
+    $('finScores').innerHTML = '';
+    $('finSlogan').textContent = '宣傳，宣傳，宣傳……';
+  } else {
+    const covPts = cov * 10, intlPts = intl * 15;
+    const score = reg + covPts + intlPts;
+    const grade = score >= 430 ? 'S' : score >= 360 ? 'A' : score >= 290 ? 'B' : 'C';
+    $('finTitle').textContent = reg >= REG_CAP ? '350 人滿員成功！🎉' : '活動順利落幕！';
+    $('finGrade').textContent = grade;
+    $('finGrade').className = 'grade';
+    $('finDesc').textContent = ({
+      S: '傳說級的一屆——連走廊都是精彩的討論。',
+      A: '賓主盡歡，社群都在敲碗明年。',
+      B: '穩穩的一場好活動，還有進步空間。',
+      C: '驚險過關！明年會更好。',
+    })[grade];
+    rows.push(`<div><span>報名人數</span><b>${reg} 分</b></div>`);
+    rows.push(`<div><span>Tag 多樣性（${cov}/6 × 10）</span><b>${covPts} 分</b></div>`);
+    rows.push(`<div><span>國際講者（${intl} × 15）</span><b>${intlPts} 分</b></div>`);
+    rows.push(`<div><span>總分</span><b>${score}</b></div>`);
+    $('finScores').innerHTML = rows.join('');
+    $('finSlogan').textContent = '「我們 iPlayground 見！」';
+    burstConfetti(); setTimeout(burstConfetti, 600); setTimeout(burstConfetti, 1200);
+  }
+  fin.classList.add('show');
+}
+$('finRestart').addEventListener('click', () => location.reload());
+
+/* ═══════════ 轉盤（移植自講者抽抽樂） ═══════════ */
+const wheelCanvas = $('wheel');
+const ctx = wheelCanvas.getContext('2d');
+let wheelMode = 'speaker';       // 'speaker' | 'staff'
+let rotation = 0;
+let spinning = false;
+let highlightIdx = -1;
+const POINTER_ANGLE = -Math.PI / 2;
+
+function currentPool() { return wheelMode === 'speaker' ? S.speakerPool : S.staffPool; }
+function poolName(i) { return wheelMode === 'speaker' ? SPEAKER_CARDS[i].name : STAFF_CARDS[i].name; }
+function segFill(i, poolIdx) {
+  if (wheelMode === 'staff') return i % 2 ? '#1A1A1A' : '#111111';
+  const r = SPEAKER_CARDS[poolIdx].rarity;
+  if (r === 'SR') return 'rgba(255,184,0,0.16)';
+  if (r === 'W')  return 'rgba(192,132,252,0.16)';
+  if (r === 'N')  return '#161616';
+  return i % 2 ? '#1A1A1A' : '#111111';
+}
+function labelColor(poolIdx) {
+  if (wheelMode === 'staff') return '#FFFFFF';
+  const r = SPEAKER_CARDS[poolIdx].rarity;
+  if (r === 'SR') return '#FFB800';
+  if (r === 'W')  return '#C084FC';
+  if (r === 'N')  return '#AAAAAA';
+  return '#FFFFFF';
+}
+
+function sizeCanvas() {
+  const rect = wheelCanvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  wheelCanvas.width = rect.width * dpr;
+  wheelCanvas.height = rect.height * dpr;
+  drawWheel();
+}
+
+function drawWheel() {
+  const w = wheelCanvas.width, h = wheelCanvas.height;
+  const cx = w / 2, cy = h / 2;
+  const R = Math.min(cx, cy) - 6;
+  ctx.clearRect(0, 0, w, h);
+  const pool = currentPool();
+  const n = pool.length;
+  if (n === 0) {
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = '#111111'; ctx.fill();
+    ctx.strokeStyle = 'rgba(215,255,0,0.28)'; ctx.lineWidth = 2; ctx.stroke();
+    return;
+  }
+  const seg = (Math.PI * 2) / n;
+  for (let i = 0; i < n; i++) {
+    const a0 = rotation + i * seg;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, a0, a0 + seg); ctx.closePath();
+    ctx.fillStyle = i === highlightIdx ? '#D7FF00' : segFill(i, pool[i]);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(215,255,0,0.22)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  const base = Math.max(11, R * 0.055);
+  for (let i = 0; i < n; i++) {
+    const mid = rotation + (i + 0.5) * seg;
+    const name = poolName(pool[i]);
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(mid);
+    let normalized = mid % (Math.PI * 2);
+    if (normalized < 0) normalized += Math.PI * 2;
+    const flipped = normalized > Math.PI / 2 && normalized < Math.PI * 1.5;
+    if (flipped) { ctx.rotate(Math.PI); ctx.textAlign = 'left'; } else { ctx.textAlign = 'right'; }
+    ctx.textBaseline = 'middle';
+    let fs = base;
+    ctx.font = `700 ${fs}px ${'-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "PingFang TC", sans-serif'}`;
+    const maxW = R * 0.52;
+    const tw = ctx.measureText(name).width;
+    if (tw > maxW) {
+      fs = Math.max(9, fs * maxW / tw);
+      ctx.font = `700 ${fs}px ${'-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "PingFang TC", sans-serif'}`;
+    }
+    ctx.fillStyle = i === highlightIdx ? '#000000' : labelColor(pool[i]);
+    ctx.fillText(name, flipped ? -R * 0.94 : R * 0.94, 0);
+    ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(215,255,0,0.45)'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = '#000000'; ctx.fill();
+}
+
+function nextFrame(cb) {
+  let done = false;
+  const raf = requestAnimationFrame(() => { if (!done) { done = true; clearTimeout(to); cb(performance.now()); } });
+  const to = setTimeout(() => { if (!done) { done = true; cancelAnimationFrame(raf); cb(performance.now()); } }, 60);
+}
+function poolPosAtPointer() {
+  const n = currentPool().length;
+  const seg = (Math.PI * 2) / n;
+  let a = (POINTER_ANGLE - rotation) % (Math.PI * 2);
+  if (a < 0) a += Math.PI * 2;
+  return Math.floor(a / seg) % n;
+}
+
+/* 轉到指定 winner（遊戲邏輯先決定，轉盤演出） */
+function spinWheel(mode, winnerIdx, onDone) {
+  if (spinning) return;
+  wheelMode = mode;
+  highlightIdx = -1;
+  const pool = currentPool();
+  const winner = pool.indexOf(winnerIdx);
+  const n = pool.length;
+  const seg = (Math.PI * 2) / n;
+  const card = mode === 'speaker' ? SPEAKER_CARDS[winnerIdx] : STAFF_CARDS[winnerIdx];
+  if (card.photo) new Image().src = card.photo;   // 預載照片
+
+  const jitter = (Math.random() * 0.7 - 0.35) * seg;
+  const target = POINTER_ANGLE - (winner + 0.5) * seg + jitter;
+  const turns = reducedMotion ? 1 : 4 + Math.floor(Math.random() * 2);
+  let final = target;
+  while (final < rotation + turns * Math.PI * 2) final += Math.PI * 2;
+
+  const start = rotation, delta = final - start;
+  const dur = reducedMotion ? 500 : 2400 + Math.random() * 600;
+  const t0 = performance.now();
+  let lastTickPos = poolPosAtPointer();
+
+  spinning = true;
+  $('wheelMode').innerHTML = mode === 'speaker' ? '正在邀請 <b>講者</b>……' : '正在招募 <b>工作人員</b>……';
+  render();
+
+  function frame(now) {
+    const t = Math.min(1, (now - t0) / dur);
+    const ease = 1 - Math.pow(1 - t, 3.2);
+    rotation = start + delta * ease;
+    drawWheel();
+    const p = poolPosAtPointer();
+    if (p !== lastTickPos) { tick(); lastTickPos = p; }
+    if (t < 1) { nextFrame(frame); }
+    else {
+      rotation = final % (Math.PI * 2);
+      spinning = false;
+      highlightIdx = winner;
+      drawWheel();
+      fanfare();
+      if (!reducedMotion) burstConfetti();
+      setTimeout(() => { highlightIdx = -1; onDone(); }, reducedMotion ? 0 : 420);
+    }
+  }
+  nextFrame(frame);
+}
+
+/* ═══════════ 音效（移植） ═══════════ */
+let actx = null;
+function audio() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); return actx; }
+function tick() {
+  try {
+    const a = audio(), o = a.createOscillator(), g = a.createGain();
+    o.type = 'square'; o.frequency.value = 1600;
+    g.gain.setValueAtTime(0.03, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.03);
+    o.connect(g).connect(a.destination);
+    o.start(); o.stop(a.currentTime + 0.035);
+  } catch (e) {}
+}
+function fanfare() {
+  try {
+    const a = audio();
+    [523.25, 659.25, 880].forEach((f, i) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      const t = a.currentTime + i * 0.09;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.12, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+      o.connect(g).connect(a.destination);
+      o.start(t); o.stop(t + 0.45);
+    });
+  } catch (e) {}
+}
+
+/* ═══════════ 彩帶（移植） ═══════════ */
+const confettiCanvas = $('confetti');
+const cctx = confettiCanvas.getContext('2d');
+let particles = [], confettiRunning = false;
+function sizeConfetti() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  confettiCanvas.width = innerWidth * dpr;
+  confettiCanvas.height = innerHeight * dpr;
+  cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function burstConfetti() {
+  sizeConfetti();
+  const colors = ['#D7FF00', '#FFFFFF', '#D9D9D9', '#9DBB00'];
+  const rect = wheelCanvas.getBoundingClientRect();
+  const ox = rect.left + rect.width / 2, oy = rect.top + rect.height / 2;
+  for (let i = 0; i < 120; i++) {
+    const ang = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
+    particles.push({ x: ox, y: oy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 3,
+      w: 4 + Math.random() * 6, h: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
+      c: colors[Math.floor(Math.random() * colors.length)], life: 1 });
+  }
+  if (!confettiRunning) { confettiRunning = true; requestAnimationFrame(confettiFrame); }
+}
+function confettiFrame() {
+  cctx.clearRect(0, 0, innerWidth, innerHeight);
+  particles = particles.filter(p => p.life > 0);
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.vx *= 0.99;
+    p.rot += p.vr; p.life -= 0.011;
+    cctx.save(); cctx.translate(p.x, p.y); cctx.rotate(p.rot);
+    cctx.globalAlpha = Math.max(0, p.life);
+    cctx.fillStyle = p.c;
+    cctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    cctx.restore();
+  }
+  if (particles.length) requestAnimationFrame(confettiFrame);
+  else { confettiRunning = false; cctx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+
+/* ═══════════ render ═══════════ */
+function render() {
+  // weeks
+  $('weeks').innerHTML = Array.from({ length: TOTAL_WEEKS }, (_, i) => {
+    const w = i + 1;
+    return `<span class="wk ${w === S.week ? 'cur' : w < S.week ? 'done' : ''}">${w}</span>`;
+  }).join('');
+  // ap
+  const base = Math.max(weeklyApBase(), S.ap);
+  $('apPips').innerHTML = Array.from({ length: base }, (_, i) =>
+    `<span class="pip ${i < S.ap ? '' : 'used'}"></span>`).join('') + ` <span style="font-size:12px;color:var(--muted);margin-left:6px;">${S.ap} 點</span>`;
+  // reg
+  $('regFill').style.width = `${(S.reg / REG_CAP) * 100}%`;
+  $('regNum').textContent = S.reg;
+  // goals
+  const g = [
+    { label: `一般講者 ${countType('regular')}/3`, ok: countType('regular') >= 3 },
+    { label: `Workshop ${countType('workshop')}/1`, ok: countType('workshop') >= 1 },
+    { label: `Lightning ${countType('lightning')}/1`, ok: countType('lightning') >= 1 },
+    { label: `🌐 國際講者 ×${intlCount()}`, ok: intlCount() > 0 },
+  ];
+  $('goals').innerHTML = g.map(x => `<span class="goal ${x.ok ? 'ok' : ''}">${x.label}</span>`).join('');
+  // cats
+  const cov = regularCats();
+  $('cats').innerHTML = CAT_KEYS.map(k => `<span class="cat ${cov.has(k) ? 'on' : ''}">${CAT_LABELS[k]}</span>`).join('');
+  // roster chips
+  $('rosterChips').innerHTML = S.roster.map(r => {
+    const c = SPEAKER_CARDS[r.idx];
+    const cls = c.rarity === 'SR' ? 'sr' : c.rarity === 'W' ? 'w' : c.rarity === 'N' ? 'n' : '';
+    return `<span class="chip ${cls} ${r.announced ? '' : 'unannounced'}">${esc(c.name)}<span class="st">${r.announced ? '✓' : '未公布'}</span></span>`;
+  }).join('') || '<span style="font-size:13px;color:var(--muted);">還沒邀到任何講者……</span>';
+  // staff
+  const bonus = Math.floor(S.staff.length / 3);
+  $('staffLine').innerHTML = `🙋 工作人員 <b>${S.staff.length}</b> 位${bonus ? ` → 每週行動點 +${bonus}` : ''}${S.staff.length % 3 ? `（再 ${3 - S.staff.length % 3} 位再 +1）` : ''}${S.staff.map(i => ` · ${esc(STAFF_CARDS[i].name)}`).join('')}`;
+  // buttons
+  $('actInvite').disabled = !canInvite();
+  $('actStaff').disabled = !canStaff();
+  $('actPromo').disabled = !canPromo();
+  $('actAnnounce').disabled = !canAnnounce();
+  $('endWeek').disabled = spinning || S.over;
+  $('endWeek').textContent = S.week >= TOTAL_WEEKS ? '🎪 迎接活動日！' : `⏭ 結束第 ${S.week} 週`;
+  const remain = S.speakerDrawLimit - S.drawsThisWeek;
+  $('inviteSub').textContent = S.freeDraws > 0 ? `免費抽卡 ×${S.freeDraws}！` : `本週剩 ${Math.max(0, remain)} 次`;
+  const unann = S.roster.filter(r => !r.announced).length;
+  $('announceSub').textContent = unann ? `${unann} 位講者待公布` : '沒有待公布講者';
+  // wheel labels
+  if (!spinning) {
+    $('wheelMode').innerHTML = `講者池 <b>${S.speakerPool.length}</b> · 工作人員池 <b>${S.staffPool.length}</b>`;
+  }
+  $('wheelHint').innerHTML = S.forcedType
+    ? `<span class="warn">🎯 ${esc(S.forcedReason)}：下一抽鎖定「${TYPE_LABELS[S.forcedType]}」</span>`
+    : (S.week >= 7 && (countType('workshop') === 0 || countType('lightning') === 0))
+      ? '<span class="warn">⚠️ 還缺必要講者類型！</span>' : '';
+  drawWheel();
+}
+
+/* ═══════════ 綁定 & 啟動 ═══════════ */
+$('actInvite').addEventListener('click', actInvite);
+$('actStaff').addEventListener('click', actStaff);
+$('actPromo').addEventListener('click', actPromo);
+$('actAnnounce').addEventListener('click', actAnnounce);
+$('endWeek').addEventListener('click', endWeek);
+$('introStart').addEventListener('click', () => {
+  $('introOverlay').classList.remove('show');
+  startWeek();
+});
+window.addEventListener('resize', sizeCanvas);
+
+newGame();
+render();
+sizeCanvas();
+</script>
+</body>
+</html>
