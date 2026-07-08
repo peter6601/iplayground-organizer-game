@@ -72,17 +72,21 @@ def duration_min(time_str):
 
 def build_speakers():
     sch = fetch("schedule.json")
+    sch_en = fetch("schedule_en.json")
     profiles = {p["name"]: p for p in fetch("speakers.json")}
+    profiles_en = {p["id"]: p for p in fetch("speakers_en.json")}
     # 名稱別名（schedule 與 speakers 名字不一致時補這裡）
     if "彭成瑋 Ervis" in profiles:
         profiles["彭成瑋"] = profiles["彭成瑋 Ervis"]
 
     cards = {}
     for day, items in sch.items():
-        for it in items:
+        en_items = sch_en.get(day, [])
+        for i, it in enumerate(items):
             name = it.get("speaker", "").strip()
             if not name:
                 continue
+            en = en_items[i] if i < len(en_items) else {}
             dur = duration_min(it["time"])
             if day.startswith("workshop"):
                 stype = "workshop"
@@ -101,6 +105,7 @@ def build_speakers():
                 cats = set(MANUAL[name])
             cats |= set(SUPPLEMENT.get(name, []))
             prof = profiles.get(name, {})
+            prof_en = profiles_en.get(prof.get("id"), {})
 
             if name in cards:  # 雙棲講者（talk + workshop）
                 c = cards[name]
@@ -113,12 +118,15 @@ def build_speakers():
                       else "N" if stype == "lightning" else "W")
             cards[name] = {
                 "name": prof.get("name", name),
+                "name_en": prof_en.get("name", prof.get("name", name)),
                 "rarity": rarity,
                 "types": [stype],
                 "cats": sorted(cats),
                 "intl": intl,
                 "title": prof.get("title", ""),
+                "title_en": prof_en.get("title", prof.get("title", "")),
                 "talk": it["title"],
+                "talk_en": en.get("title", it["title"]),
                 "photo": photo_url(prof.get("photo", "")),
             }
     return list(cards.values())

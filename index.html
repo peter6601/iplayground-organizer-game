@@ -34,6 +34,9 @@
   .logo .yr { color: var(--neon); }
   .role-tag { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
   .role-tag b { color: var(--neon); }
+  .lang-btn { margin-left: auto; background: transparent; color: var(--soft); border: 1px solid #333; border-radius: 999px;
+    padding: 4px 14px; font-family: var(--sans); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .lang-btn:hover { border-color: var(--neon-dim); color: var(--ink); }
   h1 { margin: 0; font-size: clamp(26px, 4.6vw, 44px); font-weight: 800; letter-spacing: -0.015em; line-height: 1.08; }
   h1 .neon { color: var(--neon); }
 
@@ -69,7 +72,7 @@
   .pointer { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 0; height: 0;
     border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--neon);
     filter: drop-shadow(0 0 8px var(--neon-dim)); z-index: 2; }
-  .wheel-mode { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .wheel-mode { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
   .wheel-mode b { color: var(--neon); }
   .wheel-hint { font-size: 13px; color: var(--soft); text-align: center; min-height: 20px; }
   .wheel-hint .warn { color: var(--gold); }
@@ -93,6 +96,8 @@
     padding: 11px; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; }
   .endweek:hover { border-color: var(--neon-dim); color: var(--ink); }
   .endweek:disabled { opacity: .35; cursor: not-allowed; }
+  .pity-hint { font-size: 13px; margin-top: 10px; min-height: 0; }
+  .pity-hint .warn { color: var(--gold); }
 
   /* ── roster ── */
   .goals { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -101,17 +106,8 @@
   .cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
   .cat { font-size: 12px; padding: 4px 9px; border-radius: 6px; border: 1px solid #2a2a2a; color: #555; }
   .cat.on { color: var(--neon); border-color: var(--neon-dim); background: var(--neon-faint); }
-  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid #2a2a2a; color: var(--soft); }
-  .chip.sr { border-color: rgba(255,184,0,.5); color: var(--gold); }
-  .chip.w  { border-color: rgba(192,132,252,.5); color: var(--purple); }
-  .chip.n  { color: #999; }
-  .chip.unannounced { opacity: .45; }
-  .chip .st { font-size: 10px; margin-left: 4px; }
   .staff-line { font-size: 13px; color: var(--soft); margin-top: 10px; }
   .staff-line b { color: var(--neon); }
-  .pity-hint { font-size: 13px; margin-top: 10px; min-height: 0; }
-  .pity-hint .warn { color: var(--gold); }
 
   /* ── 卡冊 ── */
   .coll-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
@@ -150,8 +146,6 @@
   .log p .wkb { color: var(--muted); font-size: 11px; margin-right: 6px; font-variant-numeric: tabular-nums; }
   .log p.good { color: var(--neon); }
   .log p.bad { color: var(--red); }
-
-  .right-col { display: flex; flex-direction: column; gap: 16px; }
 
   /* ── overlays ── */
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; place-items: center; z-index: 50; padding: 20px; }
@@ -193,7 +187,7 @@
   .ann-row .vl { color: var(--neon); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ann-total { display: flex; justify-content: space-between; margin-top: 12px; font-size: 17px; font-weight: 800; }
   .ann-total .vl { color: var(--neon); }
-  .ann-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .ann-note { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
 
   /* event modal icon */
   .ev-icon { font-size: 44px; line-height: 1; margin-bottom: 10px; }
@@ -218,28 +212,29 @@
   <header class="masthead">
     <div class="brandline">
       <span class="logo">iPLAYGROUND <span class="yr">SIM</span></span>
-      <span class="role-tag" id="roleTag">你是 <b>總召</b> · 距離活動日 9 週</span>
+      <span class="role-tag" id="roleTag"></span>
+      <button class="lang-btn" id="langToggle">EN</button>
     </div>
-    <h1>如何成功舉辦一場 <span class="neon">iPlayground</span></h1>
+    <h1 id="pageH1"></h1>
   </header>
 
   <div class="hud">
     <div class="hud-row">
       <div>
-        <div class="hud-label">週次</div>
+        <div class="hud-label" id="hudWeekL"></div>
         <div class="weeks" id="weeks"></div>
       </div>
       <div>
-        <div class="hud-label">行動點</div>
+        <div class="hud-label" id="hudApL"></div>
         <div class="ap-pips" id="apPips"></div>
       </div>
       <div class="reg-wrap">
-        <div class="hud-label">報名人數</div>
+        <div class="hud-label" id="hudRegL"></div>
         <div class="reg-bar">
           <div class="reg-fill" id="regFill"></div>
-          <div class="reg-fail-line" title="200 人及格線"></div>
+          <div class="reg-fail-line"></div>
         </div>
-        <div class="reg-num"><span id="regNum">0</span><span class="cap"> / 350</span> <span class="fail-hint">（低於 200 = 失敗）</span></div>
+        <div class="reg-num"><span id="regNum">0</span><span class="cap"> / 350</span> <span class="fail-hint" id="regFailHint"></span></div>
       </div>
     </div>
   </div>
@@ -247,33 +242,33 @@
   <div class="arena">
     <div class="left-col">
       <div class="panel">
-        <h2>本週行動</h2>
+        <h2 id="pActions"></h2>
         <div class="actions">
           <button class="act-btn primary" id="actInvite">
-            🎤 邀請講者 <small id="inviteSub">轉輪盤抽講者卡</small>
+            <span id="actInviteL"></span> <small id="inviteSub"></small>
             <span class="cost">1 AP</span>
           </button>
           <button class="act-btn" id="actStaff">
-            🙋 招募工作人員 <small id="staffSub">每 3 位 → 每週 +1 AP</small>
+            <span id="actStaffL"></span> <small id="staffSub"></small>
             <span class="cost">1 AP</span>
           </button>
           <button class="act-btn" id="actPromo">
-            📣 宣傳售票 <small id="promoSub">2d6 ＋ 已公布講者加成</small>
+            <span id="actPromoL"></span> <small id="promoSub"></small>
             <span class="cost">1 AP</span>
           </button>
           <button class="act-btn" id="actAnnounce">
-            📋 公布議程 <small id="announceSub">陣容開始每週發酵</small>
+            <span id="actAnnounceL"></span> <small id="announceSub"></small>
             <span class="cost">1 AP</span>
           </button>
         </div>
-        <button class="endweek" id="endWeek">⏭ 結束本週</button>
+        <button class="endweek" id="endWeek"></button>
         <div class="pity-hint" id="pityHint"></div>
       </div>
 
       <div class="panel">
-        <h2>講者陣容</h2>
+        <h2 id="pLineup"></h2>
         <div class="goals" id="goals"></div>
-        <div class="hud-label" style="margin-bottom:6px;">一般講者 Tag 多樣性（全亮 = 報名加成）</div>
+        <div class="hud-label" style="margin-bottom:6px;" id="tagDivL"></div>
         <div class="cats" id="cats"></div>
         <div class="staff-line" id="agendaLine"></div>
         <div class="staff-line" id="staffLine"></div>
@@ -282,52 +277,43 @@
 
     <div class="right-col">
       <div class="panel">
-        <h2>卡冊（點卡片看詳情）</h2>
-        <div class="coll-sub">🎤 講者卡 <span id="collSpCount"></span></div>
+        <h2 id="pBinder"></h2>
+        <div class="coll-sub" id="collSpL"></div>
         <div class="coll-grid" id="collSpeakers"></div>
-        <div class="coll-sub">🙋 工作人員卡 <span id="collStCount"></span></div>
+        <div class="coll-sub" id="collStL"></div>
         <div class="coll-grid" id="collStaff"></div>
       </div>
 
       <div class="panel">
-        <h2>籌備日誌</h2>
+        <h2 id="pLog"></h2>
         <div class="log" id="log"></div>
       </div>
     </div>
   </div>
 
-  <footer>
-    資料來源：iplayground/SessionData <span class="neon">2026</span> ·
-    輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> ·
-    本遊戲為粉絲作品，非官方
-  </footer>
+  <footer id="footer"></footer>
 </div>
 
 <!-- 開場：輸入名字 -->
 <div class="overlay show" id="introOverlay">
   <div class="modal" id="introStep1">
-    <p class="eyebrow">iPlayground 籌備委員會</p>
-    <h3>恭喜（？）你被推選為本屆總召 🫡</h3>
-    <p class="desc">距離活動日還有 9 週。先請教總召大名：</p>
-    <input class="name-input" id="nameInput" maxlength="12" placeholder="輸入你的名字" autocomplete="off">
-    <div class="btn-row"><button class="btn" id="nameOk">就是我 →</button></div>
+    <p class="eyebrow" id="iEyebrow1"></p>
+    <h3 id="iTitle1"></h3>
+    <p class="desc" id="iDesc1"></p>
+    <input class="name-input" id="nameInput" maxlength="12" autocomplete="off">
+    <div class="btn-row"><button class="btn" id="nameOk"></button></div>
   </div>
   <div class="modal" id="introStep2" style="display:none;">
     <p class="eyebrow">Mission Briefing</p>
-    <h3 id="greetTitle">總召您好！</h3>
-    <p class="desc">這次的目標，需要完成的事項如下：</p>
-    <ul class="goal-list">
-      <li>🎤 一般講者至少 <b>3</b> 位</li>
-      <li>🛠 Workshop 講者至少 <b>1</b> 位</li>
-      <li>⚡ Lightning Talk 講者至少 <b>1</b> 位</li>
-      <li>🌈 講者主題湊滿 <b>6 大 tag</b>（有報名加成）</li>
-      <li>🎟 報名衝上 <b>350 滿員</b>——低於 200 人就失敗</li>
-    </ul>
-    <div class="callout">⚠️ 人數至少要過 <b>200 位</b>喔！</div>
-    <div class="callout">🌈 要盡量湊齊<b>不同屬性講者</b>喔！</div>
-    <p class="desc">每週用行動點邀講者、招募工作人員、宣傳售票、公布議程。<b>公布議程後，講者陣容會「每週持續」帶來報名</b>——越早公布、發酵的週數越多（複利）；但陣容越大、每週的加成數字越高。太早公布人太少、太晚公布來不及，抓好時機！每週還會翻一張事件卡。</p>
-    <p class="cheer" id="cheerLine">總召麻煩你了，相信你可以！</p>
-    <div class="btn-row"><button class="btn" id="introStart">開始籌備 →</button></div>
+    <h3 id="greetTitle"></h3>
+    <p class="desc" id="briefLead"></p>
+    <ul class="goal-list" id="goalList"></ul>
+    <div class="callout" id="c200"></div>
+    <div class="callout" id="cTags"></div>
+    <div class="callout" id="apNote"></div>
+    <p class="desc" id="briefDesc"></p>
+    <p class="cheer" id="cheerLine"></p>
+    <div class="btn-row"><button class="btn" id="introStart"></button></div>
   </div>
 </div>
 
@@ -337,7 +323,7 @@
     <div class="wheel-mode" id="wheelMode"></div>
     <div class="wheel-wrap">
       <div class="pointer"></div>
-      <canvas id="wheel" aria-label="抽卡轉盤"></canvas>
+      <canvas id="wheel" aria-label="wheel"></canvas>
     </div>
     <div class="wheel-hint" id="wheelHint"></div>
   </div>
@@ -346,7 +332,7 @@
 <!-- 事件卡 -->
 <div class="overlay" id="eventOverlay">
   <div class="modal">
-    <p class="eyebrow" id="evEyebrow">第 ? 週 · 事件卡</p>
+    <p class="eyebrow" id="evEyebrow"></p>
     <div class="ev-icon" id="evIcon">🌀</div>
     <h3 id="evName"></h3>
     <p class="desc" id="evDesc"></p>
@@ -357,38 +343,38 @@
 <!-- 抽卡結果 -->
 <div class="overlay" id="cardOverlay">
   <div class="modal" id="cardModal">
-    <p class="eyebrow" id="cardEyebrow">🎉 抽中講者卡</p>
+    <p class="eyebrow" id="cardEyebrow"></p>
     <div class="card-photo" id="cardPhoto"></div>
     <h3 id="cardName"></h3>
     <div class="badges" id="cardBadges"></div>
     <p class="card-talk" id="cardTalk"></p>
     <div class="card-effect" id="cardEffect"></div>
-    <div class="btn-row"><button class="btn" id="cardOk">收下 →</button></div>
+    <div class="btn-row"><button class="btn" id="cardOk"></button></div>
   </div>
 </div>
 
 <!-- 公布議程結果 -->
 <div class="overlay" id="annOverlay">
   <div class="modal">
-    <p class="eyebrow">📋 議程公布</p>
-    <h3>講者陣容亮相！</h3>
+    <p class="eyebrow" id="annEyebrow"></p>
+    <h3 id="annTitle"></h3>
     <div class="ann-rows" id="annRows"></div>
-    <div class="ann-total"><span>議程效應</span><span class="vl" id="annTotal"></span></div>
+    <div class="ann-total"><span id="annTotalL"></span><span class="vl" id="annTotal"></span></div>
     <p class="ann-note" id="annNote"></p>
-    <div class="btn-row"><button class="btn" id="annOk">太好了 →</button></div>
+    <div class="btn-row"><button class="btn" id="annOk"></button></div>
   </div>
 </div>
 
 <!-- 結算 -->
 <div class="overlay" id="finaleOverlay">
   <div class="modal finale">
-    <p class="eyebrow" id="finEyebrow">活動日</p>
+    <p class="eyebrow" id="finEyebrow"></p>
     <h3 id="finTitle"></h3>
     <div class="grade" id="finGrade"></div>
     <p class="desc" id="finDesc"></p>
     <div class="score-rows" id="finScores"></div>
     <div class="slogan" id="finSlogan"></div>
-    <div class="btn-row"><button class="btn" id="finRestart">再辦一場 →</button></div>
+    <div class="btn-row"><button class="btn" id="finRestart"></button></div>
   </div>
 </div>
 
@@ -396,24 +382,51 @@
 
 <script>
 /*__DATA_START__*/
-const SPEAKER_CARDS = [{"name":"Rudrank Riyam","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"Apple platforms developer, writer, and open-source maintainer","talk":"For Agents, By Agents: Building AI Tools That Maintain Themselves","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_rudrank.JPG"},{"name":"Minkyung Kim","rarity":"SR","types":["regular"],"cats":["product","uiux"],"intl":true,"title":"Learning Lead at  Apple Developer Academy @ POSTECH","talk":"Designing Adaptive UX Through Learning Theory & AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_mk.jpeg"},{"name":"JungMin Ahn","rarity":"SR","types":["regular"],"cats":["arch"],"intl":true,"title":"I am an iOS developer focused on productivity, scalable architecture, and sharing practical engineering insights through talks and presentations.","talk":"Lessons from Operating Large-Scale Modular iOS Projects with Tuist","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_JungMin.jpg"},{"name":"Vic","rarity":"R","types":["regular"],"cats":["uiux"],"intl":false,"title":"共同看見獨特的彼此","talk":"當觸控失效時，你的 App 還能順利使用嗎？","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Vic.JPG"},{"name":"范聖佑","rarity":"SR","types":["regular"],"cats":["arch","cross"],"intl":false,"title":"讓 Kotlin 成為 iOS 開發者的第二把刀，在跨平台與 AI 時代拓展出更多可能。","talk":"從 Swift 到 Kotlin Multiplatform：iOS 開發者的跨平台二刀流","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Shengyou.JPG"},{"name":"Denken","rarity":"R","types":["regular"],"cats":["cross"],"intl":false,"title":"從工程師落跑去做國際標準","talk":"年齡保證框架，兼談數位憑證皮夾","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_denken.png"},{"name":"Bobson","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"Twinkle AI Astronaut","talk":"Tweet AI to the Edge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Bobson.jpeg"},{"name":"李易修","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"91APP senior manager","talk":"從看不見到看得懂：ccxray 與 AI Agent 的可觀測性","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_justin.jpg"},{"name":"彭成瑋 Ervis","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Senior iOS Engineer","talk":"從一張看不懂的日本收據開始：一人開發者如何用 AI 與回饋系統把 Side Project 長成產品","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ErvisPeng.jpeg"},{"name":"楊宥榛","rarity":"R","types":["regular"],"cats":["product"],"intl":false,"title":"No pain no gain.","talk":"iOS 工程師 2026 職場生存指南：資深外商獵頭視角","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Annie.jpeg"},{"name":"高見龍","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"喜歡寫程式而且希望可以寫一輩子程式的電腦阿宅！","talk":"SDD 是口號，還是真的可以用？","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kaochenlong.jpg"},{"name":"海總理","rarity":"R","types":["regular"],"cats":["ai"],"intl":false,"title":"AI Alchemist","talk":"把自己抽出迴圈：讓程式獨自升級","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%B5%B7%E7%B8%BD%E7%90%86.jpg"},{"name":"彼得潘","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"愛瘋一切為蘋果的彼得潘","talk":"從 Vibe Coding 學會的 macOS CLI 魔法指令","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_PeterPan.jpg"},{"name":"Kevin","rarity":"W","types":["workshop"],"cats":["ai"],"intl":false,"title":"致力於研究AI 的應用， 並把AI 實用在Edge端","talk":"Stitch x Antigravity 實戰指南：讓 AI 助你從視覺設計精準落地 iOS App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kevinChiu.jpg"},{"name":"13","rarity":"R","types":["regular","workshop"],"cats":["ai","uiux"],"intl":false,"title":"喜歡分享，不賣焦慮。Love being inspired and sharing inspiration.","talk":"Core People：以人為本，打造更體貼的 App 體驗","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_13.jpg"},{"name":"Hedula","rarity":"W","types":["workshop"],"cats":["ai","swift"],"intl":false,"title":"Hedula Expert Design Unique Leading Arise","talk":"我不會 Swift，但我做了一個 AI 怪獸對戰遊戲","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hedula.jpeg"},{"name":"Harry","rarity":"W","types":["workshop"],"cats":["ai","product"],"intl":false,"title":"AI Advocate & Indie Developer","talk":"在 AI 時代尋找真實","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Harry.jpeg"},{"name":"星野恵瑠","rarity":"SR","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Co-Author of Introduction to iOS Apps Design Patterns","talk":"為什麼你並不需要ViewModel","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%98%9F%E9%87%8E%E6%81%B5%E7%91%A0.png"},{"name":"Gyuri Kim","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"iOS Engineer at Babitalk","talk":"The Bottleneck Was Me: AI-Native Workflows for Large Codebases","photo":""},{"name":"freddi","rarity":"R","types":["regular"],"cats":["swift","uiux"],"intl":true,"title":"iOS engineer at Yappli","talk":"Swift 程式碼為什麼能運作？ 從平台、Runtime 與編譯器理解 Swift","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_freddi.jpg"},{"name":"Thiago Komeno","rarity":"R","types":["regular"],"cats":["product"],"intl":true,"title":"Software Developer","talk":"How to Win the Swift Student Challenge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_komeno.jpg"},{"name":"Hana 花水木","rarity":"R","types":["regular"],"cats":["ai","product"],"intl":false,"title":"獎金獵人共同創辦人","talk":"App 上架之後呢？用 AI Agent 自動化行銷、客服與產品迭代","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hana.png"},{"name":"梯口","rarity":"SR","types":["regular"],"cats":["cross"],"intl":false,"title":"Site Reliability Engineer, CNCF Ambassador","talk":"不寫 Swift 也能貢獻 Apple Container：一位雲端原生工程師的開源實戰","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%A2%AF%E5%8F%A3.jpg"},{"name":"qcl","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Software Engineer @ Google","talk":"Xcode 沒內建我愛用的 Coding Agent？iOS 開發的 Agentic Workflow 策略","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_qcl.png"},{"name":"Alex Hu","rarity":"R","types":["regular"],"cats":["ai","arch","product"],"intl":false,"title":"資深 iOS 開發者 ｜ 曾任新加坡航空","talk":"把 AI 當資淺工程師帶:一個人用 agent 把 iOS App 做到上架的工程紀律","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_AlexHu.jpg"},{"name":"Dex","rarity":"R","types":["regular"],"cats":["arch","swift"],"intl":false,"title":"iOS Dev","talk":"是時候了！將RxSwift 程式碼全部改寫成 Swift Concurrency吧！","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_dex.jpeg"},{"name":"鄭宇哲","rarity":"R","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Garmin Advanced Software Engineer","talk":"@ContentBuilder Is All You Need","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_UJ.jpg"},{"name":"Joy","rarity":"R","types":["regular"],"cats":["ai","swift","uiux"],"intl":false,"title":"iOS Engineer","talk":"讓 Apple Intelligence 理解你的 App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Joy.png"},{"name":"劉信","rarity":"N","types":["lightning"],"cats":["product","uiux"],"intl":false,"title":"Independent iOS Developer & Learning Engineer","talk":"坑很深：做寫字練習 App 比想像更費工","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E4%BF%A1.jpg"},{"name":"Jess","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Product Builder","talk":"當 Vibe Coding 不再是最大的問題，Nibble 的產品探索旅程","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_jess.jpg"},{"name":"劉育承","rarity":"N","types":["lightning"],"cats":["ai","cross","uiux"],"intl":false,"title":"Software Developer","talk":"用 SwiftUI 打造 iOS / Android 跨平台 AI 美國選舉雷達：從新聞自動摘要到人工審核的 Mobile AI App 實戰","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E8%82%B2%E6%89%BF.png"},{"name":"Ethan","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Wink CTO","talk":"開發 AI Dating Agent 的血淚史：那些好笑、奇怪又令人害怕的教訓","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ethan.jpg"},{"name":"Yu Takahashi","rarity":"N","types":["lightning"],"cats":["swift"],"intl":false,"title":"Japanese Software Engineer","talk":"為什麼 Swift Macro 無法在 #Preview 中使用？","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Takahashi.jpg"}];
+const SPEAKER_CARDS = [{"name":"Minkyung Kim","name_en":"Minkyung Kim","rarity":"SR","types":["regular"],"cats":["product","uiux"],"intl":true,"title":"Learning Lead at  Apple Developer Academy @ POSTECH","title_en":"Learning Lead at  Apple Developer Academy @ POSTECH","talk":"Designing Adaptive UX Through Learning Theory & AI","talk_en":"Designing Adaptive UX Through Learning Theory & AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_mk.jpeg"},{"name":"李易修","name_en":"Justin Lee","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"91APP senior manager","title_en":"91APP senior manager","talk":"從看不見到看得懂：ccxray 與 AI Agent 的可觀測性","talk_en":"From Black Box to Glass Box: AI Agent Observability with ccxray","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_justin.jpg"},{"name":"鄭宇哲","name_en":"UJ Cheng","rarity":"R","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Garmin Advanced Software Engineer","title_en":"Garmin Advanced Software Engineer","talk":"@ContentBuilder Is All You Need","talk_en":"@ContentBuilder Is All You Need","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_UJ.jpg"},{"name":"Gyuri Kim","name_en":"Gyuri Kim","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"iOS Engineer at Babitalk","title_en":"iOS Engineer at Babitalk","talk":"The Bottleneck Was Me: AI-Native Workflows for Large Codebases","talk_en":"The Bottleneck Was Me: AI-Native Workflows for Large Codebases","photo":""},{"name":"13","name_en":"Ethan Huang","rarity":"R","types":["regular","workshop"],"cats":["ai","uiux"],"intl":false,"title":"喜歡分享，不賣焦慮。Love being inspired and sharing inspiration.","title_en":"Love sharing, not selling anxiety. Love being inspired and sharing inspiration.","talk":"Core People：以人為本，打造更體貼的 App 體驗","talk_en":"Core People: Building More Thoughtful Apps with Apple’s Native Capabilities","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_13.jpg"},{"name":"范聖佑","name_en":"Shengyou Fan","rarity":"SR","types":["regular"],"cats":["arch","cross"],"intl":false,"title":"讓 Kotlin 成為 iOS 開發者的第二把刀，在跨平台與 AI 時代拓展出更多可能。","title_en":"Empowering iOS developers to embrace Kotlin as a second language for cross-platform development and the AI era.","talk":"從 Swift 到 Kotlin Multiplatform：iOS 開發者的跨平台二刀流","talk_en":"From Swift to Kotlin Multiplatform: Cross-Platform Nitoryu for iOS Developers","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Shengyou.JPG"},{"name":"qcl","name_en":"qcl","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Software Engineer @ Google","title_en":"Software Engineer @ Google","talk":"Xcode 沒內建我愛用的 Coding Agent？iOS 開發的 Agentic Workflow 策略","talk_en":"Beyond Xcode's Built-in Agents: Discovering iOS Agentic Workflows","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_qcl.png"},{"name":"Bobson","name_en":"Bobson","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"Twinkle AI Astronaut","title_en":"Twinkle AI Astronaut","talk":"Tweet AI to the Edge","talk_en":"Tweet AI to the Edge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Bobson.jpeg"},{"name":"freddi","name_en":"Yuki Aki","rarity":"R","types":["regular"],"cats":["swift","uiux"],"intl":true,"title":"iOS engineer at Yappli","title_en":"iOS engineer at Yappli","talk":"Swift 程式碼為什麼能運作？ 從平台、Runtime 與編譯器理解 Swift","talk_en":"Why Does Our Swift Code Work? Understanding Swift Through Platforms, Runtime, and the Compiler","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_freddi.jpg"},{"name":"Dex","name_en":"Dex","rarity":"R","types":["regular"],"cats":["arch","swift"],"intl":false,"title":"iOS Dev","title_en":"iOS Dev","talk":"是時候了！將RxSwift 程式碼全部改寫成 Swift Concurrency吧！","talk_en":"It's Time! Let's Rewrite All Your RxSwift Code in Swift Concurrency!","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_dex.jpeg"},{"name":"星野恵瑠","name_en":"lovee","rarity":"SR","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Co-Author of Introduction to iOS Apps Design Patterns","title_en":"Co-Author of Introduction to iOS Apps Design Patterns","talk":"為什麼你並不需要ViewModel","talk_en":"You don't need a ViewModel","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%98%9F%E9%87%8E%E6%81%B5%E7%91%A0.png"},{"name":"Alex Hu","name_en":"Alex Hu","rarity":"R","types":["regular"],"cats":["ai","arch","product"],"intl":false,"title":"資深 iOS 開發者 ｜ 曾任新加坡航空","title_en":"Senior iOS Engineer | Formerly at Singapore Airlines","talk":"把 AI 當資淺工程師帶:一個人用 agent 把 iOS App 做到上架的工程紀律","talk_en":"Managing AI Like a Junior Engineer: The Discipline Behind Shipping a Solo iOS App with Agents","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_AlexHu.jpg"},{"name":"楊宥榛","name_en":"Annie Yang","rarity":"R","types":["regular"],"cats":["product"],"intl":false,"title":"No pain no gain.","title_en":"No pain no gain.","talk":"iOS 工程師 2026 職場生存指南：資深外商獵頭視角","talk_en":"Navigating the iOS Job Market in 2026: A Senior Tech Recruiter’s Perspective","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Annie.jpeg"},{"name":"海總理","name_en":"tzangms","rarity":"R","types":["regular"],"cats":["ai"],"intl":false,"title":"AI Alchemist","title_en":"AI Alchemist","talk":"把自己抽出迴圈：讓程式獨自升級","talk_en":"Taking Yourself Out of the Loop: Letting Software Upgrade Itself","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%B5%B7%E7%B8%BD%E7%90%86.jpg"},{"name":"Rudrank Riyam","name_en":"Rudrank Riyam","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"Apple platforms developer, writer, and open-source maintainer","title_en":"Apple platforms developer, writer, and open-source maintainer","talk":"For Agents, By Agents: Building AI Tools That Maintain Themselves","talk_en":"For Agents, By Agents: Building AI Tools That Maintain Themselves","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_rudrank.JPG"},{"name":"Hana 花水木","name_en":"Hana Chang","rarity":"R","types":["regular"],"cats":["ai","product"],"intl":false,"title":"獎金獵人共同創辦人","title_en":"Co-founder of 獎金獵人 (BountyHunter)","talk":"App 上架之後呢？用 AI Agent 自動化行銷、客服與產品迭代","talk_en":"What Happens After Your App Ships? Automating Marketing, Support, and Product Iteration with AI Agents","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hana.png"},{"name":"Vic","name_en":"Vic","rarity":"R","types":["regular"],"cats":["uiux"],"intl":false,"title":"共同看見獨特的彼此","title_en":"Recognizing the uniqueness in one another.","talk":"當觸控失效時，你的 App 還能順利使用嗎？","talk_en":"When Touch Fails, Can Your App Still Be Used?","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Vic.JPG"},{"name":"JungMin Ahn","name_en":"JungMin Ahn","rarity":"SR","types":["regular"],"cats":["arch"],"intl":true,"title":"I am an iOS developer focused on productivity, scalable architecture, and sharing practical engineering insights through talks and presentations.","title_en":"I am an iOS developer focused on productivity, scalable architecture, and sharing practical engineering insights through talks and presentations.","talk":"Lessons from Operating Large-Scale Modular iOS Projects with Tuist","talk_en":"Lessons from Operating Large-Scale Modular iOS Projects with Tuist","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_JungMin.jpg"},{"name":"Thiago Komeno","name_en":"Thiago Komeno","rarity":"R","types":["regular"],"cats":["product"],"intl":true,"title":"Software Developer","title_en":"Software Developer","talk":"How to Win the Swift Student Challenge","talk_en":"How to Win the Swift Student Challenge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_komeno.jpg"},{"name":"梯口","name_en":"ChengHao Yang","rarity":"SR","types":["regular"],"cats":["cross"],"intl":false,"title":"Site Reliability Engineer, CNCF Ambassador","title_en":"Site Reliability Engineer, CNCF Ambassador","talk":"不寫 Swift 也能貢獻 Apple Container：一位雲端原生工程師的開源實戰","talk_en":"Contributing to Apple Container Without Writing Swift: A Cloud Native Engineer's Open Source Journey","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%A2%AF%E5%8F%A3.jpg"},{"name":"Joy","name_en":"Joy","rarity":"R","types":["regular"],"cats":["ai","swift","uiux"],"intl":false,"title":"iOS Engineer","title_en":"iOS Engineer","talk":"讓 Apple Intelligence 理解你的 App","talk_en":"How Apple Intelligence Understands Your App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Joy.png"},{"name":"彼得潘","name_en":"Peter Pan","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"愛瘋一切為蘋果的彼得潘","title_en":"A Peter Pan who never outgrew a love for all things Apple.","talk":"從 Vibe Coding 學會的 macOS CLI 魔法指令","talk_en":"macOS CLI Magic Commands I Learned from Vibe Coding","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_PeterPan.jpg"},{"name":"Denken","name_en":"Denken","rarity":"R","types":["regular"],"cats":["cross"],"intl":false,"title":"從工程師落跑去做國際標準","title_en":"From software engineering to shaping international standards.","talk":"年齡保證框架，兼談數位憑證皮夾","talk_en":"Age Assurance Frameworks and Digital Identity Wallet","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_denken.png"},{"name":"彭成瑋 Ervis","name_en":"Ervis Peng","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Senior iOS Engineer","title_en":"Senior iOS Engineer","talk":"從一張看不懂的日本收據開始：一人開發者如何用 AI 與回饋系統把 Side Project 長成產品","talk_en":"From an Unreadable Japanese Receipt: How a Solo Developer Grew a Side Project into a Product with AI and Feedback Systems","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ErvisPeng.jpeg"},{"name":"高見龍","name_en":"Chien-Long, Kao","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"喜歡寫程式而且希望可以寫一輩子程式的電腦阿宅！","title_en":"A proud coding geek who hopes to keep writing code for a lifetime.","talk":"SDD 是口號，還是真的可以用？","talk_en":"Is SDD Just a Slogan, or Can It Actually Work?","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kaochenlong.jpg"},{"name":"Yu Takahashi","name_en":"Yu Takahashi","rarity":"N","types":["lightning"],"cats":["swift"],"intl":false,"title":"Japanese Software Engineer","title_en":"Japanese Software Engineer","talk":"為什麼 Swift Macro 無法在 #Preview 中使用？","talk_en":"Why Can't We Have Nice Macros for `#Preview`?","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Takahashi.jpg"},{"name":"劉信","name_en":"Paul","rarity":"N","types":["lightning"],"cats":["product","uiux"],"intl":false,"title":"Independent iOS Developer & Learning Engineer","title_en":"Independent iOS Developer & Learning Engineer","talk":"坑很深：做寫字練習 App 比想像更費工","talk_en":"Down the Rabbit Hole: A Handwriting App's Scope Creep","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E4%BF%A1.jpg"},{"name":"Jess","name_en":"Jess","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Product Builder","title_en":"Product Builder","talk":"當 Vibe Coding 不再是最大的問題，Nibble 的產品探索旅程","talk_en":"Building Nibble: Product Discovery in the Era of AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_jess.jpg"},{"name":"Ethan","name_en":"Ethan","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Wink CTO","title_en":"Wink CTO","talk":"開發 AI Dating Agent 的血淚史：那些好笑、奇怪又令人害怕的教訓","talk_en":"Funny, Weird, and Terrifying Lessons from Building a Dating AI Agent","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ethan.jpg"},{"name":"劉育承","name_en":"YC Liu","rarity":"N","types":["lightning"],"cats":["ai","cross","uiux"],"intl":false,"title":"Software Developer","title_en":"Software Developer","talk":"用 SwiftUI 打造 iOS / Android 跨平台 AI 美國選舉雷達：從新聞自動摘要到人工審核的 Mobile AI App 實戰","talk_en":"Building a Cross-Platform AI-Powered U.S. Election Radar for iOS and Android with SwiftUI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E8%82%B2%E6%89%BF.png"},{"name":"Harry","name_en":"Harry","rarity":"W","types":["workshop"],"cats":["ai","product"],"intl":false,"title":"AI Advocate & Indie Developer","title_en":"AI Advocate & Indie Developer","talk":"在 AI 時代尋找真實","talk_en":"In Search of Authenticity in the Age of AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Harry.jpeg"},{"name":"Kevin","name_en":"Kevin Chiu","rarity":"W","types":["workshop"],"cats":["ai"],"intl":false,"title":"致力於研究AI 的應用， 並把AI 實用在Edge端","title_en":"Passionate about researching AI applications and making AI practical on edge devices.","talk":"Stitch x Antigravity 實戰指南：讓 AI 助你從視覺設計精準落地 iOS App","talk_en":"Stitch x Antigravity Hands-on Guide: Let AI Turn Visual Design into a Precise iOS App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kevinChiu.jpg"},{"name":"Hedula","name_en":"Hedula","rarity":"W","types":["workshop"],"cats":["ai","swift"],"intl":false,"title":"Hedula Expert Design Unique Leading Arise","title_en":"Hedula Expert Design Unique Leading Arise","talk":"我不會 Swift，但我做了一個 AI 怪獸對戰遊戲","talk_en":"I don't know Swift, but I made an AI monster battle game.","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hedula.jpeg"}];
 const STAFF_CARDS = [{"name":"Ethan Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_Ethan.jpg"},{"name":"UJ Cheng","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_ujcheng.jpg"},{"name":"Andy Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_andy.png"},{"name":"Will Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_will.jpg"},{"name":"Kyle Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_kyle.jpeg"},{"name":"Hokila Jan","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_hokila.jpg"},{"name":"David Kuo","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_david.jpeg"},{"name":"Joy","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_joyChen.jpg"},{"name":"Michelle Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_michelleChen.jpeg"},{"name":"Hao Lee","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2025/v1/images/staff/staff_hao.jpeg"},{"name":"DinDin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2025/v1/images/staff/staff_DinDin.jpg"},{"name":"Dawei Hao","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_DaweiHao.jpg"},{"name":"Jeff Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_jeffLin.jpg"},{"name":"Tank Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_tankLin.jpg"},{"name":"Terry Kuo","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_terryKuo.jpg"}];
 /*__DATA_END__*/
 
-/* ═══════════ 常數 ═══════════ */
-const CAT_LABELS = { ai: '🤖 AI／Agent', arch: '🏗 架構／工程', uiux: '🎨 UI/UX／無障礙', swift: '🐦 Swift／底層', cross: '🔀 跨平台／系統', product: '💼 產品／職涯' };
-const CAT_KEYS = ['ai', 'arch', 'uiux', 'swift', 'cross', 'product'];
-const RARITY_LABELS = { SR: 'SR · 40min 主講', R: 'R · 20min 講者', N: 'N · Lightning', W: 'W · Workshop' };
-const TYPE_LABELS = { regular: '一般講者', workshop: 'Workshop', lightning: 'Lightning' };
-const REG_CAP = 350, REG_FAIL = 200, TOTAL_WEEKS = 9;
+/* ═══════════ i18n ═══════════ */
+let lang = localStorage.getItem('ipg_lang') || 'zh';
+const L = (zh, en) => lang === 'zh' ? zh : en;
 
+const CAT_LABELS = {
+  ai:      { zh: '🤖 AI／Agent',      en: '🤖 AI / Agent' },
+  arch:    { zh: '🏗 架構／工程',      en: '🏗 Architecture' },
+  uiux:    { zh: '🎨 UI/UX／無障礙',   en: '🎨 UI/UX / A11y' },
+  swift:   { zh: '🐦 Swift／底層',     en: '🐦 Swift / Internals' },
+  cross:   { zh: '🔀 跨平台／系統',    en: '🔀 Cross-platform' },
+  product: { zh: '💼 產品／職涯',      en: '💼 Product / Career' },
+};
+const CAT_KEYS = ['ai', 'arch', 'uiux', 'swift', 'cross', 'product'];
+const catL = k => CAT_LABELS[k][lang] || CAT_LABELS[k].zh;
+
+const RARITY_LABELS = {
+  SR: { zh: 'SR · 40min 主講', en: 'SR · 40-min Keynote' },
+  R:  { zh: 'R · 20min 講者',  en: 'R · 20-min Talk' },
+  N:  { zh: 'N · Lightning',   en: 'N · Lightning' },
+  W:  { zh: 'W · Workshop',    en: 'W · Workshop' },
+};
+const rarL = r => RARITY_LABELS[r][lang];
+const TYPE_LABELS = {
+  regular:   { zh: '一般講者', en: 'Regular Talk' },
+  workshop:  { zh: 'Workshop', en: 'Workshop' },
+  lightning: { zh: 'Lightning', en: 'Lightning' },
+};
+const typeL = t => TYPE_LABELS[t][lang];
+
+const nm = c => (lang === 'en' && c.name_en) ? c.name_en : c.name;
+const tk = c => (lang === 'en' && c.talk_en) ? c.talk_en : c.talk;
+const tt = c => (lang === 'en' && c.title_en) ? c.title_en : c.title;
+
+const REG_CAP = 350, REG_FAIL = 200, TOTAL_WEEKS = 9;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ═══════════ 遊戲狀態 ═══════════ */
 let S;
 function newGame() {
   S = {
-    week: 1, ap: 3, reg: 0,
+    week: 1, ap: apBaseStart(), reg: 0,
     drawsThisWeek: 0, speakerDrawLimit: 3, freeDraws: 0,
     speakerPool: SPEAKER_CARDS.map((_, i) => i),
     staffPool: STAFF_CARDS.map((_, i) => i),
@@ -428,6 +441,9 @@ function newGame() {
   };
 }
 
+/* 一周目失敗後，籌委會追加預算：基礎行動點 2 → 3 */
+function apBaseStart() { return localStorage.getItem('ipg_boost') === '1' ? 3 : 2; }
+
 /* ═══════════ 工具 ═══════════ */
 const $ = id => document.getElementById(id);
 function d6() { return 1 + Math.floor(Math.random() * 6); }
@@ -436,7 +452,7 @@ function sum(a) { return a.reduce((x, y) => x + y, 0); }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function clampReg() { S.reg = Math.max(0, Math.min(REG_CAP, S.reg)); }
 
-function weeklyApBase() { return Math.min(5, 3 + Math.floor(S.staff.length / 3)); }
+function weeklyApBase() { return Math.min(5, apBaseStart() + Math.floor(S.staff.length / 3)); }
 function countType(t) { return S.roster.filter(r => SPEAKER_CARDS[r.idx].types.includes(t)).length; }
 function regularCats() {
   const set = new Set();
@@ -461,7 +477,8 @@ const WEEKLY_RANGE = { SR: '4~6', R: '3~5', W: '2~4', N: '1~3' };
 const WEEKLY_AVG = { SR: 5, R: 4, W: 3, N: 2 };
 function weeklyRoll(card) { return WEEKLY_BASE[card.rarity] + d3(); }
 function announceHint(card) {
-  return `公布議程後：每週 +${WEEKLY_RANGE[card.rarity]} 報名，持續發酵到活動日`;
+  return L(`公布議程後：每週 +${WEEKLY_RANGE[card.rarity]} 報名，持續發酵到活動日`,
+           `Once announced: +${WEEKLY_RANGE[card.rarity]} signups every week until showtime`);
 }
 /* 陣容加成：已公布講者越多，每週乘數越高；6 大 tag 湊齊再 ×1.2 */
 function lineupMult() {
@@ -484,63 +501,100 @@ function agendaTick(label) {
   ann.forEach(r => { const v = weeklyRoll(SPEAKER_CARDS[r.idx]); raw += v; r.contrib += v; });
   const gain = Math.round(raw * m);
   S.reg += gain; clampReg();
-  log(`📈 ${label}：${ann.length} 位已公布講者持續發酵，報名 +${gain}（陣容乘數 ×${m.toFixed(2)}）`, 'good');
+  log(L(`📈 ${label}：${ann.length} 位已公布講者持續發酵，報名 +${gain}（陣容乘數 ×${m.toFixed(2)}）`,
+        `📈 ${label}: ${ann.length} announced speaker(s) keep working — +${gain} signups (lineup ×${m.toFixed(2)})`), 'good');
   return gain;
 }
 
 /* ═══════════ 事件卡 ═══════════ */
 const EVENTS = [
-  { id: 'quiet', phase: 'any', icon: '🌤', name: '風平浪靜', desc: '沒有大事發生的一週。專心籌備吧！',
+  { id: 'quiet', phase: 'any', icon: '🌤',
+    name: { zh: '風平浪靜', en: 'Calm Week' },
+    desc: { zh: '沒有大事發生的一週。專心籌備吧！', en: 'Nothing dramatic this week. Focus on the prep!' },
     apply() {} },
-  { id: 'sponsor', phase: 'any', icon: '💰', name: '贊助商注資', desc: '贊助商臨時加碼！本週行動點 +2。',
-    apply() { S.ap += 2; log('💰 贊助商注資：本週行動點 +2', 'good'); } },
-  { id: 'designate', phase: 'any', icon: '🎯', name: '指定邀請', desc: '議程組人脈大爆發——你可以指定下一次抽講者的卡型！',
+  { id: 'sponsor', phase: 'any', icon: '💰',
+    name: { zh: '贊助商注資', en: 'Sponsor Boost' },
+    desc: { zh: '贊助商臨時加碼！本週行動點 +2。', en: 'A sponsor chips in! +2 action points this week.' },
+    apply() { S.ap += 2; log(L('💰 贊助商注資：本週行動點 +2', '💰 Sponsor boost: +2 AP this week'), 'good'); } },
+  { id: 'designate', phase: 'any', icon: '🎯',
+    name: { zh: '指定邀請', en: 'Targeted Invitation' },
+    desc: { zh: '議程組人脈大爆發——你可以指定下一次抽講者的卡型！', en: 'Your program team pulls some strings — choose the type of your next speaker draw!' },
     choices: [
-      { label: '🎤 一般講者', run() { setForced('regular', '指定邀請'); } },
-      { label: '🛠 Workshop', run() { setForced('workshop', '指定邀請'); } },
-      { label: '⚡ Lightning', run() { setForced('lightning', '指定邀請'); } },
+      { label: { zh: '🎤 一般講者', en: '🎤 Regular Talk' }, run() { setForced('regular', L('指定邀請', 'Targeted invitation')); } },
+      { label: { zh: '🛠 Workshop', en: '🛠 Workshop' }, run() { setForced('workshop', L('指定邀請', 'Targeted invitation')); } },
+      { label: { zh: '⚡ Lightning', en: '⚡ Lightning' }, run() { setForced('lightning', L('指定邀請', 'Targeted invitation')); } },
     ] },
-  { id: 'cfp_cold', phase: 'early', icon: '😨', name: 'CFP 冷清', desc: '這週投稿信箱靜悄悄……本週邀請講者上限 3 → 2。',
-    apply() { S.speakerDrawLimit = 2; log('😨 CFP 冷清：本週邀請上限 2 次', 'bad'); } },
-  { id: 'self_submit', phase: 'early', icon: '🙋‍♂️', name: '講者主動投稿', desc: '有講者自己敲門！獲得一次免費抽講者（不佔上限、不花行動點）。',
-    apply() { S.freeDraws += 1; log('🙋‍♂️ 講者主動投稿：免費抽講者 ×1', 'good'); } },
-  { id: 'boost_share', phase: 'mid', icon: '📢', name: '大神轉發', desc: '圈內大神轉發了你的貼文——下一次宣傳效果 ×2！',
-    apply() { S.promoBoost = true; log('📢 大神轉發：下次宣傳 ×2', 'good'); } },
-  { id: 'earlybird', phase: 'mid', icon: '🐦', name: '早鳥完售', desc: '早鳥票完售，話題發酵！',
-    apply() { const d = dice(3); S.reg += sum(d); clampReg(); log(`🐦 早鳥完售：報名 +${sum(d)}（3d6：${d.join('+')}）`, 'good'); } },
-  { id: 'viral', phase: 'mid', icon: '🔥', name: '社群爆紅', desc: '你的宣傳貼文被瘋轉！',
-    apply() { const d = dice(2); S.reg += sum(d); clampReg(); log(`🔥 社群爆紅：報名 +${sum(d)}（2d6：${d.join('+')}）`, 'good'); } },
-  { id: 'rival', phase: 'mid', icon: '🥊', name: '隔壁研討會同天', desc: '另一場研討會宣布跟你同一天……本週宣傳效果減半。',
-    apply() { S.promoHalved = true; log('🥊 撞檔：本週宣傳效果減半', 'bad'); } },
-  { id: 'ticket_down', phase: 'mid', icon: '💥', name: '售票系統掛掉', desc: '搶修一整天……本週行動點 −1。',
-    apply() { S.ap = Math.max(0, S.ap - 1); log('💥 售票系統掛掉：本週行動點 −1', 'bad'); } },
-  { id: 'drama', phase: 'mid', icon: '⚡', name: '社群論戰', desc: 'iOS 圈吵起來了，話題正熱。要蹭這波流量嗎？',
+  { id: 'cfp_cold', phase: 'early', icon: '😨',
+    name: { zh: 'CFP 冷清', en: 'Quiet CFP' },
+    desc: { zh: '這週投稿信箱靜悄悄……本週邀請講者上限 3 → 2。', en: 'The CFP inbox is silent... speaker invites capped at 2 this week.' },
+    apply() { S.speakerDrawLimit = 2; log(L('😨 CFP 冷清：本週邀請上限 2 次', '😨 Quiet CFP: invite limit 2 this week'), 'bad'); } },
+  { id: 'self_submit', phase: 'early', icon: '🙋‍♂️',
+    name: { zh: '講者主動投稿', en: 'Surprise Submission' },
+    desc: { zh: '有講者自己敲門！獲得一次免費抽講者（不佔上限、不花行動點）。', en: 'A speaker knocks on YOUR door! One free speaker draw (no AP, no limit).' },
+    apply() { S.freeDraws += 1; log(L('🙋‍♂️ 講者主動投稿：免費抽講者 ×1', '🙋‍♂️ Surprise submission: free speaker draw ×1'), 'good'); } },
+  { id: 'boost_share', phase: 'mid', icon: '📢',
+    name: { zh: '大神轉發', en: 'Influencer Repost' },
+    desc: { zh: '圈內大神轉發了你的貼文——下一次宣傳效果 ×2！', en: 'A community legend reposts you — next promo counts double!' },
+    apply() { S.promoBoost = true; log(L('📢 大神轉發：下次宣傳 ×2', '📢 Influencer repost: next promo ×2'), 'good'); } },
+  { id: 'earlybird', phase: 'mid', icon: '🐦',
+    name: { zh: '早鳥完售', en: 'Early Birds Sold Out' },
+    desc: { zh: '早鳥票完售，話題發酵！', en: 'Early-bird tickets are gone — the buzz is real!' },
+    apply() { const d = dice(3); S.reg += sum(d); clampReg(); log(L(`🐦 早鳥完售：報名 +${sum(d)}（3d6）`, `🐦 Early birds sold out: +${sum(d)} signups (3d6)`), 'good'); } },
+  { id: 'viral', phase: 'mid', icon: '🔥',
+    name: { zh: '社群爆紅', en: 'Gone Viral' },
+    desc: { zh: '你的宣傳貼文被瘋轉！', en: 'Your promo post blows up!' },
+    apply() { const d = dice(2); S.reg += sum(d); clampReg(); log(L(`🔥 社群爆紅：報名 +${sum(d)}（2d6）`, `🔥 Gone viral: +${sum(d)} signups (2d6)`), 'good'); } },
+  { id: 'rival', phase: 'mid', icon: '🥊',
+    name: { zh: '隔壁研討會同天', en: 'Rival Conference' },
+    desc: { zh: '另一場研討會宣布跟你同一天……本週宣傳效果減半。', en: 'Another conference lands on the same date... promos halved this week.' },
+    apply() { S.promoHalved = true; log(L('🥊 撞檔：本週宣傳效果減半', '🥊 Rival conference: promos halved this week'), 'bad'); } },
+  { id: 'ticket_down', phase: 'mid', icon: '💥',
+    name: { zh: '售票系統掛掉', en: 'Ticketing Outage' },
+    desc: { zh: '搶修一整天……本週行動點 −1。', en: 'A full day of firefighting... −1 AP this week.' },
+    apply() { S.ap = Math.max(0, S.ap - 1); log(L('💥 售票系統掛掉：本週行動點 −1', '💥 Ticketing outage: −1 AP this week'), 'bad'); } },
+  { id: 'drama', phase: 'mid', icon: '⚡',
+    name: { zh: '社群論戰', en: 'Community Drama' },
+    desc: { zh: 'iOS 圈吵起來了，話題正熱。要蹭這波流量嗎？', en: 'The iOS community is on fire. Ride the wave?' },
     choices: [
-      { label: '🔥 蹭！（報名 +2d6，下週宣傳減半）', run() { const d = dice(2); S.reg += sum(d); clampReg(); S.promoHalvedNextWeek = true; log(`⚡ 蹭上論戰：報名 +${sum(d)}，但下週宣傳減半`, 'good'); } },
-      { label: '🧘 保持中立', run() { log('🧘 社群論戰：選擇保持中立'); } },
+      { label: { zh: '🔥 蹭！（報名 +2d6，下週宣傳減半）', en: '🔥 Ride it! (+2d6 signups, promos halved next week)' },
+        run() { const d = dice(2); S.reg += sum(d); clampReg(); S.promoHalvedNextWeek = true; log(L(`⚡ 蹭上論戰：報名 +${sum(d)}，但下週宣傳減半`, `⚡ Rode the drama: +${sum(d)} signups, promos halved next week`), 'good'); } },
+      { label: { zh: '🧘 保持中立', en: '🧘 Stay neutral' },
+        run() { log(L('🧘 社群論戰：選擇保持中立', '🧘 Community drama: stayed neutral')); } },
     ] },
-  { id: 'flu', phase: 'late', icon: '🤧', name: '流行性感冒', desc: '流感大流行，一波退票……',
-    apply() { const d = dice(2); S.reg -= sum(d); clampReg(); log(`🤧 流感：報名 −${sum(d)}（2d6）`, 'bad'); } },
-  { id: 'typhoon', phase: 'late', icon: '🌀', name: '颱風警報', desc: '颱風生成中，路徑直指活動日……',
-    apply() { const n = S.week >= 9 ? 4 : 2; const d = dice(n); S.reg -= sum(d); clampReg(); log(`🌀 颱風警報：報名 −${sum(d)}（${n}d6）`, 'bad'); } },
-  { id: 'refund', phase: 'late', icon: '🎫', name: '退票潮', desc: '不明原因的一小波退票。',
-    apply() { const d = dice(1); S.reg -= sum(d); clampReg(); log(`🎫 退票潮：報名 −${sum(d)}`, 'bad'); } },
-  { id: 'volunteer', phase: 'late', icon: '💪', name: '志工大量報名', desc: '社群夥伴來支援——免費獲得一位工作人員！',
+  { id: 'flu', phase: 'late', icon: '🤧',
+    name: { zh: '流行性感冒', en: 'Flu Season' },
+    desc: { zh: '流感大流行，一波退票……', en: 'Flu season hits — a wave of refunds...' },
+    apply() { const d = dice(2); S.reg -= sum(d); clampReg(); log(L(`🤧 流感：報名 −${sum(d)}（2d6）`, `🤧 Flu: −${sum(d)} signups (2d6)`), 'bad'); } },
+  { id: 'typhoon', phase: 'late', icon: '🌀',
+    name: { zh: '颱風警報', en: 'Typhoon Warning' },
+    desc: { zh: '颱風生成中，路徑直指活動日……', en: 'A typhoon is forming, headed straight for the event...' },
+    apply() { const n = S.week >= 9 ? 4 : 2; const d = dice(n); S.reg -= sum(d); clampReg(); log(L(`🌀 颱風警報：報名 −${sum(d)}（${n}d6）`, `🌀 Typhoon: −${sum(d)} signups (${n}d6)`), 'bad'); } },
+  { id: 'refund', phase: 'late', icon: '🎫',
+    name: { zh: '退票潮', en: 'Refund Wave' },
+    desc: { zh: '不明原因的一小波退票。', en: 'A small mysterious wave of refunds.' },
+    apply() { const d = dice(1); S.reg -= sum(d); clampReg(); log(L(`🎫 退票潮：報名 −${sum(d)}`, `🎫 Refunds: −${sum(d)} signups`), 'bad'); } },
+  { id: 'volunteer', phase: 'late', icon: '💪',
+    name: { zh: '志工大量報名', en: 'Volunteer Surge' },
+    desc: { zh: '社群夥伴來支援——免費獲得一位工作人員！', en: 'The community shows up — gain a free staff member!' },
     apply() {
       if (S.staffPool.length) {
         const i = S.staffPool.splice(Math.floor(Math.random() * S.staffPool.length), 1)[0];
         S.staff.push(i);
-        log(`💪 志工支援：${esc(STAFF_CARDS[i].name)} 加入（工作人員 ${S.staff.length} 位）`, 'good');
-      } else { S.reg += 5; clampReg(); log('💪 志工支援：人手已滿，改幫忙發傳單（報名 +5）', 'good'); }
+        log(L(`💪 志工支援：${esc(STAFF_CARDS[i].name)} 加入（工作人員 ${S.staff.length} 位）`, `💪 Volunteer surge: ${esc(STAFF_CARDS[i].name)} joins (${S.staff.length} staff)`), 'good');
+      } else { S.reg += 5; clampReg(); log(L('💪 志工支援：人手已滿，改幫忙發傳單（報名 +5）', '💪 Volunteers: crew is full, they hand out flyers instead (+5 signups)'), 'good'); }
     } },
-  { id: 'bento', phase: 'late', icon: '🍱', name: '便當廠商加菜', desc: '口碑小加分！',
-    apply() { const d = dice(1); S.reg += sum(d); clampReg(); log(`🍱 便當加菜：報名 +${sum(d)}`, 'good'); } },
-  { id: 'cancel', phase: 'late', icon: '😱', name: '講者臨時取消', desc: '', apply() {} }, // 動態處理
+  { id: 'bento', phase: 'late', icon: '🍱',
+    name: { zh: '便當廠商加菜', en: 'Bento Upgrade' },
+    desc: { zh: '口碑小加分！', en: 'Word of mouth gets tastier!' },
+    apply() { const d = dice(1); S.reg += sum(d); clampReg(); log(L(`🍱 便當加菜：報名 +${sum(d)}`, `🍱 Bento upgrade: +${sum(d)} signups`), 'good'); } },
+  { id: 'cancel', phase: 'late', icon: '😱',
+    name: { zh: '講者臨時取消', en: 'Speaker Cancellation' },
+    desc: { zh: '', en: '' }, apply() {} }, // 動態處理
 ];
 
 function setForced(type, reason) {
   S.forcedType = type; S.forcedReason = reason;
-  log(`🎯 ${reason}：下一抽鎖定「${TYPE_LABELS[type]}」`, 'good');
+  log(L(`🎯 ${reason}：下一抽鎖定「${typeL(type)}」`, `🎯 ${reason}: next draw locked to "${typeL(type)}"`), 'good');
 }
 
 function eventPhase() { return S.week <= 3 ? 'early' : S.week <= 6 ? 'mid' : 'late'; }
@@ -548,7 +602,6 @@ function eventPhase() { return S.week <= 3 ? 'early' : S.week <= 6 ? 'mid' : 'la
 function pickEvent() {
   const ph = eventPhase();
   let pool = EVENTS.filter(e => (e.phase === ph || e.phase === 'any') && e.id !== S.lastEventId);
-  // 沒講者時取消事件無意義
   if (!S.roster.length) pool = pool.filter(e => e.id !== 'cancel');
   return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -562,7 +615,8 @@ function runCancelEvent() {
   const backup = S.roster.find(r => r !== victim && !r.announced && SPEAKER_CARDS[r.idx].types.includes(vType));
 
   S.roster.splice(ri, 1);
-  let msg = `講者 <b>${esc(vCard.name)}</b> 臨時有要事，無法出席……`;
+  let msg = L(`講者 <b>${esc(nm(vCard))}</b> 臨時有要事，無法出席……`,
+              `Speaker <b>${esc(nm(vCard))}</b> can no longer make it...`);
 
   // 已公布的講者取消 → 一波失望退票；未來的發酵也沒了
   let refund = 0;
@@ -573,19 +627,24 @@ function runCancelEvent() {
   }
 
   if (backup) {
+    const bName = esc(nm(SPEAKER_CARDS[backup.idx]));
     if (victim.announced) {
       backup.announced = true;   // 備援緊急遞補，接手每週發酵
-      msg += `<br><br>失望退票 −${refund}。好在 <b>${esc(SPEAKER_CARDS[backup.idx].name)}</b> 臨危受命救場，緊急公布遞補，議程效應不中斷！`;
-      log(`😱 ${esc(vCard.name)} 取消（退票 −${refund}）→ ${esc(SPEAKER_CARDS[backup.idx].name)} 備援救場`, 'good');
+      msg += L(`<br><br>失望退票 −${refund}。好在 <b>${bName}</b> 臨危受命救場，緊急公布遞補，議程效應不中斷！`,
+               `<br><br>Disappointed refunds: −${refund}. But <b>${bName}</b> steps up as the emergency replacement — the agenda effect continues!`);
+      log(L(`😱 ${esc(nm(vCard))} 取消（退票 −${refund}）→ ${bName} 備援救場`, `😱 ${esc(nm(vCard))} cancelled (−${refund}) → ${bName} saves the day`), 'good');
     } else {
-      msg += `<br><br>好在還有 <b>${esc(SPEAKER_CARDS[backup.idx].name)}</b> 可以補位，議程沒有開天窗。`;
-      log(`😱 ${esc(vCard.name)} 取消，${esc(SPEAKER_CARDS[backup.idx].name)} 補位`, 'bad');
+      msg += L(`<br><br>好在還有 <b>${bName}</b> 可以補位，議程沒有開天窗。`,
+               `<br><br>Luckily <b>${bName}</b> can fill the slot — no gap in the program.`);
+      log(L(`😱 ${esc(nm(vCard))} 取消，${bName} 補位`, `😱 ${esc(nm(vCard))} cancelled, ${bName} fills in`), 'bad');
     }
   } else {
     msg += victim.announced
-      ? `<br><br>沒有備援講者……失望退票 −${refund}，之後也少了他的每週發酵。`
-      : `<br><br>沒有備援講者，只能默默把議程表改掉。`;
-    log(`😱 講者取消：失去 ${esc(vCard.name)}${victim.announced ? `（退票 −${refund}）` : ''}`, 'bad');
+      ? L(`<br><br>沒有備援講者……失望退票 −${refund}，之後也少了他的每週發酵。`,
+          `<br><br>No backup speaker... −${refund} refunds, and their weekly buzz is gone too.`)
+      : L('<br><br>沒有備援講者，只能默默把議程表改掉。', '<br><br>No backup available — quietly edit the schedule and move on.');
+    log(L(`😱 講者取消：失去 ${esc(nm(vCard))}${victim.announced ? `（退票 −${refund}）` : ''}`,
+          `😱 Cancellation: lost ${esc(nm(vCard))}${victim.announced ? ` (−${refund} refunds)` : ''}`), 'bad');
   }
   return msg;
 }
@@ -599,14 +658,14 @@ function startWeek() {
   S.promoHalvedNextWeek = false;
 
   // 議程效應：已公布的講者陣容每週持續帶來報名
-  agendaTick(`第 ${S.week} 週議程效應`);
+  agendaTick(L(`第 ${S.week} 週議程效應`, `Week ${S.week} agenda effect`));
 
   // pity：第 7 週起缺 workshop / lightning 就鎖定下一抽
   if (S.week >= 7 && !S.forcedType) {
     if (countType('workshop') === 0 && S.speakerPool.some(i => SPEAKER_CARDS[i].types.includes('workshop'))) {
-      setForced('workshop', '議程組緊急協調');
+      setForced('workshop', L('議程組緊急協調', 'Program team scramble'));
     } else if (countType('lightning') === 0 && S.speakerPool.some(i => SPEAKER_CARDS[i].types.includes('lightning'))) {
-      setForced('lightning', '議程組緊急協調');
+      setForced('lightning', L('議程組緊急協調', 'Program team scramble'));
     }
   }
 
@@ -624,29 +683,29 @@ function endWeek() {
 /* ═══════════ 事件 UI ═══════════ */
 function showEvent(ev) {
   S.lastEventId = ev.id;
-  $('evEyebrow').textContent = `第 ${S.week} 週 · 事件卡`;
+  $('evEyebrow').textContent = L(`第 ${S.week} 週 · 事件卡`, `Week ${S.week} · Event Card`);
   $('evIcon').textContent = ev.icon;
-  $('evName').textContent = ev.name;
+  $('evName').textContent = ev.name[lang] || ev.name.zh;
   const btns = $('evBtns');
   btns.innerHTML = '';
   if (ev.id === 'cancel') {
     $('evDesc').innerHTML = runCancelEvent();
     const b = document.createElement('button');
-    b.className = 'btn'; b.textContent = '嗚……知道了';
+    b.className = 'btn'; b.textContent = L('嗚……知道了', 'Ouch... got it');
     b.onclick = () => { hideEvent(); };
     btns.appendChild(b);
   } else if (ev.choices) {
-    $('evDesc').innerHTML = esc(ev.desc);
+    $('evDesc').innerHTML = esc(ev.desc[lang] || ev.desc.zh);
     ev.choices.forEach(ch => {
       const b = document.createElement('button');
-      b.className = 'btn'; b.style.flexBasis = '100%'; b.textContent = ch.label;
+      b.className = 'btn'; b.style.flexBasis = '100%'; b.textContent = ch.label[lang] || ch.label.zh;
       b.onclick = () => { ch.run(); hideEvent(); };
       btns.appendChild(b);
     });
   } else {
-    $('evDesc').innerHTML = esc(ev.desc);
+    $('evDesc').innerHTML = esc(ev.desc[lang] || ev.desc.zh);
     const b = document.createElement('button');
-    b.className = 'btn'; b.textContent = '知道了';
+    b.className = 'btn'; b.textContent = L('知道了', 'Got it');
     b.onclick = () => { ev.apply(); hideEvent(); };
     btns.appendChild(b);
   }
@@ -664,7 +723,6 @@ function actInvite() {
   const usedFree = S.freeDraws > 0;
   if (usedFree) S.freeDraws -= 1; else { S.ap -= 1; S.drawsThisWeek += 1; }
 
-  // 決定 winner：pity / 指定邀請優先
   let candidates = S.speakerPool;
   if (S.forcedType) {
     const sub = S.speakerPool.filter(i => SPEAKER_CARDS[i].types.includes(S.forcedType));
@@ -676,7 +734,8 @@ function actInvite() {
     S.speakerPool = S.speakerPool.filter(i => i !== winnerIdx);
     S.roster.push({ idx: winnerIdx, announced: false, contrib: 0 });
     const c = SPEAKER_CARDS[winnerIdx];
-    log(`🎤 邀請成功：<b>${esc(c.name)}</b>（${RARITY_LABELS[c.rarity]}）${usedFree ? ' · 免費' : ''}`, 'good');
+    log(L(`🎤 邀請成功：<b>${esc(nm(c))}</b>（${rarL(c.rarity)}）${usedFree ? ' · 免費' : ''}`,
+          `🎤 Invited: <b>${esc(nm(c))}</b> (${rarL(c.rarity)})${usedFree ? ' · free' : ''}`), 'good');
     showSpeakerCard(c);
     render();
   });
@@ -692,7 +751,8 @@ function actStaff() {
     S.staffPool = S.staffPool.filter(i => i !== winnerIdx);
     S.staff.push(winnerIdx);
     const c = STAFF_CARDS[winnerIdx];
-    log(`🙋 招募成功：<b>${esc(c.name)}</b>（工作人員 ${S.staff.length} 位）`, 'good');
+    log(L(`🙋 招募成功：<b>${esc(c.name)}</b>（工作人員 ${S.staff.length} 位）`,
+          `🙋 Recruited: <b>${esc(c.name)}</b> (${S.staff.length} staff)`), 'good');
     showStaffCard(c);
     render();
   });
@@ -706,11 +766,11 @@ function actPromo() {
   const d = dice(2);
   const announced = S.roster.filter(r => r.announced).length;
   let gain = sum(d) + 2 * announced;
-  let note = `2d6（${d.join('+')}）＋ 已公布講者 ${announced}×2`;
-  if (S.promoBoost) { gain *= 2; note += ' · 大神轉發 ×2'; S.promoBoost = false; }
-  if (S.promoHalved) { gain = Math.floor(gain / 2); note += ' · 撞檔減半'; }
+  let note = L(`2d6（${d.join('+')}）＋ 已公布講者 ${announced}×2`, `2d6 (${d.join('+')}) + announced ${announced}×2`);
+  if (S.promoBoost) { gain *= 2; note += L(' · 大神轉發 ×2', ' · repost ×2'); S.promoBoost = false; }
+  if (S.promoHalved) { gain = Math.floor(gain / 2); note += L(' · 撞檔減半', ' · rival halved'); }
   S.reg += gain; clampReg();
-  log(`📣 宣傳售票：報名 +${gain}（${note}）`, 'good');
+  log(L(`📣 宣傳售票：報名 +${gain}（${note}）`, `📣 Promo: +${gain} signups (${note})`), 'good');
   render();
 }
 
@@ -725,14 +785,15 @@ function actAnnounce() {
   let covLine = '';
   if (!S.covBonusGiven && regularCats().size === CAT_KEYS.length) {
     S.covBonusGiven = true;
-    covLine = '🌈 主題多樣性爆棚！6 大 tag 全湊齊：議程效應永久 ×1.2';
+    covLine = L('🌈 主題多樣性爆棚！6 大 tag 全湊齊：議程效應永久 ×1.2', '🌈 Full topic diversity! All 6 tags covered: agenda effect ×1.2 forever');
     log(covLine, 'good');
   }
 
   const annCount = S.roster.filter(r => r.announced).length;
   const est = estimateWeekly();
   const remainTicks = TOTAL_WEEKS - S.week + 1;   // 含活動日湧入
-  log(`📋 公布議程：${batch.length} 位講者亮相（陣容 ${annCount} 位）→ 每週約 +${est} 報名開始發酵`, 'good');
+  log(L(`📋 公布議程：${batch.length} 位講者亮相（陣容 ${annCount} 位）→ 每週約 +${est} 報名開始發酵`,
+        `📋 Agenda announced: ${batch.length} speaker(s) revealed (lineup ${annCount}) → ~+${est} signups/week`), 'good');
   showAnnounceModal(batch, est, remainTicks, covLine);
   render();
 }
@@ -756,38 +817,40 @@ function fillPhoto(el, photo, name) {
 function showSpeakerCard(c, rosterEntry) {
   const fromColl = !!rosterEntry;
   $('cardModal').className = `modal rar-${c.rarity}`;
-  $('cardEyebrow').textContent = fromColl ? '📇 講者卡' : '🎉 抽中講者卡';
-  fillPhoto($('cardPhoto'), c.photo, c.name);
-  $('cardName').textContent = c.name;
-  const badges = [`<span class="badge rar-${c.rarity}">${RARITY_LABELS[c.rarity]}</span>`];
-  c.types.forEach(t => { if (c.types.length > 1) badges.push(`<span class="badge">${TYPE_LABELS[t]}</span>`); });
-  c.cats.forEach(k => badges.push(`<span class="badge">${CAT_LABELS[k]}</span>`));
-  if (c.intl) badges.push('<span class="badge intl">🌐 國際講者</span>');
+  $('cardEyebrow').textContent = fromColl ? L('📇 講者卡', '📇 Speaker Card') : L('🎉 抽中講者卡', '🎉 Speaker Card Drawn!');
+  fillPhoto($('cardPhoto'), c.photo, nm(c));
+  $('cardName').textContent = nm(c);
+  const badges = [`<span class="badge rar-${c.rarity}">${rarL(c.rarity)}</span>`];
+  c.types.forEach(t => { if (c.types.length > 1) badges.push(`<span class="badge">${typeL(t)}</span>`); });
+  c.cats.forEach(k => badges.push(`<span class="badge">${catL(k)}</span>`));
+  if (c.intl) badges.push(`<span class="badge intl">${L('🌐 國際講者', '🌐 International')}</span>`);
   $('cardBadges').innerHTML = badges.join('');
-  $('cardTalk').innerHTML = `《${esc(c.talk)}》${c.title ? `<br>${esc(c.title)}` : ''}`;
-  const dual = c.types.length > 1 ? '（雙棲卡：同時計入兩種講者名額！）' : '';
+  $('cardTalk').innerHTML = `${L('《', '“')}${esc(tk(c))}${L('》', '”')}${tt(c) ? `<br>${esc(tt(c))}` : ''}`;
+  const dual = c.types.length > 1 ? L('（雙棲卡：同時計入兩種講者名額！）', ' (Dual card: counts for both speaker slots!)') : '';
   $('cardEffect').textContent = fromColl
-    ? (rosterEntry.announced ? `✓ 已公布 · 為活動帶來 ${rosterEntry.contrib} 名報名${dual}` : `尚未公布 · ${announceHint(c)}${dual}`)
+    ? (rosterEntry.announced
+        ? L(`✓ 已公布 · 至今帶來 ${rosterEntry.contrib} 名報名${dual}`, `✓ Announced · ${rosterEntry.contrib} signups so far${dual}`)
+        : L(`尚未公布 · ${announceHint(c)}${dual}`, `Not announced yet · ${announceHint(c)}${dual}`))
     : announceHint(c) + dual;
-  $('cardOk').textContent = fromColl ? '關閉' : '收下 →';
+  $('cardOk').textContent = fromColl ? L('關閉', 'Close') : L('收下 →', 'Take it →');
   $('cardOverlay').classList.add('show');
 }
 function showStaffCard(c, fromColl) {
   $('cardModal').className = 'modal';
-  $('cardEyebrow').textContent = fromColl ? '📇 工作人員卡' : '🙌 招募到工作人員';
+  $('cardEyebrow').textContent = fromColl ? L('📇 工作人員卡', '📇 Staff Card') : L('🙌 招募到工作人員', '🙌 Staff Recruited!');
   fillPhoto($('cardPhoto'), c.photo, c.name);
   $('cardName').textContent = c.name;
   const isDinDin = /dindin/i.test(c.name);
   $('cardBadges').innerHTML = isDinDin
-    ? '<span class="badge intl">🏠 地主卡 · 場地組組長</span>'
-    : '<span class="badge">🙋 工作人員</span>';
-  $('cardTalk').textContent = isDinDin ? '「等等，這不是我自己嗎？」——你抽到了你自己。' : '';
+    ? `<span class="badge intl">${L('🏠 地主卡 · 場地組組長', '🏠 The Landlord · Venue Lead')}</span>`
+    : `<span class="badge">${L('🙋 工作人員', '🙋 Staff')}</span>`;
+  $('cardTalk').textContent = isDinDin ? L('「等等，這不是我自己嗎？」——你抽到了你自己。', '"Wait, isn\'t that... me?" — You drew yourself.') : '';
   const bonus = Math.floor(S.staff.length / 3);
   const next = 3 - (S.staff.length % 3);
-  $('cardEffect').textContent = (fromColl ? '' : '戰力 +1！') +
-    `目前 ${S.staff.length} 位 → 每週行動點 +${bonus}` +
-    (S.staff.length % 3 ? `（再 ${next} 位再 +1）` : '');
-  $('cardOk').textContent = fromColl ? '關閉' : '收下 →';
+  $('cardEffect').textContent = (fromColl ? '' : L('戰力 +1！', 'Crew +1! ')) +
+    L(`目前 ${S.staff.length} 位 → 每週行動點 +${bonus}`, `${S.staff.length} staff → +${bonus} AP per week`) +
+    (S.staff.length % 3 ? L(`（再 ${next} 位再 +1）`, ` (${next} more for another +1)`) : '');
+  $('cardOk').textContent = fromColl ? L('關閉', 'Close') : L('收下 →', 'Take it →');
   $('cardOverlay').classList.add('show');
 }
 $('cardOk').addEventListener('click', () => $('cardOverlay').classList.remove('show'));
@@ -803,18 +866,18 @@ function renderCollection() {
     const c = SPEAKER_CARDS[r.idx];
     const cls = c.rarity === 'SR' ? 'sr' : c.rarity === 'W' ? 'w' : '';
     return `<div class="mini ${cls}" data-i="${i}">
-      ${miniPh(c.photo, c.name)}
-      <div class="nm">${esc(c.name)}</div>
-      <div class="st2 ${r.announced ? 'pub' : ''}">${r.announced ? '✓ 已公布' : '未公布'}</div>
+      ${miniPh(c.photo, nm(c))}
+      <div class="nm">${esc(nm(c))}</div>
+      <div class="st2 ${r.announced ? 'pub' : ''}">${r.announced ? L('✓ 已公布', '✓ Announced') : L('未公布', 'Unannounced')}</div>
     </div>`;
-  }).join('') || '<div class="coll-empty">還沒抽到講者卡——快去邀請講者！</div>';
+  }).join('') || `<div class="coll-empty">${L('還沒抽到講者卡——快去邀請講者！', 'No speaker cards yet — go invite some!')}</div>`;
   $('collStaff').innerHTML = S.staff.map((idx, i) => {
     const c = STAFF_CARDS[idx];
     return `<div class="mini staffc" data-i="${i}">
       ${miniPh(c.photo, c.name)}
       <div class="nm">${esc(c.name)}</div>
     </div>`;
-  }).join('') || '<div class="coll-empty">還沒招募到工作人員</div>';
+  }).join('') || `<div class="coll-empty">${L('還沒招募到工作人員', 'No staff recruited yet')}</div>`;
 }
 $('collSpeakers').addEventListener('click', e => {
   const m = e.target.closest('.mini'); if (!m) return;
@@ -826,14 +889,19 @@ $('collStaff').addEventListener('click', e => {
 });
 
 function showAnnounceModal(batch, est, remainTicks, covLine) {
+  $('annEyebrow').textContent = L('📋 議程公布', '📋 Agenda Announced');
+  $('annTitle').textContent = L('講者陣容亮相！', 'The lineup goes live!');
+  $('annTotalL').textContent = L('議程效應', 'Agenda effect');
+  $('annOk').textContent = L('太好了 →', 'Awesome →');
   $('annRows').innerHTML = batch.map(r => {
     const c = SPEAKER_CARDS[r.idx];
-    return `<div class="ann-row"><span class="nm"><span class="badge rar-${c.rarity}">${c.rarity}</span> ${esc(c.name)}</span><span class="vl">每週 +${WEEKLY_RANGE[c.rarity]}</span></div>`;
+    return `<div class="ann-row"><span class="nm"><span class="badge rar-${c.rarity}">${c.rarity}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[c.rarity]}</span></div>`;
   }).join('');
-  $('annTotal').textContent = `約 +${est}／週`;
-  let note = `陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`;
-  if (remainTicks <= 2) note += ' 有點晚了……能吃到的複利不多！';
-  else note += ' 陣容越大、每週越多——繼續邀人再公布也會疊上去。';
+  $('annTotal').textContent = L(`約 +${est}／週`, `~+${est}/week`);
+  let note = L(`陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`,
+               `Lineup multiplier ×${lineupMult().toFixed(2)} — ticks at the start of every week, ${remainTicks} tick(s) left (incl. event-day rush).`);
+  if (remainTicks <= 2) note += L(' 有點晚了……能吃到的複利不多！', ' Cutting it close... not much compounding left!');
+  else note += L(' 陣容越大、每週越多——繼續邀人再公布也會疊上去。', ' Bigger lineup = bigger weekly gains — keep inviting and announcing to stack it.');
   if (covLine) note += ` ${covLine}`;
   $('annNote').textContent = note;
   $('annOverlay').classList.add('show');
@@ -842,47 +910,58 @@ $('annOk').addEventListener('click', () => $('annOverlay').classList.remove('sho
 
 /* ═══════════ 結算 ═══════════ */
 function finale() {
-  agendaTick('活動日湧入');   // 最後一波：活動當天現場報名
+  agendaTick(L('活動日湧入', 'Event-day rush'));   // 最後一波：活動當天現場報名
   S.over = true;
   const reg = S.reg, regular = countType('regular'), ws = countType('workshop'), lt = countType('lightning');
   const cov = regularCats().size, intl = intlCount();
   const fin = $('finaleOverlay');
   const rows = [];
+  $('finEyebrow').textContent = L('活動日', 'Event Day');
+  $('finRestart').textContent = L('再辦一場 →', 'Run it back →');
 
   const reqOk = regular >= 3 && ws >= 1 && lt >= 1;
+  const firstFail = localStorage.getItem('ipg_boost') !== '1';
+  const boostNote = firstFail
+    ? L('<br><br>💪 籌委會痛定思痛，追加了預算——下一輪起每週基礎行動點 3 點！', '<br><br>💪 The committee learns its lesson and adds budget — from the next run, base AP is 3 per week!')
+    : '';
+
   if (!reqOk) {
-    $('finTitle').textContent = '議程開天窗……';
+    $('finTitle').textContent = L('議程開天窗……', 'Gaps in the program...');
     $('finGrade').textContent = 'FAIL';
     $('finGrade').className = 'grade fail';
-    $('finDesc').innerHTML = `講者陣容沒湊齊，活動辦不起來。<br>一般講者 ${regular}/3 · Workshop ${ws}/1 · Lightning ${lt}/1`;
+    $('finDesc').innerHTML = L(`講者陣容沒湊齊，活動辦不起來。<br>一般講者 ${regular}/3 · Workshop ${ws}/1 · Lightning ${lt}/1`,
+                               `The lineup never came together.<br>Regular ${regular}/3 · Workshop ${ws}/1 · Lightning ${lt}/1`) + boostNote;
     $('finScores').innerHTML = '';
-    $('finSlogan').textContent = '明年捲土重來……';
+    $('finSlogan').textContent = L('明年捲土重來……', 'There\'s always next year...');
+    localStorage.setItem('ipg_boost', '1');
   } else if (reg < REG_FAIL) {
-    $('finTitle').textContent = '現場冷冷清清……';
+    $('finTitle').textContent = L('現場冷冷清清……', 'The venue feels... empty');
     $('finGrade').textContent = 'FAIL';
     $('finGrade').className = 'grade fail';
-    $('finDesc').innerHTML = `只來了 <b>${reg}</b> 人（及格線 ${REG_FAIL}）。講者很棒，但世界還不知道。`;
+    $('finDesc').innerHTML = L(`只來了 <b>${reg}</b> 人（及格線 ${REG_FAIL}）。講者很棒，但世界還不知道。`,
+                               `Only <b>${reg}</b> signups (needed ${REG_FAIL}). Great speakers — the world just never heard about them.`) + boostNote;
     $('finScores').innerHTML = '';
-    $('finSlogan').textContent = '宣傳，宣傳，宣傳……';
+    $('finSlogan').textContent = L('宣傳，宣傳，宣傳……', 'Promote, promote, promote...');
+    localStorage.setItem('ipg_boost', '1');
   } else {
     const covPts = cov * 10, intlPts = intl * 15;
     const score = reg + covPts + intlPts;
     const grade = score >= 430 ? 'S' : score >= 360 ? 'A' : score >= 290 ? 'B' : 'C';
-    $('finTitle').textContent = reg >= REG_CAP ? '350 人滿員成功！🎉' : '活動順利落幕！';
+    $('finTitle').textContent = reg >= REG_CAP ? L('350 人滿員成功！🎉', 'Sold out at 350! 🎉') : L('活動順利落幕！', 'The event is a wrap!');
     $('finGrade').textContent = grade;
     $('finGrade').className = 'grade';
-    $('finDesc').textContent = `${playerName} 總召——` + ({
-      S: '傳說級的一屆！連走廊都是精彩的討論。',
-      A: '賓主盡歡，社群都在敲碗明年。',
-      B: '穩穩的一場好活動，還有進步空間。',
-      C: '驚險過關！明年會更好。',
+    $('finDesc').textContent = L(`${playerName} 總召——`, `Chief ${playerName} — `) + ({
+      S: L('傳說級的一屆！連走廊都是精彩的討論。', 'a legendary edition! Even the hallway track was on fire.'),
+      A: L('賓主盡歡，社群都在敲碗明年。', 'everyone went home happy, and the community is already asking about next year.'),
+      B: L('穩穩的一場好活動，還有進步空間。', 'a solid event, with room to grow.'),
+      C: L('驚險過關！明年會更好。', 'a close call — next year will be better!'),
     })[grade];
-    rows.push(`<div><span>報名人數</span><b>${reg} 分</b></div>`);
-    rows.push(`<div><span>Tag 多樣性（${cov}/6 × 10）</span><b>${covPts} 分</b></div>`);
-    rows.push(`<div><span>國際講者（${intl} × 15）</span><b>${intlPts} 分</b></div>`);
-    rows.push(`<div><span>總分</span><b>${score}</b></div>`);
+    rows.push(`<div><span>${L('報名人數', 'Signups')}</span><b>${reg}</b></div>`);
+    rows.push(`<div><span>${L(`Tag 多樣性（${cov}/6 × 10）`, `Tag diversity (${cov}/6 × 10)`)}</span><b>${covPts}</b></div>`);
+    rows.push(`<div><span>${L(`國際講者（${intl} × 15）`, `International speakers (${intl} × 15)`)}</span><b>${intlPts}</b></div>`);
+    rows.push(`<div><span>${L('總分', 'Total score')}</span><b>${score}</b></div>`);
     $('finScores').innerHTML = rows.join('');
-    $('finSlogan').textContent = '「我們 iPlayground 見！」';
+    $('finSlogan').textContent = L('「我們 iPlayground 見！」', '"See you at iPlayground!"');
     burstConfetti(); setTimeout(burstConfetti, 600); setTimeout(burstConfetti, 1200);
   }
   fin.classList.add('show');
@@ -899,7 +978,7 @@ let highlightIdx = -1;
 const POINTER_ANGLE = -Math.PI / 2;
 
 function currentPool() { return wheelMode === 'speaker' ? S.speakerPool : S.staffPool; }
-function poolName(i) { return wheelMode === 'speaker' ? SPEAKER_CARDS[i].name : STAFF_CARDS[i].name; }
+function poolName(i) { return wheelMode === 'speaker' ? nm(SPEAKER_CARDS[i]) : STAFF_CARDS[i].name; }
 function segFill(i, poolIdx) {
   if (wheelMode === 'staff') return i % 2 ? '#1A1A1A' : '#111111';
   const r = SPEAKER_CARDS[poolIdx].rarity;
@@ -1014,8 +1093,8 @@ function spinWheel(mode, winnerIdx, onDone) {
 
   spinning = true;
   $('wheelMode').innerHTML = mode === 'speaker'
-    ? `正在邀請 <b>講者</b>……（池內剩 ${n} 位）`
-    : `正在招募 <b>工作人員</b>……（池內剩 ${n} 位）`;
+    ? L(`正在邀請 <b>講者</b>……（池內剩 ${n} 位）`, `Inviting a <b>speaker</b>… (${n} left in pool)`)
+    : L(`正在招募 <b>工作人員</b>……（池內剩 ${n} 位）`, `Recruiting <b>staff</b>… (${n} left in pool)`);
   $('wheelHint').innerHTML = '';
   $('wheelOverlay').classList.add('show');
   sizeCanvas();
@@ -1129,49 +1208,108 @@ function render() {
   // ap
   const base = Math.max(weeklyApBase(), S.ap);
   $('apPips').innerHTML = Array.from({ length: base }, (_, i) =>
-    `<span class="pip ${i < S.ap ? '' : 'used'}"></span>`).join('') + ` <span style="font-size:12px;color:var(--muted);margin-left:6px;">${S.ap} 點</span>`;
+    `<span class="pip ${i < S.ap ? '' : 'used'}"></span>`).join('') + ` <span style="font-size:12px;color:var(--muted);margin-left:6px;">${S.ap} ${L('點', 'pts')}</span>`;
   // reg
   $('regFill').style.width = `${(S.reg / REG_CAP) * 100}%`;
   $('regNum').textContent = S.reg;
   // goals
   const g = [
-    { label: `一般講者 ${countType('regular')}/3`, ok: countType('regular') >= 3 },
+    { label: L(`一般講者 ${countType('regular')}/3`, `Regular ${countType('regular')}/3`), ok: countType('regular') >= 3 },
     { label: `Workshop ${countType('workshop')}/1`, ok: countType('workshop') >= 1 },
     { label: `Lightning ${countType('lightning')}/1`, ok: countType('lightning') >= 1 },
-    { label: `🌐 國際講者 ×${intlCount()}`, ok: intlCount() > 0 },
+    { label: L(`🌐 國際講者 ×${intlCount()}`, `🌐 International ×${intlCount()}`), ok: intlCount() > 0 },
   ];
   $('goals').innerHTML = g.map(x => `<span class="goal ${x.ok ? 'ok' : ''}">${x.label}</span>`).join('');
   // cats
   const cov = regularCats();
-  $('cats').innerHTML = CAT_KEYS.map(k => `<span class="cat ${cov.has(k) ? 'on' : ''}">${CAT_LABELS[k]}</span>`).join('');
+  $('cats').innerHTML = CAT_KEYS.map(k => `<span class="cat ${cov.has(k) ? 'on' : ''}">${catL(k)}</span>`).join('');
   // 卡冊
   renderCollection();
   // staff
   const bonus = Math.floor(S.staff.length / 3);
-  $('staffLine').innerHTML = `🙋 工作人員 <b>${S.staff.length}</b> 位${bonus ? ` → 每週行動點 +${bonus}` : ''}${S.staff.length % 3 ? `（再 ${3 - S.staff.length % 3} 位再 +1）` : ''}${S.staff.map(i => ` · ${esc(STAFF_CARDS[i].name)}`).join('')}`;
+  $('staffLine').innerHTML = L(
+    `🙋 工作人員 <b>${S.staff.length}</b> 位${bonus ? ` → 每週行動點 +${bonus}` : ''}${S.staff.length % 3 ? `（再 ${3 - S.staff.length % 3} 位再 +1）` : ''}`,
+    `🙋 Staff: <b>${S.staff.length}</b>${bonus ? ` → +${bonus} AP/week` : ''}${S.staff.length % 3 ? ` (${3 - S.staff.length % 3} more for +1)` : ''}`);
+  // 議程效應
+  const annCount = S.roster.filter(r => r.announced).length;
+  $('agendaLine').innerHTML = annCount
+    ? L(`📈 議程效應：每週約 <b>+${estimateWeekly()}</b>（陣容 ${annCount} 位 × ${lineupMult().toFixed(2)}${S.covBonusGiven ? ' · 🌈已含多樣性加成' : ''}）`,
+        `📈 Agenda effect: ~<b>+${estimateWeekly()}</b>/week (lineup ${annCount} × ${lineupMult().toFixed(2)}${S.covBonusGiven ? ' · 🌈 diversity incl.' : ''})`)
+    : L('📈 議程效應：尚未公布議程——講者公布後才會每週帶來報名', '📈 Agenda effect: nothing announced yet — speakers only draw signups once announced');
   // buttons
   $('actInvite').disabled = !canInvite();
   $('actStaff').disabled = !canStaff();
   $('actPromo').disabled = !canPromo();
   $('actAnnounce').disabled = !canAnnounce();
   $('endWeek').disabled = spinning || S.over;
-  $('endWeek').textContent = S.week >= TOTAL_WEEKS ? '🎪 迎接活動日！' : `⏭ 結束第 ${S.week} 週`;
+  $('endWeek').textContent = S.week >= TOTAL_WEEKS ? L('🎪 迎接活動日！', '🎪 Bring on event day!') : L(`⏭ 結束第 ${S.week} 週`, `⏭ End week ${S.week}`);
   const remain = S.speakerDrawLimit - S.drawsThisWeek;
-  $('inviteSub').textContent = S.freeDraws > 0 ? `免費抽卡 ×${S.freeDraws}！` : `本週剩 ${Math.max(0, remain)} 次`;
+  $('inviteSub').textContent = S.freeDraws > 0 ? L(`免費抽卡 ×${S.freeDraws}！`, `Free draw ×${S.freeDraws}!`) : L(`本週剩 ${Math.max(0, remain)} 次`, `${Math.max(0, remain)} left this week`);
   const unann = S.roster.filter(r => !r.announced).length;
-  $('announceSub').textContent = unann ? `${unann} 位講者待公布` : '沒有待公布講者';
-  // 議程效應
-  const annCount = S.roster.filter(r => r.announced).length;
-  $('agendaLine').innerHTML = annCount
-    ? `📈 議程效應：每週約 <b>+${estimateWeekly()}</b>（陣容 ${annCount} 位 × ${lineupMult().toFixed(2)}${S.covBonusGiven ? ' · 🌈已含多樣性加成' : ''}）`
-    : '📈 議程效應：尚未公布議程——講者公布後才會每週帶來報名';
+  $('announceSub').textContent = unann ? L(`${unann} 位講者待公布`, `${unann} speaker(s) to announce`) : L('沒有待公布講者', 'No one to announce');
   // 提示（鎖卡型 / 缺必要類型）
   $('pityHint').innerHTML = S.forcedType
-    ? `<span class="warn">🎯 ${esc(S.forcedReason)}：下一抽鎖定「${TYPE_LABELS[S.forcedType]}」</span>`
+    ? `<span class="warn">🎯 ${esc(S.forcedReason)}${L('：下一抽鎖定「', ': next draw locked to "')}${typeL(S.forcedType)}${L('」', '"')}</span>`
     : (S.week >= 7 && (countType('workshop') === 0 || countType('lightning') === 0))
-      ? '<span class="warn">⚠️ 還缺必要講者類型！</span>' : '';
+      ? `<span class="warn">${L('⚠️ 還缺必要講者類型！', '⚠️ Still missing a required speaker type!')}</span>` : '';
   // 標題列
-  $('roleTag').innerHTML = `總召 <b>${esc(playerName || '???')}</b> · 距離活動日 ${TOTAL_WEEKS - S.week + 1} 週`;
+  $('roleTag').innerHTML = L(`總召 <b>${esc(playerName || '???')}</b> · 距離活動日 ${TOTAL_WEEKS - S.week + 1} 週`,
+                             `Chief <b>${esc(playerName || '???')}</b> · ${TOTAL_WEEKS - S.week + 1} wk to showtime`);
+}
+
+/* ═══════════ 靜態文案 ═══════════ */
+function applyLang() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+  document.title = L('iPlayground 主辦模擬器', 'iPlayground Organizer Sim');
+  $('langToggle').textContent = L('EN', '中文');
+  $('pageH1').innerHTML = L('如何成功舉辦一場 <span class="neon">iPlayground</span>', 'How to Host a Successful <span class="neon">iPlayground</span>');
+  $('hudWeekL').textContent = L('週次', 'Week');
+  $('hudApL').textContent = L('行動點', 'Action Points');
+  $('hudRegL').textContent = L('報名人數', 'Registrations');
+  $('regFailHint').textContent = L('（低於 200 = 失敗）', '(below 200 = fail)');
+  $('pActions').textContent = L('本週行動', 'This Week\'s Actions');
+  $('pLineup').textContent = L('講者陣容', 'Speaker Lineup');
+  $('pBinder').textContent = L('卡冊（點卡片看詳情）', 'Card Binder (tap to view)');
+  $('pLog').textContent = L('籌備日誌', 'Organizer Log');
+  $('actInviteL').textContent = L('🎤 邀請講者', '🎤 Invite Speaker');
+  $('actStaffL').textContent = L('🙋 招募工作人員', '🙋 Recruit Staff');
+  $('actPromoL').textContent = L('📣 宣傳售票', '📣 Promote Tickets');
+  $('actAnnounceL').textContent = L('📋 公布議程', '📋 Announce Agenda');
+  $('staffSub').textContent = L('每 3 位 → 每週 +1 AP', 'Every 3 → +1 AP/week');
+  $('promoSub').textContent = L('2d6 ＋ 已公布講者加成', '2d6 + announced bonus');
+  $('tagDivL').textContent = L('一般講者 Tag 多樣性（全亮 = 議程效應 ×1.2）', 'Regular-speaker tag diversity (all lit = agenda ×1.2)');
+  $('collSpL').innerHTML = L('🎤 講者卡 ', '🎤 Speaker cards ') + '<span id="collSpCount"></span>';
+  $('collStL').innerHTML = L('🙋 工作人員卡 ', '🙋 Staff cards ') + '<span id="collStCount"></span>';
+  $('footer').innerHTML = L(
+    '資料來源：iplayground/SessionData <span class="neon">2026</span> · 輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> · 本遊戲為粉絲作品，非官方',
+    'Data: iplayground/SessionData <span class="neon">2026</span> · Wheel engine from <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">Speaker Roulette</a> · Fan-made, unofficial');
+  // intro
+  $('iEyebrow1').textContent = L('iPlayground 籌備委員會', 'iPlayground Organizing Committee');
+  $('iTitle1').textContent = L('恭喜（？）你被推選為本屆總召 🫡', 'Congrats(?) — you\'re this year\'s Chief Organizer 🫡');
+  $('iDesc1').textContent = L('距離活動日還有 9 週。先請教總召大名：', 'Nine weeks to event day. First, your name, Chief:');
+  $('nameInput').placeholder = L('輸入你的名字', 'Enter your name');
+  $('nameOk').textContent = L('就是我 →', 'That\'s me →');
+  $('briefLead').textContent = L('這次的目標，需要完成的事項如下：', 'Here\'s what needs to happen:');
+  $('goalList').innerHTML = [
+    L('🎤 一般講者至少 <b>3</b> 位', '🎤 At least <b>3</b> regular speakers'),
+    L('🛠 Workshop 講者至少 <b>1</b> 位', '🛠 At least <b>1</b> workshop speaker'),
+    L('⚡ Lightning Talk 講者至少 <b>1</b> 位', '⚡ At least <b>1</b> lightning talk speaker'),
+    L('🌈 講者主題湊滿 <b>6 大 tag</b>（有報名加成）', '🌈 Cover all <b>6 topic tags</b> (signup bonus)'),
+    L('🎟 報名衝上 <b>350 滿員</b>——低於 200 人就失敗', '🎟 Fill the house at <b>350</b> — under 200 means failure'),
+  ].map(x => `<li>${x}</li>`).join('');
+  $('c200').innerHTML = L('⚠️ 人數至少要過 <b>200 位</b>喔！', '⚠️ You need at least <b>200 attendees</b>!');
+  $('cTags').innerHTML = L('🌈 要盡量湊齊<b>不同屬性講者</b>喔！', '🌈 Mix up your <b>speaker topics</b> as much as you can!');
+  $('apNote').innerHTML = apBaseStart() === 3
+    ? L('💪 籌委會追加了預算：每週基礎行動點 <b>3</b> 點！', '💪 Extra budget this year: base <b>3</b> AP per week!')
+    : L('📌 每週基礎行動點只有 <b>2</b> 點——第一屆總是比較辛苦……', '📌 Only <b>2</b> base AP per week — year one is always rough...');
+  $('briefDesc').innerHTML = L('每週用行動點邀講者、招募工作人員、宣傳售票、公布議程。<b>公布議程後，講者陣容會「每週持續」帶來報名</b>——越早公布、發酵的週數越多（複利）；但陣容越大、每週的加成數字越高。太早公布人太少、太晚公布來不及，抓好時機！每週還會翻一張事件卡。',
+    'Spend AP to invite speakers, recruit staff, promote tickets, and announce the agenda. <b>Once announced, your lineup keeps bringing signups every single week</b> — announce early to compound longer, but a bigger lineup means bigger weekly gains. Too early = tiny lineup, too late = no time to compound. Timing is everything! An event card flips every week too.');
+  $('introStart').textContent = L('開始籌備 →', 'Start organizing →');
+  if (playerName) {
+    $('greetTitle').textContent = L(`${playerName} 總召您好！`, `Hello, Chief ${playerName}!`);
+    $('cheerLine').textContent = L(`${playerName} 總召麻煩你了，相信你可以！`, `We're counting on you, Chief ${playerName} — you've got this!`);
+  }
+  render();
 }
 
 /* ═══════════ 綁定 & 啟動 ═══════════ */
@@ -1181,11 +1319,16 @@ $('actStaff').addEventListener('click', actStaff);
 $('actPromo').addEventListener('click', actPromo);
 $('actAnnounce').addEventListener('click', actAnnounce);
 $('endWeek').addEventListener('click', endWeek);
+$('langToggle').addEventListener('click', () => {
+  lang = lang === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('ipg_lang', lang);
+  applyLang();
+});
 
 function submitName() {
-  playerName = $('nameInput').value.trim() || '神秘';
-  $('greetTitle').textContent = `${playerName} 總召您好！`;
-  $('cheerLine').textContent = `${playerName} 總召麻煩你了，相信你可以！`;
+  playerName = $('nameInput').value.trim() || L('神秘', 'Mystery');
+  $('greetTitle').textContent = L(`${playerName} 總召您好！`, `Hello, Chief ${playerName}!`);
+  $('cheerLine').textContent = L(`${playerName} 總召麻煩你了，相信你可以！`, `We're counting on you, Chief ${playerName} — you've got this!`);
   $('introStep1').style.display = 'none';
   $('introStep2').style.display = '';
 }
@@ -1200,7 +1343,7 @@ window.addEventListener('resize', () => {
 });
 
 newGame();
-render();
+applyLang();
 $('nameInput').focus();
 </script>
 </body>
