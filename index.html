@@ -169,15 +169,23 @@
   .cheer { margin-top: 16px; font-size: 16px; font-weight: 800; color: var(--neon); }
   .intro-top { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 
-  /* 首頁 */
-  .title-screen { text-align: center; }
-  .t-logo { font-size: 14px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  /* 首頁（滿版獨立頁） */
+  #titleOverlay { background: #000; padding: 0; }
+  #titleOverlay.show { display: block; }
+  .title-page { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; }
+  .t-bg { position: absolute; inset: 0; }
+  .t-bg svg, .t-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .t-dim { position: absolute; inset: 0; background: rgba(0,0,0,.62); }
+  .t-content { position: relative; text-align: center; width: min(420px, 88vw); animation: pop .4s cubic-bezier(.2,1.2,.4,1); }
+  .t-logo { font-size: 14px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; color: var(--soft); margin-bottom: 16px; }
   .t-logo .yr { color: var(--neon); }
-  .title-screen h3 { font-size: 26px; line-height: 1.3; }
-  .title-screen h3 .neon { color: var(--neon); }
-  .t-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
-  .t-menu, .t-diff { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .t-content h3 { margin: 0; font-size: clamp(30px, 6vw, 50px); font-weight: 800; line-height: 1.22; letter-spacing: -0.01em; }
+  .t-content h3 .neon { color: var(--neon); text-shadow: 0 0 34px var(--neon-dim); }
+  .t-sub { font-size: 14px; color: var(--soft); margin-top: 10px; letter-spacing: 0.06em; }
+  .t-menu, .t-diff { display: flex; flex-direction: column; gap: 10px; margin-top: 30px; }
   .t-menu .btn, .t-diff .btn { width: 100%; flex: none; }
+  .t-menu .btn.ghost, .t-diff .btn.ghost { background: rgba(10,10,10,.6); }
   .diff-opt { text-align: left; line-height: 1.5; }
   .diff-opt small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
   .diff-opt.sel { border-color: var(--neon); color: var(--neon); }
@@ -296,22 +304,26 @@
   <footer id="footer"></footer>
 </div>
 
-<!-- 首頁 -->
+<!-- 首頁（滿版） -->
 <div class="overlay show" id="titleOverlay">
-  <div class="modal title-screen">
-    <div class="t-logo">iPLAYGROUND <span class="yr">SIM</span></div>
-    <h3 id="tTitle"></h3>
-    <div class="t-sub" id="tSub"></div>
-    <div class="t-menu" id="tMenu">
-      <button class="btn" id="tStart"></button>
-      <button class="btn ghost" id="tLang"></button>
-      <button class="btn ghost" id="tDiff"></button>
-    </div>
-    <div class="t-diff" id="tDiffMenu" style="display:none;">
-      <button class="btn ghost diff-opt" id="dEasy"></button>
-      <button class="btn ghost diff-opt" id="dNormal"></button>
-      <button class="btn ghost diff-opt" id="dHard"></button>
-      <button class="btn ghost" id="tDiffBack"></button>
+  <div class="title-page">
+    <div class="t-bg" id="tBg"></div>
+    <div class="t-dim"></div>
+    <div class="t-content">
+      <div class="t-logo">iPLAYGROUND <span class="yr">SIM</span></div>
+      <h3 id="tTitle"></h3>
+      <div class="t-sub" id="tSub"></div>
+      <div class="t-menu" id="tMenu">
+        <button class="btn" id="tStart"></button>
+        <button class="btn ghost" id="tLang"></button>
+        <button class="btn ghost" id="tDiff"></button>
+      </div>
+      <div class="t-diff" id="tDiffMenu" style="display:none;">
+        <button class="btn ghost diff-opt" id="dEasy"></button>
+        <button class="btn ghost diff-opt" id="dNormal"></button>
+        <button class="btn ghost diff-opt" id="dHard"></button>
+        <button class="btn ghost" id="tDiffBack"></button>
+      </div>
     </div>
   </div>
 </div>
@@ -455,7 +467,7 @@ const STAFF_CARDS = [{"name":"Ethan Chen","photo":"https://raw.githubusercontent
 /*__DATA_END__*/
 
 /* ═══════════ 圖片接口（方案 B：填入圖片路徑即取代內建 SVG，見 art-prompts.md） ═══════════ */
-const SCENE_IMAGES = { rainy: '', early: '', mid: '', eve: '', day: '' };
+const SCENE_IMAGES = { rainy: '', early: '', mid: '', eve: '', day: '', title: '' };
 const ACTION_IMAGES = { promo: '', announce: '', success: '', fail_gap: '', fail_quiet: '' };
 const EVENT_IMAGES = {}; // 例：{ typhoon: 'images/ev_typhoon.png' }
 
@@ -645,6 +657,14 @@ function renderScene() {
   const phase = scenePhase();
   const img = SCENE_IMAGES[phase];
   $('sceneArt').innerHTML = img ? `<img src="${img}" alt="">` : sceneSVG(phase);
+}
+/* 首頁滿版背景：SCENE_IMAGES.title 有圖用圖，否則用前夜場景鋪滿 */
+function renderTitleBg() {
+  if (SCENE_IMAGES.title) {
+    $('tBg').innerHTML = `<img src="${SCENE_IMAGES.title}" alt="">`;
+  } else {
+    $('tBg').innerHTML = sceneSVG('eve').replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ');
+  }
 }
 
 /* ═══════════ 訊息窗（打字機） ═══════════ */
@@ -1586,6 +1606,7 @@ function applyLang() {
     $('cheerLine').textContent = L(`${playerName} 總召麻煩你了，相信你可以！`, `We're counting on you, Chief ${playerName} — you've got this!`);
   }
   renderScene();
+  renderTitleBg();
   render();
 }
 

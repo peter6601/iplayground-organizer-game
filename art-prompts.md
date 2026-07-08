@@ -77,6 +77,7 @@ no text, no letters, no watermark, landscape 16:9
 
 | 用途 | 檔名建議 | Prompt |
 |---|---|---|
+| 首頁滿版背景（`SCENE_IMAGES.title`） | scene_title.png | Title screen key art: the futuristic conference venue at night from a low dramatic angle, giant glowing neon signage, holographic light beams sweeping the sky, rain-slicked reflective plaza, awe-inspiring and inviting — leave the center area visually calm for UI text overlay |
 | 開場（委員會任命） | intro.png | A committee of anime-style characters pointing at the surprised protagonist, "it's you" moment, futuristic meeting room with holographic conference posters |
 | 網站 OG 分享圖 | og.png | Game key visual: the futuristic venue at dusk with neon signage glowing, a giant holographic wheel of speaker cards spinning above it, light beams and floating festival banners |
 
