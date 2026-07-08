@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>iPlayground 主辦模擬器</title>
-<meta name="description" content="肉鴿抽卡小遊戲：扮演 iPlayground 總召，9 週內湊齊講者陣容、宣傳售票，成功舉辦一場 350 人滿員的研討會！">
+<meta name="description" content="日式文字遊戲風的肉鴿抽卡小遊戲：扮演 iPlayground 總召，9 週內湊齊講者陣容、宣傳售票，成功舉辦一場 350 人滿員的研討會！">
 <style>
   :root {
     --bg: #000000;
@@ -25,98 +25,126 @@
   * { box-sizing: border-box; }
   html, body { background: var(--bg); }
   body { margin: 0; font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; min-height: 100vh; }
-  .frame { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
+  .frame { max-width: 1020px; margin: 0 auto; padding: 18px 16px 40px; }
 
   /* ── masthead ── */
-  .masthead { display: flex; flex-direction: column; gap: 8px; padding-bottom: 18px; border-bottom: 1px solid #1A1A1A; margin-bottom: 20px; }
-  .brandline { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-  .logo { font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+  .masthead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .logo { font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
   .logo .yr { color: var(--neon); }
-  .role-tag { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+  .role-tag { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
   .role-tag b { color: var(--neon); }
   .lang-btn { margin-left: auto; background: transparent; color: var(--soft); border: 1px solid #333; border-radius: 999px;
     padding: 4px 14px; font-family: var(--sans); font-size: 12px; font-weight: 700; cursor: pointer; }
   .lang-btn:hover { border-color: var(--neon-dim); color: var(--ink); }
-  h1 { margin: 0; font-size: clamp(26px, 4.6vw, 44px); font-weight: 800; letter-spacing: -0.015em; line-height: 1.08; }
-  h1 .neon { color: var(--neon); }
 
-  /* ── HUD ── */
-  .hud { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; }
-  .hud-row { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
-  .weeks { display: flex; gap: 6px; align-items: center; }
-  .wk { width: 26px; height: 26px; border-radius: 6px; background: var(--panel); border: 1px solid #222;
-        display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .wk.cur { background: var(--neon); color: #000; border-color: var(--neon); box-shadow: 0 0 12px var(--neon-dim); }
-  .wk.done { color: #333; text-decoration: line-through; }
-  .hud-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
-  .ap-pips { display: flex; gap: 5px; align-items: center; }
-  .pip { width: 14px; height: 14px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 8px var(--neon-dim); }
+  /* ── bars ── */
+  .bars { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
+  .bar-block { flex: 1 1 200px; min-width: 180px; }
+  .bar-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .bar-label b { color: var(--neon); }
+  .bar { position: relative; height: 12px; border-radius: 6px; background: var(--panel); border: 1px solid #222; }
+  .bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; transition: width .5s ease; }
+  .bar-fill.time { background: var(--gold); }
+  .bar-fill.crowd { background: linear-gradient(90deg, #5a6b00, var(--neon)); }
+  .bar-mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--red); opacity: .85; }
+  .ap-block { flex: 0 0 auto; }
+  .ap-pips { display: flex; gap: 5px; align-items: center; height: 12px; }
+  .pip { width: 12px; height: 12px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 8px var(--neon-dim); }
   .pip.used { background: #222; box-shadow: none; }
-  .reg-wrap { flex: 1 1 260px; min-width: 240px; }
-  .reg-bar { position: relative; height: 22px; border-radius: 11px; background: var(--panel); border: 1px solid #222; overflow: hidden; }
-  .reg-fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, #5a6b00, var(--neon)); transition: width .5s ease; }
-  .reg-fail-line { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--red); left: 57.14%; opacity: .8; }
-  .reg-num { font-size: 13px; margin-top: 4px; color: var(--soft); font-variant-numeric: tabular-nums; }
-  .reg-num .cap { color: var(--muted); }
-  .reg-num .fail-hint { color: var(--red); }
+  .ap-num { font-size: 12px; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
 
-  /* ── layout ── */
-  .arena { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr); gap: 24px; align-items: start; }
-  @media (max-width: 900px) { .arena { grid-template-columns: 1fr; gap: 24px; } }
-  .left-col, .right-col { display: flex; flex-direction: column; gap: 16px; }
+  /* ── stage ── */
+  .scene-row { display: flex; gap: 10px; }
+  .scene { position: relative; flex: 1; border-radius: 12px; overflow: hidden; border: 1px solid #1e1e1e; background: #101418; }
+  .scene-art, .scene-art svg, .scene-art img { width: 100%; display: block; }
+  .scene-art img { object-fit: cover; aspect-ratio: 23/12; }
+  .msgwin { position: absolute; left: 10px; right: 10px; bottom: 10px; background: rgba(5,5,5,.86); border: 1px solid var(--neon-dim);
+    border-radius: 10px; padding: 9px 13px 8px; min-height: 62px; cursor: pointer; user-select: none; }
+  .msg-tag { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--neon); margin-bottom: 3px; min-height: 12px; }
+  .msg-text { font-size: 14px; color: #EDEDE6; line-height: 1.55; min-height: 22px; }
+  .msg-choices { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .msg-btn { background: var(--neon); color: #000; border: 0; border-radius: 8px; padding: 8px 14px;
+    font-family: var(--sans); font-size: 13px; font-weight: 800; cursor: pointer; }
+  .msg-btn.ghost { background: transparent; color: var(--soft); border: 1px solid #444; font-weight: 600; }
+  .msg-adv { position: absolute; right: 12px; bottom: 6px; color: var(--neon); font-size: 12px; animation: bob 1s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 
-  /* ── wheel（抽卡時才彈出） ── */
-  .wheel-overlay-inner { width: min(460px, 92vw); display: flex; flex-direction: column; gap: 16px; align-items: center; }
-  .wheel-wrap { position: relative; width: 100%; max-width: 460px; aspect-ratio: 1; }
+  .side { width: 128px; display: flex; flex-direction: column; gap: 8px; }
+  .side-btn { display: flex; align-items: center; gap: 8px; background: var(--panel-2); color: var(--soft); border: 1px solid #2a2a2a;
+    border-radius: 10px; padding: 11px 12px; font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; text-align: left; }
+  .side-btn:hover { border-color: var(--neon-dim); color: var(--ink); }
+  .side-btn .ico { color: var(--neon); }
+  .side-note { margin-top: auto; font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .side-note .warn { color: var(--gold); }
+
+  /* ── commands ── */
+  .commands { display: flex; gap: 8px; margin-top: 10px; }
+  .cmd { flex: 1; position: relative; display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center;
+    background: var(--panel-2); color: var(--ink); border: 1px solid #262626; border-radius: 10px; padding: 10px 6px 8px;
+    font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; transition: border-color .15s, transform .1s; }
+  .cmd small { font-weight: 400; font-size: 11px; color: var(--muted); }
+  .cmd:hover:not(:disabled) { border-color: var(--neon-dim); }
+  .cmd:active:not(:disabled) { transform: scale(.97); }
+  .cmd:disabled { opacity: .35; cursor: not-allowed; }
+  .cmd.primary { border-color: var(--neon-dim); background: linear-gradient(180deg, #1c2402, var(--panel-2)); }
+  .cmd.endw { border-style: dashed; color: var(--soft); }
+  @media (max-width: 720px) {
+    .scene-row { flex-direction: column; }
+    .side { width: 100%; flex-direction: row; }
+    .side-btn { flex: 1; justify-content: center; padding: 9px 6px; }
+    .side-note { display: none; }
+    .commands { flex-wrap: wrap; }
+    .cmd { flex: 1 1 30%; }
+  }
+
+  /* ── overlays ── */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; place-items: center; z-index: 50; padding: 20px; }
+  .overlay.show { display: grid; }
+  .modal { width: min(500px, 94vw); max-height: 88vh; overflow-y: auto; background: var(--panel); border: 1px solid #262626;
+    border-radius: 18px; padding: 24px; animation: pop .28s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal .eyebrow { margin: 0 0 8px; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--neon); }
+  .modal h3 { margin: 0 0 6px; font-size: 23px; font-weight: 800; line-height: 1.15; }
+  .modal p.desc { margin: 8px 0 0; font-size: 14px; color: var(--soft); line-height: 1.7; }
+  .modal .btn-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .btn { flex: 1; background: var(--neon); color: #000; border: 0; border-radius: 10px; padding: 12px 16px;
+    font-family: var(--sans); font-size: 15px; font-weight: 800; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--soft); border: 1px solid #333; font-weight: 600; }
+  .btn:active { transform: scale(.98); }
+  .art-slot { margin: 12px 0 4px; border-radius: 10px; overflow: hidden; border: 1px solid #222; }
+  .art-slot svg, .art-slot img { width: 100%; display: block; }
+  .big-num { font-size: 52px; font-weight: 900; color: var(--neon); text-align: center; margin: 10px 0 2px; text-shadow: 0 0 24px var(--neon-dim); font-variant-numeric: tabular-nums; }
+  .big-num.neg { color: var(--red); text-shadow: none; }
+
+  /* wheel overlay */
+  .wheel-overlay-inner { width: min(440px, 90vw); display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .wheel-wrap { position: relative; width: 100%; aspect-ratio: 1; }
   canvas#wheel { width: 100%; height: 100%; display: block; }
   .pointer { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 0; height: 0;
     border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--neon);
     filter: drop-shadow(0 0 8px var(--neon-dim)); z-index: 2; }
   .wheel-mode { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
   .wheel-mode b { color: var(--neon); }
-  .wheel-hint { font-size: 13px; color: var(--soft); text-align: center; min-height: 20px; }
-  .wheel-hint .warn { color: var(--gold); }
 
-  /* ── actions ── */
-  .panel { background: var(--panel); border: 1px solid #1e1e1e; border-radius: 14px; padding: 16px; }
-  .panel h2 { margin: 0 0 12px; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
-  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media (max-width: 480px) { .actions { grid-template-columns: 1fr; } }
-  .act-btn { position: relative; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; text-align: left;
-    background: var(--panel-2); color: var(--ink); border: 1px solid #262626; border-radius: 10px; padding: 12px 14px;
-    font-family: var(--sans); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color .15s, transform .1s; }
-  .act-btn small { font-weight: 400; font-size: 12px; color: var(--muted); }
-  .act-btn .cost { position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 700; color: var(--neon);
-    border: 1px solid var(--neon-dim); border-radius: 999px; padding: 2px 8px; }
-  .act-btn:hover:not(:disabled) { border-color: var(--neon-dim); }
-  .act-btn:active:not(:disabled) { transform: scale(.98); }
-  .act-btn:disabled { opacity: .35; cursor: not-allowed; }
-  .act-btn.primary { border-color: var(--neon-dim); background: linear-gradient(180deg, #1c2402, var(--panel-2)); }
-  .endweek { margin-top: 10px; width: 100%; background: transparent; color: var(--soft); border: 1px dashed #333; border-radius: 10px;
-    padding: 11px; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; }
-  .endweek:hover { border-color: var(--neon-dim); color: var(--ink); }
-  .endweek:disabled { opacity: .35; cursor: not-allowed; }
-  .pity-hint { font-size: 13px; margin-top: 10px; min-height: 0; }
-  .pity-hint .warn { color: var(--gold); }
-
-  /* ── roster ── */
+  /* goals / cats（陣容 overlay） */
   .goals { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .goal { font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid #2a2a2a; color: var(--muted); font-variant-numeric: tabular-nums; }
   .goal.ok { color: #000; background: var(--neon); border-color: var(--neon); font-weight: 700; }
   .cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
   .cat { font-size: 12px; padding: 4px 9px; border-radius: 6px; border: 1px solid #2a2a2a; color: #555; }
   .cat.on { color: var(--neon); border-color: var(--neon-dim); background: var(--neon-faint); }
-  .staff-line { font-size: 13px; color: var(--soft); margin-top: 10px; }
+  .hud-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .staff-line { font-size: 13px; color: var(--soft); margin-top: 10px; line-height: 1.6; }
   .staff-line b { color: var(--neon); }
 
-  /* ── 卡冊 ── */
+  /* 卡冊 */
   .coll-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
   .coll-sub + .coll-sub { margin-top: 14px; }
-  .coll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; margin-bottom: 6px; }
+  .coll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-bottom: 6px; }
   .mini { background: var(--panel-2); border: 1px solid #262626; border-radius: 10px; padding: 9px 6px 7px; text-align: center;
     cursor: pointer; transition: border-color .15s, transform .1s; }
   .mini:hover { border-color: var(--neon-dim); transform: translateY(-2px); }
-  .mini .ph { width: 54px; height: 54px; border-radius: 10px; margin: 0 auto 6px; overflow: hidden; background: #000;
+  .mini .ph { width: 52px; height: 52px; border-radius: 10px; margin: 0 auto 6px; overflow: hidden; background: #000;
     display: grid; place-items: center; border: 2px solid #333; }
   .mini .ph img { width: 100%; height: 100%; object-fit: cover; }
   .mini .ph .mono { font-weight: 800; color: var(--neon); font-size: 20px; }
@@ -128,7 +156,7 @@
   .mini .st2.pub { color: var(--neon); }
   .coll-empty { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
 
-  /* ── 開場輸入 ── */
+  /* 開場 */
   .name-input { width: 100%; margin-top: 14px; background: var(--panel-2); border: 1px solid #333; border-radius: 10px;
     padding: 12px 14px; color: var(--ink); font-family: var(--sans); font-size: 16px; }
   .name-input:focus { outline: none; border-color: var(--neon-dim); box-shadow: 0 0 0 3px var(--neon-faint); }
@@ -139,31 +167,17 @@
     border: 1px solid var(--neon-dim); font-size: 15px; font-weight: 700; color: var(--ink); }
   .callout b { color: var(--neon); }
   .cheer { margin-top: 16px; font-size: 16px; font-weight: 800; color: var(--neon); }
+  .intro-top { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 
-  /* ── log ── */
-  .log { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+  /* 日誌 */
+  .log { max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
   .log p { margin: 0; font-size: 13px; color: var(--soft); line-height: 1.5; }
   .log p .wkb { color: var(--muted); font-size: 11px; margin-right: 6px; font-variant-numeric: tabular-nums; }
   .log p.good { color: var(--neon); }
   .log p.bad { color: var(--red); }
 
-  /* ── overlays ── */
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; place-items: center; z-index: 50; padding: 20px; }
-  .overlay.show { display: grid; }
-  .modal { width: min(480px, 94vw); max-height: 88vh; overflow-y: auto; background: var(--panel); border: 1px solid #262626;
-    border-radius: 18px; padding: 26px; animation: pop .28s cubic-bezier(.2,1.4,.4,1); }
-  @keyframes pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .modal .eyebrow { margin: 0 0 8px; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--neon); }
-  .modal h3 { margin: 0 0 6px; font-size: 24px; font-weight: 800; line-height: 1.15; }
-  .modal p.desc { margin: 8px 0 0; font-size: 14px; color: var(--soft); line-height: 1.7; }
-  .modal .btn-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-  .btn { flex: 1; background: var(--neon); color: #000; border: 0; border-radius: 10px; padding: 12px 16px;
-    font-family: var(--sans); font-size: 15px; font-weight: 800; cursor: pointer; }
-  .btn.ghost { background: transparent; color: var(--soft); border: 1px solid #333; font-weight: 600; }
-  .btn:active { transform: scale(.98); }
-
   /* card reveal */
-  .card-photo { width: 108px; height: 108px; border-radius: 14px; overflow: hidden; background: var(--panel-2);
+  .card-photo { width: 104px; height: 104px; border-radius: 14px; overflow: hidden; background: var(--panel-2);
     border: 2px solid var(--neon-dim); margin-bottom: 12px; display: grid; place-items: center; }
   .card-photo img { width: 100%; height: 100%; object-fit: cover; }
   .card-photo .monogram { font-size: 40px; font-weight: 800; color: var(--neon); }
@@ -181,7 +195,7 @@
     border: 1px solid var(--neon-dim); font-size: 13px; color: var(--ink); line-height: 1.6; }
 
   /* announce rows */
-  .ann-rows { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .ann-rows { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
   .ann-row { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding-bottom: 8px; border-bottom: 1px dashed #222; }
   .ann-row .nm { color: var(--soft); }
   .ann-row .vl { color: var(--neon); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -189,20 +203,29 @@
   .ann-total .vl { color: var(--neon); }
   .ann-note { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
 
-  /* event modal icon */
-  .ev-icon { font-size: 44px; line-height: 1; margin-bottom: 10px; }
-
   /* finale */
-  .finale h3 { font-size: 30px; }
-  .grade { font-size: 88px; font-weight: 900; color: var(--neon); line-height: 1; margin: 12px 0; text-shadow: 0 0 30px var(--neon-dim); }
-  .grade.fail { color: var(--red); text-shadow: none; font-size: 54px; }
+  .finale h3 { font-size: 28px; }
+  .grade { font-size: 80px; font-weight: 900; color: var(--neon); line-height: 1; margin: 10px 0; text-shadow: 0 0 30px var(--neon-dim); }
+  .grade.fail { color: var(--red); text-shadow: none; font-size: 50px; }
   .score-rows { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
   .score-rows div { display: flex; justify-content: space-between; font-size: 14px; color: var(--soft); font-variant-numeric: tabular-nums; }
   .score-rows div b { color: var(--ink); }
-  .slogan { margin-top: 18px; font-size: 22px; font-weight: 800; color: var(--neon); text-align: center; }
+  .slogan { margin-top: 16px; font-size: 22px; font-weight: 800; color: var(--neon); text-align: center; }
+
+  /* 轉橫向提示 */
+  .rotate-hint { position: fixed; inset: 0; z-index: 90; background: #000; display: none; place-items: center; text-align: center; padding: 30px; }
+  .rotate-hint .inner { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .rotate-hint .phone { font-size: 56px; animation: rot 1.6s ease-in-out infinite; }
+  @keyframes rot { 0%,20% { transform: rotate(0); } 60%,100% { transform: rotate(90deg); } }
+  .rotate-hint p { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+  .rotate-hint button { background: transparent; color: var(--muted); border: 1px solid #333; border-radius: 999px;
+    padding: 8px 18px; font-family: var(--sans); font-size: 13px; cursor: pointer; }
+  @media (orientation: portrait) and (max-width: 820px) {
+    .rotate-hint:not(.dismissed) { display: grid; }
+  }
 
   canvas#confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
-  footer { margin-top: 40px; font-size: 12px; color: var(--muted); }
+  footer { margin-top: 26px; font-size: 12px; color: var(--muted); }
   footer .neon { color: var(--neon); }
   footer a { color: var(--soft); }
 </style>
@@ -210,85 +233,50 @@
 <body>
 <div class="frame">
   <header class="masthead">
-    <div class="brandline">
-      <span class="logo">iPLAYGROUND <span class="yr">SIM</span></span>
-      <span class="role-tag" id="roleTag"></span>
-      <button class="lang-btn" id="langToggle">EN</button>
-    </div>
-    <h1 id="pageH1"></h1>
+    <span class="logo">iPLAYGROUND <span class="yr">SIM</span></span>
+    <span class="role-tag" id="roleTag"></span>
+    <button class="lang-btn" id="langToggle">EN</button>
   </header>
 
-  <div class="hud">
-    <div class="hud-row">
-      <div>
-        <div class="hud-label" id="hudWeekL"></div>
-        <div class="weeks" id="weeks"></div>
-      </div>
-      <div>
-        <div class="hud-label" id="hudApL"></div>
-        <div class="ap-pips" id="apPips"></div>
-      </div>
-      <div class="reg-wrap">
-        <div class="hud-label" id="hudRegL"></div>
-        <div class="reg-bar">
-          <div class="reg-fill" id="regFill"></div>
-          <div class="reg-fail-line"></div>
-        </div>
-        <div class="reg-num"><span id="regNum">0</span><span class="cap"> / 350</span> <span class="fail-hint" id="regFailHint"></span></div>
-      </div>
+  <div class="bars">
+    <div class="bar-block">
+      <div class="bar-label" id="timeL"></div>
+      <div class="bar"><div class="bar-fill time" id="timeFill"></div></div>
+    </div>
+    <div class="bar-block" style="flex:1.4 1 240px;">
+      <div class="bar-label" id="crowdL"></div>
+      <div class="bar"><div class="bar-fill crowd" id="crowdFill"></div><div class="bar-mark" style="left:57.14%;"></div></div>
+    </div>
+    <div class="ap-block">
+      <div class="bar-label" id="apL"></div>
+      <div class="ap-pips" id="apPips"></div>
     </div>
   </div>
 
-  <div class="arena">
-    <div class="left-col">
-      <div class="panel">
-        <h2 id="pActions"></h2>
-        <div class="actions">
-          <button class="act-btn primary" id="actInvite">
-            <span id="actInviteL"></span> <small id="inviteSub"></small>
-            <span class="cost">1 AP</span>
-          </button>
-          <button class="act-btn" id="actStaff">
-            <span id="actStaffL"></span> <small id="staffSub"></small>
-            <span class="cost">1 AP</span>
-          </button>
-          <button class="act-btn" id="actPromo">
-            <span id="actPromoL"></span> <small id="promoSub"></small>
-            <span class="cost">1 AP</span>
-          </button>
-          <button class="act-btn" id="actAnnounce">
-            <span id="actAnnounceL"></span> <small id="announceSub"></small>
-            <span class="cost">1 AP</span>
-          </button>
-        </div>
-        <button class="endweek" id="endWeek"></button>
-        <div class="pity-hint" id="pityHint"></div>
-      </div>
-
-      <div class="panel">
-        <h2 id="pLineup"></h2>
-        <div class="goals" id="goals"></div>
-        <div class="hud-label" style="margin-bottom:6px;" id="tagDivL"></div>
-        <div class="cats" id="cats"></div>
-        <div class="staff-line" id="agendaLine"></div>
-        <div class="staff-line" id="staffLine"></div>
+  <div class="scene-row">
+    <div class="scene">
+      <div class="scene-art" id="sceneArt"></div>
+      <div class="msgwin" id="msgwin">
+        <div class="msg-tag" id="msgTag"></div>
+        <div class="msg-text" id="msgText"></div>
+        <div class="msg-choices" id="msgChoices"></div>
+        <div class="msg-adv" id="msgAdv" style="display:none;">▼</div>
       </div>
     </div>
-
-    <div class="right-col">
-      <div class="panel">
-        <h2 id="pBinder"></h2>
-        <div class="coll-sub" id="collSpL"></div>
-        <div class="coll-grid" id="collSpeakers"></div>
-        <div class="coll-sub" id="collStL"></div>
-        <div class="coll-grid" id="collStaff"></div>
-      </div>
-
-      <div class="panel">
-        <h2 id="pLog"></h2>
-        <div class="log" id="log"></div>
-      </div>
+    <div class="side">
+      <button class="side-btn" id="sbBinder"><span class="ico">🃏</span><span id="sbBinderL"></span></button>
+      <button class="side-btn" id="sbLineup"><span class="ico">🎤</span><span id="sbLineupL"></span></button>
+      <button class="side-btn" id="sbLog"><span class="ico">📓</span><span id="sbLogL"></span></button>
+      <div class="side-note" id="pityHint"></div>
     </div>
+  </div>
+
+  <div class="commands">
+    <button class="cmd primary" id="actInvite"><span id="actInviteL"></span><small id="inviteSub"></small></button>
+    <button class="cmd" id="actStaff"><span id="actStaffL"></span><small id="staffSub"></small></button>
+    <button class="cmd" id="actPromo"><span id="actPromoL"></span><small id="promoSub"></small></button>
+    <button class="cmd" id="actAnnounce"><span id="actAnnounceL"></span><small id="announceSub"></small></button>
+    <button class="cmd endw" id="endWeek"><span id="endWeekL"></span><small id="endWeekSub"></small></button>
   </div>
 
   <footer id="footer"></footer>
@@ -297,6 +285,7 @@
 <!-- 開場：輸入名字 -->
 <div class="overlay show" id="introOverlay">
   <div class="modal" id="introStep1">
+    <div class="intro-top"><button class="lang-btn" id="introLang">EN</button></div>
     <p class="eyebrow" id="iEyebrow1"></p>
     <h3 id="iTitle1"></h3>
     <p class="desc" id="iDesc1"></p>
@@ -325,18 +314,6 @@
       <div class="pointer"></div>
       <canvas id="wheel" aria-label="wheel"></canvas>
     </div>
-    <div class="wheel-hint" id="wheelHint"></div>
-  </div>
-</div>
-
-<!-- 事件卡 -->
-<div class="overlay" id="eventOverlay">
-  <div class="modal">
-    <p class="eyebrow" id="evEyebrow"></p>
-    <div class="ev-icon" id="evIcon">🌀</div>
-    <h3 id="evName"></h3>
-    <p class="desc" id="evDesc"></p>
-    <div class="btn-row" id="evBtns"></div>
   </div>
 </div>
 
@@ -353,15 +330,62 @@
   </div>
 </div>
 
+<!-- 宣傳成果 -->
+<div class="overlay" id="promoOverlay">
+  <div class="modal">
+    <p class="eyebrow" id="promoEyebrow"></p>
+    <h3 id="promoTitle"></h3>
+    <div class="art-slot" id="promoArt"></div>
+    <div class="big-num" id="promoNum"></div>
+    <p class="desc" id="promoNote" style="text-align:center;"></p>
+    <div class="btn-row"><button class="btn" id="promoOk"></button></div>
+  </div>
+</div>
+
 <!-- 公布議程結果 -->
 <div class="overlay" id="annOverlay">
   <div class="modal">
     <p class="eyebrow" id="annEyebrow"></p>
     <h3 id="annTitle"></h3>
+    <div class="art-slot" id="annArt"></div>
     <div class="ann-rows" id="annRows"></div>
     <div class="ann-total"><span id="annTotalL"></span><span class="vl" id="annTotal"></span></div>
     <p class="ann-note" id="annNote"></p>
     <div class="btn-row"><button class="btn" id="annOk"></button></div>
+  </div>
+</div>
+
+<!-- 卡冊 -->
+<div class="overlay" id="binderOverlay">
+  <div class="modal">
+    <p class="eyebrow" id="binderT"></p>
+    <div class="coll-sub" id="collSpL"></div>
+    <div class="coll-grid" id="collSpeakers"></div>
+    <div class="coll-sub" id="collStL"></div>
+    <div class="coll-grid" id="collStaff"></div>
+    <div class="btn-row"><button class="btn ghost" id="binderClose"></button></div>
+  </div>
+</div>
+
+<!-- 講者陣容 -->
+<div class="overlay" id="lineupOverlay">
+  <div class="modal">
+    <p class="eyebrow" id="lineupT"></p>
+    <div class="goals" id="goals"></div>
+    <div class="hud-label" style="margin-bottom:6px;" id="tagDivL"></div>
+    <div class="cats" id="cats"></div>
+    <div class="staff-line" id="agendaLine"></div>
+    <div class="staff-line" id="staffLine"></div>
+    <div class="btn-row"><button class="btn ghost" id="lineupClose"></button></div>
+  </div>
+</div>
+
+<!-- 籌備日誌 -->
+<div class="overlay" id="logOverlay">
+  <div class="modal">
+    <p class="eyebrow" id="logT"></p>
+    <div class="log" id="log"></div>
+    <div class="btn-row"><button class="btn ghost" id="logClose"></button></div>
   </div>
 </div>
 
@@ -370,11 +394,21 @@
   <div class="modal finale">
     <p class="eyebrow" id="finEyebrow"></p>
     <h3 id="finTitle"></h3>
+    <div class="art-slot" id="finArt"></div>
     <div class="grade" id="finGrade"></div>
     <p class="desc" id="finDesc"></p>
     <div class="score-rows" id="finScores"></div>
     <div class="slogan" id="finSlogan"></div>
     <div class="btn-row"><button class="btn" id="finRestart"></button></div>
+  </div>
+</div>
+
+<!-- 手機直式提示 -->
+<div class="rotate-hint" id="rotateHint">
+  <div class="inner">
+    <div class="phone">📱</div>
+    <p id="rotateMsg"></p>
+    <button id="rotateDismiss"></button>
   </div>
 </div>
 
@@ -385,6 +419,11 @@
 const SPEAKER_CARDS = [{"name":"Minkyung Kim","name_en":"Minkyung Kim","rarity":"SR","types":["regular"],"cats":["product","uiux"],"intl":true,"title":"Learning Lead at  Apple Developer Academy @ POSTECH","title_en":"Learning Lead at  Apple Developer Academy @ POSTECH","talk":"Designing Adaptive UX Through Learning Theory & AI","talk_en":"Designing Adaptive UX Through Learning Theory & AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_mk.jpeg"},{"name":"李易修","name_en":"Justin Lee","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"91APP senior manager","title_en":"91APP senior manager","talk":"從看不見到看得懂：ccxray 與 AI Agent 的可觀測性","talk_en":"From Black Box to Glass Box: AI Agent Observability with ccxray","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_justin.jpg"},{"name":"鄭宇哲","name_en":"UJ Cheng","rarity":"R","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Garmin Advanced Software Engineer","title_en":"Garmin Advanced Software Engineer","talk":"@ContentBuilder Is All You Need","talk_en":"@ContentBuilder Is All You Need","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_UJ.jpg"},{"name":"Gyuri Kim","name_en":"Gyuri Kim","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"iOS Engineer at Babitalk","title_en":"iOS Engineer at Babitalk","talk":"The Bottleneck Was Me: AI-Native Workflows for Large Codebases","talk_en":"The Bottleneck Was Me: AI-Native Workflows for Large Codebases","photo":""},{"name":"13","name_en":"Ethan Huang","rarity":"R","types":["regular","workshop"],"cats":["ai","uiux"],"intl":false,"title":"喜歡分享，不賣焦慮。Love being inspired and sharing inspiration.","title_en":"Love sharing, not selling anxiety. Love being inspired and sharing inspiration.","talk":"Core People：以人為本，打造更體貼的 App 體驗","talk_en":"Core People: Building More Thoughtful Apps with Apple’s Native Capabilities","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_13.jpg"},{"name":"范聖佑","name_en":"Shengyou Fan","rarity":"SR","types":["regular"],"cats":["arch","cross"],"intl":false,"title":"讓 Kotlin 成為 iOS 開發者的第二把刀，在跨平台與 AI 時代拓展出更多可能。","title_en":"Empowering iOS developers to embrace Kotlin as a second language for cross-platform development and the AI era.","talk":"從 Swift 到 Kotlin Multiplatform：iOS 開發者的跨平台二刀流","talk_en":"From Swift to Kotlin Multiplatform: Cross-Platform Nitoryu for iOS Developers","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Shengyou.JPG"},{"name":"qcl","name_en":"qcl","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Software Engineer @ Google","title_en":"Software Engineer @ Google","talk":"Xcode 沒內建我愛用的 Coding Agent？iOS 開發的 Agentic Workflow 策略","talk_en":"Beyond Xcode's Built-in Agents: Discovering iOS Agentic Workflows","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_qcl.png"},{"name":"Bobson","name_en":"Bobson","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"Twinkle AI Astronaut","title_en":"Twinkle AI Astronaut","talk":"Tweet AI to the Edge","talk_en":"Tweet AI to the Edge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Bobson.jpeg"},{"name":"freddi","name_en":"Yuki Aki","rarity":"R","types":["regular"],"cats":["swift","uiux"],"intl":true,"title":"iOS engineer at Yappli","title_en":"iOS engineer at Yappli","talk":"Swift 程式碼為什麼能運作？ 從平台、Runtime 與編譯器理解 Swift","talk_en":"Why Does Our Swift Code Work? Understanding Swift Through Platforms, Runtime, and the Compiler","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_freddi.jpg"},{"name":"Dex","name_en":"Dex","rarity":"R","types":["regular"],"cats":["arch","swift"],"intl":false,"title":"iOS Dev","title_en":"iOS Dev","talk":"是時候了！將RxSwift 程式碼全部改寫成 Swift Concurrency吧！","talk_en":"It's Time! Let's Rewrite All Your RxSwift Code in Swift Concurrency!","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_dex.jpeg"},{"name":"星野恵瑠","name_en":"lovee","rarity":"SR","types":["regular"],"cats":["arch","swift","uiux"],"intl":false,"title":"Co-Author of Introduction to iOS Apps Design Patterns","title_en":"Co-Author of Introduction to iOS Apps Design Patterns","talk":"為什麼你並不需要ViewModel","talk_en":"You don't need a ViewModel","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%98%9F%E9%87%8E%E6%81%B5%E7%91%A0.png"},{"name":"Alex Hu","name_en":"Alex Hu","rarity":"R","types":["regular"],"cats":["ai","arch","product"],"intl":false,"title":"資深 iOS 開發者 ｜ 曾任新加坡航空","title_en":"Senior iOS Engineer | Formerly at Singapore Airlines","talk":"把 AI 當資淺工程師帶:一個人用 agent 把 iOS App 做到上架的工程紀律","talk_en":"Managing AI Like a Junior Engineer: The Discipline Behind Shipping a Solo iOS App with Agents","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_AlexHu.jpg"},{"name":"楊宥榛","name_en":"Annie Yang","rarity":"R","types":["regular"],"cats":["product"],"intl":false,"title":"No pain no gain.","title_en":"No pain no gain.","talk":"iOS 工程師 2026 職場生存指南：資深外商獵頭視角","talk_en":"Navigating the iOS Job Market in 2026: A Senior Tech Recruiter’s Perspective","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Annie.jpeg"},{"name":"海總理","name_en":"tzangms","rarity":"R","types":["regular"],"cats":["ai"],"intl":false,"title":"AI Alchemist","title_en":"AI Alchemist","talk":"把自己抽出迴圈：讓程式獨自升級","talk_en":"Taking Yourself Out of the Loop: Letting Software Upgrade Itself","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%B5%B7%E7%B8%BD%E7%90%86.jpg"},{"name":"Rudrank Riyam","name_en":"Rudrank Riyam","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":true,"title":"Apple platforms developer, writer, and open-source maintainer","title_en":"Apple platforms developer, writer, and open-source maintainer","talk":"For Agents, By Agents: Building AI Tools That Maintain Themselves","talk_en":"For Agents, By Agents: Building AI Tools That Maintain Themselves","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_rudrank.JPG"},{"name":"Hana 花水木","name_en":"Hana Chang","rarity":"R","types":["regular"],"cats":["ai","product"],"intl":false,"title":"獎金獵人共同創辦人","title_en":"Co-founder of 獎金獵人 (BountyHunter)","talk":"App 上架之後呢？用 AI Agent 自動化行銷、客服與產品迭代","talk_en":"What Happens After Your App Ships? Automating Marketing, Support, and Product Iteration with AI Agents","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hana.png"},{"name":"Vic","name_en":"Vic","rarity":"R","types":["regular"],"cats":["uiux"],"intl":false,"title":"共同看見獨特的彼此","title_en":"Recognizing the uniqueness in one another.","talk":"當觸控失效時，你的 App 還能順利使用嗎？","talk_en":"When Touch Fails, Can Your App Still Be Used?","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Vic.JPG"},{"name":"JungMin Ahn","name_en":"JungMin Ahn","rarity":"SR","types":["regular"],"cats":["arch"],"intl":true,"title":"I am an iOS developer focused on productivity, scalable architecture, and sharing practical engineering insights through talks and presentations.","title_en":"I am an iOS developer focused on productivity, scalable architecture, and sharing practical engineering insights through talks and presentations.","talk":"Lessons from Operating Large-Scale Modular iOS Projects with Tuist","talk_en":"Lessons from Operating Large-Scale Modular iOS Projects with Tuist","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_JungMin.jpg"},{"name":"Thiago Komeno","name_en":"Thiago Komeno","rarity":"R","types":["regular"],"cats":["product"],"intl":true,"title":"Software Developer","title_en":"Software Developer","talk":"How to Win the Swift Student Challenge","talk_en":"How to Win the Swift Student Challenge","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_komeno.jpg"},{"name":"梯口","name_en":"ChengHao Yang","rarity":"SR","types":["regular"],"cats":["cross"],"intl":false,"title":"Site Reliability Engineer, CNCF Ambassador","title_en":"Site Reliability Engineer, CNCF Ambassador","talk":"不寫 Swift 也能貢獻 Apple Container：一位雲端原生工程師的開源實戰","talk_en":"Contributing to Apple Container Without Writing Swift: A Cloud Native Engineer's Open Source Journey","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E6%A2%AF%E5%8F%A3.jpg"},{"name":"Joy","name_en":"Joy","rarity":"R","types":["regular"],"cats":["ai","swift","uiux"],"intl":false,"title":"iOS Engineer","title_en":"iOS Engineer","talk":"讓 Apple Intelligence 理解你的 App","talk_en":"How Apple Intelligence Understands Your App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Joy.png"},{"name":"彼得潘","name_en":"Peter Pan","rarity":"R","types":["regular"],"cats":["ai","cross"],"intl":false,"title":"愛瘋一切為蘋果的彼得潘","title_en":"A Peter Pan who never outgrew a love for all things Apple.","talk":"從 Vibe Coding 學會的 macOS CLI 魔法指令","talk_en":"macOS CLI Magic Commands I Learned from Vibe Coding","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_PeterPan.jpg"},{"name":"Denken","name_en":"Denken","rarity":"R","types":["regular"],"cats":["cross"],"intl":false,"title":"從工程師落跑去做國際標準","title_en":"From software engineering to shaping international standards.","talk":"年齡保證框架，兼談數位憑證皮夾","talk_en":"Age Assurance Frameworks and Digital Identity Wallet","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_denken.png"},{"name":"彭成瑋 Ervis","name_en":"Ervis Peng","rarity":"R","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"Senior iOS Engineer","title_en":"Senior iOS Engineer","talk":"從一張看不懂的日本收據開始：一人開發者如何用 AI 與回饋系統把 Side Project 長成產品","talk_en":"From an Unreadable Japanese Receipt: How a Solo Developer Grew a Side Project into a Product with AI and Feedback Systems","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ErvisPeng.jpeg"},{"name":"高見龍","name_en":"Chien-Long, Kao","rarity":"SR","types":["regular"],"cats":["ai","arch"],"intl":false,"title":"喜歡寫程式而且希望可以寫一輩子程式的電腦阿宅！","title_en":"A proud coding geek who hopes to keep writing code for a lifetime.","talk":"SDD 是口號，還是真的可以用？","talk_en":"Is SDD Just a Slogan, or Can It Actually Work?","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kaochenlong.jpg"},{"name":"Yu Takahashi","name_en":"Yu Takahashi","rarity":"N","types":["lightning"],"cats":["swift"],"intl":false,"title":"Japanese Software Engineer","title_en":"Japanese Software Engineer","talk":"為什麼 Swift Macro 無法在 #Preview 中使用？","talk_en":"Why Can't We Have Nice Macros for `#Preview`?","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Takahashi.jpg"},{"name":"劉信","name_en":"Paul","rarity":"N","types":["lightning"],"cats":["product","uiux"],"intl":false,"title":"Independent iOS Developer & Learning Engineer","title_en":"Independent iOS Developer & Learning Engineer","talk":"坑很深：做寫字練習 App 比想像更費工","talk_en":"Down the Rabbit Hole: A Handwriting App's Scope Creep","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E4%BF%A1.jpg"},{"name":"Jess","name_en":"Jess","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Product Builder","title_en":"Product Builder","talk":"當 Vibe Coding 不再是最大的問題，Nibble 的產品探索旅程","talk_en":"Building Nibble: Product Discovery in the Era of AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_jess.jpg"},{"name":"Ethan","name_en":"Ethan","rarity":"N","types":["lightning"],"cats":["ai","product"],"intl":false,"title":"Wink CTO","title_en":"Wink CTO","talk":"開發 AI Dating Agent 的血淚史：那些好笑、奇怪又令人害怕的教訓","talk_en":"Funny, Weird, and Terrifying Lessons from Building a Dating AI Agent","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_ethan.jpg"},{"name":"劉育承","name_en":"YC Liu","rarity":"N","types":["lightning"],"cats":["ai","cross","uiux"],"intl":false,"title":"Software Developer","title_en":"Software Developer","talk":"用 SwiftUI 打造 iOS / Android 跨平台 AI 美國選舉雷達：從新聞自動摘要到人工審核的 Mobile AI App 實戰","talk_en":"Building a Cross-Platform AI-Powered U.S. Election Radar for iOS and Android with SwiftUI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_%E5%8A%89%E8%82%B2%E6%89%BF.png"},{"name":"Harry","name_en":"Harry","rarity":"W","types":["workshop"],"cats":["ai","product"],"intl":false,"title":"AI Advocate & Indie Developer","title_en":"AI Advocate & Indie Developer","talk":"在 AI 時代尋找真實","talk_en":"In Search of Authenticity in the Age of AI","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_Harry.jpeg"},{"name":"Kevin","name_en":"Kevin Chiu","rarity":"W","types":["workshop"],"cats":["ai"],"intl":false,"title":"致力於研究AI 的應用， 並把AI 實用在Edge端","title_en":"Passionate about researching AI applications and making AI practical on edge devices.","talk":"Stitch x Antigravity 實戰指南：讓 AI 助你從視覺設計精準落地 iOS App","talk_en":"Stitch x Antigravity Hands-on Guide: Let AI Turn Visual Design into a Precise iOS App","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_kevinChiu.jpg"},{"name":"Hedula","name_en":"Hedula","rarity":"W","types":["workshop"],"cats":["ai","swift"],"intl":false,"title":"Hedula Expert Design Unique Leading Arise","title_en":"Hedula Expert Design Unique Leading Arise","talk":"我不會 Swift，但我做了一個 AI 怪獸對戰遊戲","talk_en":"I don't know Swift, but I made an AI monster battle game.","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/images/speakers/speaker_hedula.jpeg"}];
 const STAFF_CARDS = [{"name":"Ethan Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_Ethan.jpg"},{"name":"UJ Cheng","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_ujcheng.jpg"},{"name":"Andy Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_andy.png"},{"name":"Will Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_will.jpg"},{"name":"Kyle Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_kyle.jpeg"},{"name":"Hokila Jan","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_hokila.jpg"},{"name":"David Kuo","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_david.jpeg"},{"name":"Joy","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_joyChen.jpg"},{"name":"Michelle Chen","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_michelleChen.jpeg"},{"name":"Hao Lee","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2025/v1/images/staff/staff_hao.jpeg"},{"name":"DinDin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/2025/v1/images/staff/staff_DinDin.jpg"},{"name":"Dawei Hao","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_DaweiHao.jpg"},{"name":"Jeff Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_jeffLin.jpg"},{"name":"Tank Lin","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_tankLin.jpg"},{"name":"Terry Kuo","photo":"https://raw.githubusercontent.com/iplayground/SessionData/develop/images/staff/staff_terryKuo.jpg"}];
 /*__DATA_END__*/
+
+/* ═══════════ 圖片接口（方案 B：填入圖片路徑即取代內建 SVG，見 art-prompts.md） ═══════════ */
+const SCENE_IMAGES = { rainy: '', early: '', mid: '', eve: '', day: '' };
+const ACTION_IMAGES = { promo: '', announce: '', success: '', fail_gap: '', fail_quiet: '' };
+const EVENT_IMAGES = {}; // 例：{ typhoon: 'images/ev_typhoon.png' }
 
 /* ═══════════ i18n ═══════════ */
 let lang = localStorage.getItem('ipg_lang') || 'zh';
@@ -430,18 +469,15 @@ function newGame() {
     drawsThisWeek: 0, speakerDrawLimit: 3, freeDraws: 0,
     speakerPool: SPEAKER_CARDS.map((_, i) => i),
     staffPool: STAFF_CARDS.map((_, i) => i),
-    roster: [],           // {idx, announced, contrib}
-    staff: [],            // indices into STAFF_CARDS
+    roster: [],
+    staff: [],
     promoBoost: false, promoHalved: false, promoHalvedNextWeek: false,
-    forcedType: null,     // 'regular' | 'workshop' | 'lightning'
-    forcedReason: '',
+    forcedType: null, forcedReason: '',
     covBonusGiven: false,
     lastEventId: null,
     over: false,
   };
 }
-
-/* 一周目失敗後，籌委會追加預算：基礎行動點 2 → 3 */
 function apBaseStart() { return localStorage.getItem('ipg_boost') === '1' ? 3 : 2; }
 
 /* ═══════════ 工具 ═══════════ */
@@ -467,12 +503,12 @@ function log(msg, cls) {
   p.innerHTML = `<span class="wkb">W${S.week}</span>${msg}`;
   const el = $('log');
   el.prepend(p);
-  while (el.children.length > 50) el.lastChild.remove();
+  while (el.children.length > 60) el.lastChild.remove();
 }
 
 /* ═══════════ 議程效應（公布後每週持續發酵） ═══════════ */
 function d3() { return 1 + Math.floor(Math.random() * 3); }
-const WEEKLY_BASE = { SR: 3, R: 2, W: 1, N: 0 };            // 每週 = base + 1d3
+const WEEKLY_BASE = { SR: 3, R: 2, W: 1, N: 0 };
 const WEEKLY_RANGE = { SR: '4~6', R: '3~5', W: '2~4', N: '1~3' };
 const WEEKLY_AVG = { SR: 5, R: 4, W: 3, N: 2 };
 function weeklyRoll(card) { return WEEKLY_BASE[card.rarity] + d3(); }
@@ -480,7 +516,6 @@ function announceHint(card) {
   return L(`公布議程後：每週 +${WEEKLY_RANGE[card.rarity]} 報名，持續發酵到活動日`,
            `Once announced: +${WEEKLY_RANGE[card.rarity]} signups every week until showtime`);
 }
-/* 陣容加成：已公布講者越多，每週乘數越高；6 大 tag 湊齊再 ×1.2 */
 function lineupMult() {
   const n = S.roster.filter(r => r.announced).length;
   let m = Math.min(1.3, 1 + 0.04 * Math.max(0, n - 1));
@@ -492,7 +527,6 @@ function estimateWeekly() {
   if (!ann.length) return 0;
   return Math.round(ann.reduce((s, r) => s + WEEKLY_AVG[SPEAKER_CARDS[r.idx].rarity], 0) * lineupMult());
 }
-/* 每週開始（與活動日）結算一次議程效應 */
 function agendaTick(label) {
   const ann = S.roster.filter(r => r.announced);
   if (!ann.length) return 0;
@@ -505,6 +539,140 @@ function agendaTick(label) {
         `📈 ${label}: ${ann.length} announced speaker(s) keep working — +${gain} signups (lineup ×${m.toFixed(2)})`), 'good');
   return gain;
 }
+
+/* ═══════════ 場景（方案 A：程序化 SVG；SCENE_IMAGES 有值時換成圖片） ═══════════ */
+function scenePhase() { return S.over ? 'day' : S.week <= 3 ? 'rainy' : S.week <= 6 ? 'early' : S.week <= 8 ? 'mid' : 'eve'; }
+
+function crowdFigs(count, groundY) {
+  let out = '';
+  const colors = ['#F0997B', '#AFA9EC', '#5DCAA5', '#F4C0D1', '#FAC775', '#85B7EB'];
+  for (let i = 0; i < count; i++) {
+    const x = 30 + ((i * 53) % 400) + (i % 3) * 7;
+    const y = groundY + 4 + (i % 3) * 9;
+    const c = colors[i % colors.length];
+    out += `<circle cx="${x}" cy="${y}" r="7" fill="${c}"/><rect x="${x - 5}" y="${y + 6}" width="10" height="15" rx="3" fill="${c}" opacity="0.75"/>`;
+  }
+  return out;
+}
+function venueSVG(dark) {
+  const wall = dark ? '#3a3f4a' : '#D3D1C7', roof = dark ? '#262a33' : '#888780', door = dark ? '#171a20' : '#5F5E5A';
+  return `<rect x="150" y="82" width="160" height="76" fill="${wall}"/>
+    <polygon points="150,82 230,56 310,82" fill="${roof}"/>
+    <rect x="205" y="122" width="50" height="36" fill="${door}"/>
+    <rect x="165" y="98" width="130" height="18" fill="#D7FF00"/>
+    <text x="230" y="111" text-anchor="middle" font-size="12" font-weight="700" fill="#26215C" font-family="sans-serif">iPlayground</text>`;
+}
+function sceneSVG(phase) {
+  const crowd = crowdFigs(Math.min(14, Math.floor(S.reg / 25)), 168);
+  if (phase === 'rainy') {
+    let rain = '';
+    for (let i = 0; i < 26; i++) rain += `<line x1="${(i * 37) % 460}" y1="${(i * 53) % 120}" x2="${(i * 37) % 460 - 5}" y2="${(i * 53) % 120 + 16}" stroke="#7DA4CC" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
+    return `<svg viewBox="0 0 460 240" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="240" fill="#5E6E85"/>
+      <ellipse cx="90" cy="36" rx="46" ry="16" fill="#8B99AD"/><ellipse cx="200" cy="26" rx="56" ry="18" fill="#7D8CA1"/><ellipse cx="370" cy="40" rx="50" ry="16" fill="#8B99AD"/>
+      ${rain}<rect y="158" width="460" height="82" fill="#4F6B4A"/>${venueSVG(false)}${crowd}
+      <circle cx="60" cy="200" r="12" fill="#7F77DD"/><rect x="52" y="208" width="16" height="20" rx="4" fill="#534AB7"/>
+      <path d="M 40 190 Q 60 168 80 190" stroke="#D7FF00" stroke-width="3" fill="none"/></svg>`;
+  }
+  if (phase === 'early') {
+    return `<svg viewBox="0 0 460 240" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="240" fill="#8FC1EA"/>
+      <circle cx="395" cy="42" r="22" fill="#FFD34D"/>
+      <ellipse cx="110" cy="40" rx="44" ry="15" fill="#F1EFE8"/><ellipse cx="250" cy="30" rx="36" ry="12" fill="#FFFFFF"/>
+      <rect y="158" width="460" height="82" fill="#639922"/>${venueSVG(false)}${crowd}
+      <ellipse cx="70" cy="150" rx="18" ry="24" fill="#3B6D11"/><rect x="66" y="164" width="8" height="18" fill="#712B13"/>
+      <ellipse cx="410" cy="148" rx="20" ry="26" fill="#3B6D11"/><rect x="406" y="164" width="8" height="18" fill="#712B13"/></svg>`;
+  }
+  if (phase === 'mid') {
+    return `<svg viewBox="0 0 460 240" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="240" fill="#4D9FE0"/>
+      <circle cx="380" cy="46" r="30" fill="#FFC93C"/><circle cx="380" cy="46" r="38" fill="#FFC93C" opacity="0.3"/>
+      <rect y="158" width="460" height="82" fill="#7AA82E"/>${venueSVG(false)}${crowd}
+      <ellipse cx="66" cy="146" rx="20" ry="28" fill="#2F5E12"/><rect x="62" y="164" width="8" height="18" fill="#712B13"/>
+      <text x="52" y="80" font-size="16" fill="#FFFFFF" opacity="0.85" font-family="sans-serif">〰</text>
+      <text x="96" y="62" font-size="16" fill="#FFFFFF" opacity="0.7" font-family="sans-serif">〰</text></svg>`;
+  }
+  if (phase === 'eve') {
+    let lights = '';
+    for (let i = 0; i < 9; i++) lights += `<circle cx="${100 + i * 32}" cy="${64 + Math.sin(i) * 6}" r="4" fill="${i % 2 ? '#FFD34D' : '#D7FF00'}"/>`;
+    return `<svg viewBox="0 0 460 240" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="240" fill="#2B2340"/>
+      <rect width="460" height="90" fill="#4A3358"/><circle cx="70" cy="46" r="16" fill="#F1EFE8"/>
+      <path d="M 96 66 Q 230 44 364 66" stroke="#555" stroke-width="2" fill="none"/>${lights}
+      <rect y="158" width="460" height="82" fill="#22301E"/>${venueSVG(true)}${crowd}
+      <rect x="180" y="164" width="100" height="8" rx="4" fill="#D7FF00" opacity="0.5"/></svg>`;
+  }
+  let confetti = '';
+  for (let i = 0; i < 22; i++) confetti += `<rect x="${(i * 61) % 450}" y="${(i * 37) % 130}" width="6" height="3" rx="1" fill="${['#D7FF00', '#F0997B', '#85B7EB', '#F4C0D1'][i % 4]}" transform="rotate(${i * 33} ${(i * 61) % 450} ${(i * 37) % 130})"/>`;
+  return `<svg viewBox="0 0 460 240" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="240" fill="#8FC1EA"/>
+    <circle cx="395" cy="40" r="22" fill="#FFD34D"/>${confetti}
+    <rect y="158" width="460" height="82" fill="#639922"/>${venueSVG(false)}
+    ${crowdFigs(Math.min(20, Math.floor(S.reg / 18)), 164)}
+    <rect x="150" y="60" width="160" height="16" rx="8" fill="#D7FF00"/>
+    <text x="230" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#26215C" font-family="sans-serif">${L('活動日！', 'EVENT DAY!')}</text></svg>`;
+}
+function renderScene() {
+  const phase = scenePhase();
+  const img = SCENE_IMAGES[phase];
+  $('sceneArt').innerHTML = img ? `<img src="${img}" alt="">` : sceneSVG(phase);
+}
+
+/* ═══════════ 訊息窗（打字機） ═══════════ */
+let msgBusy = false, typing = false, awaitingAck = false;
+let curFinish = null, ackResolve = null, typeTimer = null;
+
+function say(text, opts = {}) {
+  return new Promise(resolve => {
+    msgBusy = true;
+    $('msgTag').textContent = opts.tag || '';
+    $('msgChoices').innerHTML = '';
+    $('msgAdv').style.display = 'none';
+    const el = $('msgText');
+    el.textContent = '';
+    typing = true;
+    let i = 0;
+    clearInterval(typeTimer);
+    const speed = reducedMotion ? 0 : 20;
+    curFinish = finish;
+    if (speed === 0) { finish(); } else {
+      typeTimer = setInterval(() => {
+        if (i >= text.length) { finish(); return; }
+        el.textContent += text[i++];
+      }, speed);
+    }
+    function finish() {
+      clearInterval(typeTimer);
+      typing = false;
+      el.textContent = text;
+      if (opts.choices && opts.choices.length) {
+        opts.choices.forEach(ch => {
+          const b = document.createElement('button');
+          b.className = 'msg-btn' + (ch.ghost ? ' ghost' : '');
+          b.textContent = ch.label;
+          b.onclick = e => {
+            e.stopPropagation();
+            $('msgChoices').innerHTML = '';
+            msgBusy = false;
+            if (ch.run) ch.run();
+            resolve();
+            renderScene(); render();
+          };
+          $('msgChoices').appendChild(b);
+        });
+      } else if (opts.wait === false) {
+        msgBusy = false; resolve(); render();
+      } else {
+        $('msgAdv').style.display = '';
+        awaitingAck = true;
+        ackResolve = () => {
+          awaitingAck = false;
+          $('msgAdv').style.display = 'none';
+          msgBusy = false; resolve(); render();
+        };
+      }
+    }
+  });
+}
+$('msgwin').addEventListener('click', () => {
+  if (typing && curFinish) { curFinish(); }
+  else if (awaitingAck && ackResolve) { ackResolve(); }
+});
 
 /* ═══════════ 事件卡 ═══════════ */
 const EVENTS = [
@@ -556,9 +724,9 @@ const EVENTS = [
     name: { zh: '社群論戰', en: 'Community Drama' },
     desc: { zh: 'iOS 圈吵起來了，話題正熱。要蹭這波流量嗎？', en: 'The iOS community is on fire. Ride the wave?' },
     choices: [
-      { label: { zh: '🔥 蹭！（報名 +2d6，下週宣傳減半）', en: '🔥 Ride it! (+2d6 signups, promos halved next week)' },
+      { label: { zh: '🔥 蹭！（+2d6，下週宣傳減半）', en: '🔥 Ride it! (+2d6, promos halved next week)' },
         run() { const d = dice(2); S.reg += sum(d); clampReg(); S.promoHalvedNextWeek = true; log(L(`⚡ 蹭上論戰：報名 +${sum(d)}，但下週宣傳減半`, `⚡ Rode the drama: +${sum(d)} signups, promos halved next week`), 'good'); } },
-      { label: { zh: '🧘 保持中立', en: '🧘 Stay neutral' },
+      { label: { zh: '🧘 保持中立', en: '🧘 Stay neutral' }, ghost: true,
         run() { log(L('🧘 社群論戰：選擇保持中立', '🧘 Community drama: stayed neutral')); } },
     ] },
   { id: 'flu', phase: 'late', icon: '🤧',
@@ -589,16 +757,14 @@ const EVENTS = [
     apply() { const d = dice(1); S.reg += sum(d); clampReg(); log(L(`🍱 便當加菜：報名 +${sum(d)}`, `🍱 Bento upgrade: +${sum(d)} signups`), 'good'); } },
   { id: 'cancel', phase: 'late', icon: '😱',
     name: { zh: '講者臨時取消', en: 'Speaker Cancellation' },
-    desc: { zh: '', en: '' }, apply() {} }, // 動態處理
+    desc: { zh: '', en: '' }, apply() {} },
 ];
 
 function setForced(type, reason) {
   S.forcedType = type; S.forcedReason = reason;
   log(L(`🎯 ${reason}：下一抽鎖定「${typeL(type)}」`, `🎯 ${reason}: next draw locked to "${typeL(type)}"`), 'good');
 }
-
 function eventPhase() { return S.week <= 3 ? 'early' : S.week <= 6 ? 'mid' : 'late'; }
-
 function pickEvent() {
   const ph = eventPhase();
   let pool = EVENTS.filter(e => (e.phase === ph || e.phase === 'any') && e.id !== S.lastEventId);
@@ -606,8 +772,8 @@ function pickEvent() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-/* 講者取消：有備援（同型未公布的其他講者）就救場 */
-function runCancelEvent() {
+/* 講者取消（純文字版，走訊息窗） */
+function runCancelEventPlain() {
   const ri = Math.floor(Math.random() * S.roster.length);
   const victim = S.roster[ri];
   const vCard = SPEAKER_CARDS[victim.idx];
@@ -615,52 +781,73 @@ function runCancelEvent() {
   const backup = S.roster.find(r => r !== victim && !r.announced && SPEAKER_CARDS[r.idx].types.includes(vType));
 
   S.roster.splice(ri, 1);
-  let msg = L(`講者 <b>${esc(nm(vCard))}</b> 臨時有要事，無法出席……`,
-              `Speaker <b>${esc(nm(vCard))}</b> can no longer make it...`);
-
-  // 已公布的講者取消 → 一波失望退票；未來的發酵也沒了
+  let msg = L(`講者「${nm(vCard)}」臨時有要事，無法出席……`, `Speaker "${nm(vCard)}" can no longer make it...`);
   let refund = 0;
-  if (victim.announced) {
-    const d = dice(2);
-    refund = sum(d);
-    S.reg -= refund; clampReg();
-  }
+  if (victim.announced) { const d = dice(2); refund = sum(d); S.reg -= refund; clampReg(); }
 
   if (backup) {
-    const bName = esc(nm(SPEAKER_CARDS[backup.idx]));
+    const bName = nm(SPEAKER_CARDS[backup.idx]);
     if (victim.announced) {
-      backup.announced = true;   // 備援緊急遞補，接手每週發酵
-      msg += L(`<br><br>失望退票 −${refund}。好在 <b>${bName}</b> 臨危受命救場，緊急公布遞補，議程效應不中斷！`,
-               `<br><br>Disappointed refunds: −${refund}. But <b>${bName}</b> steps up as the emergency replacement — the agenda effect continues!`);
-      log(L(`😱 ${esc(nm(vCard))} 取消（退票 −${refund}）→ ${bName} 備援救場`, `😱 ${esc(nm(vCard))} cancelled (−${refund}) → ${bName} saves the day`), 'good');
+      backup.announced = true;
+      msg += L(`失望退票 −${refund}。好在「${bName}」臨危受命救場，緊急公布遞補，議程效應不中斷！`,
+               ` Refunds: −${refund}. But "${bName}" steps up as the emergency replacement — the agenda effect continues!`);
+      log(L(`😱 ${esc(nm(vCard))} 取消（退票 −${refund}）→ ${esc(bName)} 備援救場`, `😱 ${esc(nm(vCard))} cancelled (−${refund}) → ${esc(bName)} saves the day`), 'good');
     } else {
-      msg += L(`<br><br>好在還有 <b>${bName}</b> 可以補位，議程沒有開天窗。`,
-               `<br><br>Luckily <b>${bName}</b> can fill the slot — no gap in the program.`);
-      log(L(`😱 ${esc(nm(vCard))} 取消，${bName} 補位`, `😱 ${esc(nm(vCard))} cancelled, ${bName} fills in`), 'bad');
+      msg += L(`好在還有「${bName}」可以補位，議程沒有開天窗。`, ` Luckily "${bName}" can fill the slot — no gap in the program.`);
+      log(L(`😱 ${esc(nm(vCard))} 取消，${esc(bName)} 補位`, `😱 ${esc(nm(vCard))} cancelled, ${esc(bName)} fills in`), 'bad');
     }
   } else {
     msg += victim.announced
-      ? L(`<br><br>沒有備援講者……失望退票 −${refund}，之後也少了他的每週發酵。`,
-          `<br><br>No backup speaker... −${refund} refunds, and their weekly buzz is gone too.`)
-      : L('<br><br>沒有備援講者，只能默默把議程表改掉。', '<br><br>No backup available — quietly edit the schedule and move on.');
+      ? L(`沒有備援講者……失望退票 −${refund}，之後也少了他的每週發酵。`, ` No backup speaker... −${refund} refunds, and their weekly buzz is gone too.`)
+      : L('沒有備援講者，只能默默把議程表改掉。', ' No backup available — quietly edit the schedule and move on.');
     log(L(`😱 講者取消：失去 ${esc(nm(vCard))}${victim.announced ? `（退票 −${refund}）` : ''}`,
           `😱 Cancellation: lost ${esc(nm(vCard))}${victim.announced ? ` (−${refund} refunds)` : ''}`), 'bad');
   }
   return msg;
 }
 
+async function runEventNarrative(ev) {
+  S.lastEventId = ev.id;
+  const tag = L(`第 ${S.week} 週 · 事件`, `Week ${S.week} · Event`);
+  const name = ev.name[lang] || ev.name.zh;
+  if (ev.id === 'cancel') {
+    const text = runCancelEventPlain();
+    renderScene();
+    await say(`${ev.icon} ${name}——${text}`, { tag });
+  } else if (ev.choices) {
+    await say(`${ev.icon} ${name}——${ev.desc[lang] || ev.desc.zh}`, {
+      tag,
+      choices: ev.choices.map(ch => ({ label: ch.label[lang] || ch.label.zh, ghost: ch.ghost, run: ch.run })),
+    });
+  } else {
+    await say(`${ev.icon} ${name}——${ev.desc[lang] || ev.desc.zh}`, { tag });
+    ev.apply();
+  }
+  renderScene(); render();
+}
+
 /* ═══════════ 每週流程 ═══════════ */
-function startWeek() {
+const WEEK_FLAVOR = [
+  { zh: '總召上任第一週。窗外下著梅雨，售票頁還是一片空白……先從邀請講者開始吧。', en: 'Week one on the job. Rainy season drizzles outside, and the ticket page is a blank slate... time to invite some speakers.' },
+  { zh: '雨還在下。信箱裡開始出現講者的回信了。', en: 'Still raining. Speaker replies are starting to land in the inbox.' },
+  { zh: '梅雨尾聲。社群裡開始有人問「今年 iPlayground 什麼時候？」', en: 'Rainy season is winding down. People are asking "when is iPlayground this year?"' },
+  { zh: '出梅了！天氣放晴，售票的黃金期開始。', en: 'The rain has cleared! Prime ticket-selling season begins.' },
+  { zh: '初夏的風。其他研討會也開始搶講者了，動作要快。', en: 'Early-summer breeze. Other conferences are hunting speakers too — move fast.' },
+  { zh: '天氣越來越熱，報名數字是唯一的降溫方式。', en: 'It keeps getting hotter. Watching signups climb is the only way to cool down.' },
+  { zh: '盛夏蟬鳴。剩三週，該補的洞要補了。', en: 'Midsummer cicadas. Three weeks left — plug the gaps now.' },
+  { zh: '倒數兩週，社群的期待感肉眼可見。最後衝刺！', en: 'Two weeks out. You can feel the community buzzing. Final sprint!' },
+  { zh: '活動前夜週。命運都寫在這一週了……', en: 'The final week before showtime. Everything comes down to this...' },
+];
+
+async function startWeek() {
   S.ap = weeklyApBase();
   S.drawsThisWeek = 0;
   S.speakerDrawLimit = 3;
   S.promoHalved = S.promoHalvedNextWeek;
   S.promoHalvedNextWeek = false;
 
-  // 議程效應：已公布的講者陣容每週持續帶來報名
-  agendaTick(L(`第 ${S.week} 週議程效應`, `Week ${S.week} agenda effect`));
+  const gain = agendaTick(L(`第 ${S.week} 週議程效應`, `Week ${S.week} agenda effect`));
 
-  // pity：第 7 週起缺 workshop / lightning 就鎖定下一抽
   if (S.week >= 7 && !S.forcedType) {
     if (countType('workshop') === 0 && S.speakerPool.some(i => SPEAKER_CARDS[i].types.includes('workshop'))) {
       setForced('workshop', L('議程組緊急協調', 'Program team scramble'));
@@ -669,53 +856,24 @@ function startWeek() {
     }
   }
 
-  render();
-  if (S.week >= 2) showEvent(pickEvent());
+  renderScene(); render();
+  let flavor = WEEK_FLAVOR[S.week - 1][lang] || WEEK_FLAVOR[S.week - 1].zh;
+  if (gain > 0) flavor += L(`（議程效應：報名 +${gain}！）`, ` (Agenda effect: +${gain} signups!)`);
+  await say(flavor, { tag: L(`第 ${S.week} 週`, `Week ${S.week}`) });
+  if (S.week >= 2) await runEventNarrative(pickEvent());
+  say(L('本週要做什麼呢？', 'What should we do this week?'), { tag: L(`第 ${S.week} 週 · 待命`, `Week ${S.week} · Standing by`), wait: false });
 }
 
 function endWeek() {
-  if (spinning || S.over) return;
+  if (spinning || S.over || msgBusy) return;
   if (S.week >= TOTAL_WEEKS) { finale(); return; }
   S.week += 1;
   startWeek();
 }
 
-/* ═══════════ 事件 UI ═══════════ */
-function showEvent(ev) {
-  S.lastEventId = ev.id;
-  $('evEyebrow').textContent = L(`第 ${S.week} 週 · 事件卡`, `Week ${S.week} · Event Card`);
-  $('evIcon').textContent = ev.icon;
-  $('evName').textContent = ev.name[lang] || ev.name.zh;
-  const btns = $('evBtns');
-  btns.innerHTML = '';
-  if (ev.id === 'cancel') {
-    $('evDesc').innerHTML = runCancelEvent();
-    const b = document.createElement('button');
-    b.className = 'btn'; b.textContent = L('嗚……知道了', 'Ouch... got it');
-    b.onclick = () => { hideEvent(); };
-    btns.appendChild(b);
-  } else if (ev.choices) {
-    $('evDesc').innerHTML = esc(ev.desc[lang] || ev.desc.zh);
-    ev.choices.forEach(ch => {
-      const b = document.createElement('button');
-      b.className = 'btn'; b.style.flexBasis = '100%'; b.textContent = ch.label[lang] || ch.label.zh;
-      b.onclick = () => { ch.run(); hideEvent(); };
-      btns.appendChild(b);
-    });
-  } else {
-    $('evDesc').innerHTML = esc(ev.desc[lang] || ev.desc.zh);
-    const b = document.createElement('button');
-    b.className = 'btn'; b.textContent = L('知道了', 'Got it');
-    b.onclick = () => { ev.apply(); hideEvent(); };
-    btns.appendChild(b);
-  }
-  $('eventOverlay').classList.add('show');
-}
-function hideEvent() { $('eventOverlay').classList.remove('show'); render(); }
-
 /* ═══════════ 行動 ═══════════ */
 function canInvite() {
-  return !S.over && !spinning && S.speakerPool.length > 0 &&
+  return !S.over && !spinning && !msgBusy && S.speakerPool.length > 0 &&
     (S.freeDraws > 0 || (S.ap >= 1 && S.drawsThisWeek < S.speakerDrawLimit));
 }
 function actInvite() {
@@ -742,7 +900,7 @@ function actInvite() {
   render();
 }
 
-function canStaff() { return !S.over && !spinning && S.ap >= 1 && S.staffPool.length > 0; }
+function canStaff() { return !S.over && !spinning && !msgBusy && S.ap >= 1 && S.staffPool.length > 0; }
 function actStaff() {
   if (!canStaff()) return;
   S.ap -= 1;
@@ -759,7 +917,7 @@ function actStaff() {
   render();
 }
 
-function canPromo() { return !S.over && !spinning && S.ap >= 1; }
+function canPromo() { return !S.over && !spinning && !msgBusy && S.ap >= 1; }
 function actPromo() {
   if (!canPromo()) return;
   S.ap -= 1;
@@ -771,17 +929,17 @@ function actPromo() {
   if (S.promoHalved) { gain = Math.floor(gain / 2); note += L(' · 撞檔減半', ' · rival halved'); }
   S.reg += gain; clampReg();
   log(L(`📣 宣傳售票：報名 +${gain}（${note}）`, `📣 Promo: +${gain} signups (${note})`), 'good');
-  render();
+  showPromoResult(gain, note);
+  renderScene(); render();
 }
 
-function canAnnounce() { return !S.over && !spinning && S.ap >= 1 && S.roster.some(r => !r.announced); }
+function canAnnounce() { return !S.over && !spinning && !msgBusy && S.ap >= 1 && S.roster.some(r => !r.announced); }
 function actAnnounce() {
   if (!canAnnounce()) return;
   S.ap -= 1;
   const batch = S.roster.filter(r => !r.announced);
   batch.forEach(r => { r.announced = true; });
 
-  // 一般講者 tag 全湊齊 → 議程效應永久 ×1.2
   let covLine = '';
   if (!S.covBonusGiven && regularCats().size === CAT_KEYS.length) {
     S.covBonusGiven = true;
@@ -791,12 +949,89 @@ function actAnnounce() {
 
   const annCount = S.roster.filter(r => r.announced).length;
   const est = estimateWeekly();
-  const remainTicks = TOTAL_WEEKS - S.week + 1;   // 含活動日湧入
+  const remainTicks = TOTAL_WEEKS - S.week + 1;
   log(L(`📋 公布議程：${batch.length} 位講者亮相（陣容 ${annCount} 位）→ 每週約 +${est} 報名開始發酵`,
         `📋 Agenda announced: ${batch.length} speaker(s) revealed (lineup ${annCount}) → ~+${est} signups/week`), 'good');
   showAnnounceModal(batch, est, remainTicks, covLine);
   render();
 }
+
+/* ═══════════ 行動結果視覺 ═══════════ */
+function artInto(el, imgKey, fallbackSVG) {
+  const img = ACTION_IMAGES[imgKey];
+  el.innerHTML = img ? `<img src="${img}" alt="">` : fallbackSVG;
+}
+function promoFallbackSVG() {
+  return `<svg viewBox="0 0 460 130" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="130" fill="#17201a"/>
+    <rect x="24" y="26" width="180" height="78" rx="8" fill="#1A1A1A" stroke="#D7FF00" stroke-width="2"/>
+    <text x="114" y="60" text-anchor="middle" font-size="15" font-weight="700" fill="#D7FF00" font-family="sans-serif">iPlayground</text>
+    <text x="114" y="82" text-anchor="middle" font-size="11" fill="#D9D9D9" font-family="sans-serif">${L('售票中！', 'Tickets on sale!')}</text>
+    <path d="M 250 78 L 300 52 L 300 104 Z" fill="#FFB800"/><rect x="296" y="64" width="60" height="28" rx="6" fill="#FFB800"/>
+    <circle cx="390" cy="46" r="9" fill="#F0997B"/><rect x="383" y="53" width="14" height="20" rx="4" fill="#F0997B" opacity="0.75"/>
+    <circle cx="420" cy="56" r="9" fill="#85B7EB"/><rect x="413" y="63" width="14" height="20" rx="4" fill="#85B7EB" opacity="0.75"/>
+    <circle cx="404" cy="88" r="9" fill="#F4C0D1"/><rect x="397" y="95" width="14" height="20" rx="4" fill="#F4C0D1" opacity="0.75"/></svg>`;
+}
+function announceFallbackSVG() {
+  return `<svg viewBox="0 0 460 110" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="110" fill="#141826"/>
+    <rect x="40" y="22" width="380" height="30" rx="6" fill="#D7FF00"/>
+    <text x="230" y="42" text-anchor="middle" font-size="14" font-weight="700" fill="#26215C" font-family="sans-serif">${L('議程公布！', 'AGENDA IS LIVE!')}</text>
+    <rect x="70" y="66" width="90" height="26" rx="5" fill="#1A1A1A" stroke="#FFB800"/>
+    <rect x="185" y="66" width="90" height="26" rx="5" fill="#1A1A1A" stroke="#7DD3FC"/>
+    <rect x="300" y="66" width="90" height="26" rx="5" fill="#1A1A1A" stroke="#C084FC"/></svg>`;
+}
+function finaleFallbackSVG(kind) {
+  if (kind === 'success') {
+    let conf = '';
+    for (let i = 0; i < 18; i++) conf += `<rect x="${(i * 67) % 440}" y="${(i * 29) % 70}" width="7" height="3" rx="1" fill="${['#D7FF00', '#F0997B', '#85B7EB', '#F4C0D1'][i % 4]}" transform="rotate(${i * 41} ${(i * 67) % 440} ${(i * 29) % 70})"/>`;
+    return `<svg viewBox="0 0 460 120" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="120" fill="#17201a"/>${conf}
+      ${crowdFigs(16, 62)}<rect x="140" y="26" width="180" height="20" rx="10" fill="#D7FF00"/>
+      <text x="230" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#26215C" font-family="sans-serif">iPlayground</text></svg>`;
+  }
+  if (kind === 'fail_gap') {
+    return `<svg viewBox="0 0 460 120" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="120" fill="#1a1418"/>
+      <rect x="110" y="30" width="240" height="60" rx="8" fill="#111" stroke="#333"/>
+      <text x="230" y="58" text-anchor="middle" font-size="13" fill="#666" font-family="sans-serif">${L('議程表', 'AGENDA')}</text>
+      <text x="230" y="80" text-anchor="middle" font-size="18" fill="#FF5D5D" font-family="sans-serif">？？？</text></svg>`;
+  }
+  return `<svg viewBox="0 0 460 120" xmlns="http://www.w3.org/2000/svg"><rect width="460" height="120" fill="#131720"/>
+    <rect x="60" y="70" width="40" height="24" rx="4" fill="#242424"/><rect x="130" y="70" width="40" height="24" rx="4" fill="#242424"/>
+    <rect x="200" y="70" width="40" height="24" rx="4" fill="#242424"/><rect x="270" y="70" width="40" height="24" rx="4" fill="#242424"/>
+    <rect x="340" y="70" width="40" height="24" rx="4" fill="#242424"/>
+    <circle cx="230" cy="40" r="10" fill="#7F77DD"/><rect x="222" y="48" width="16" height="22" rx="4" fill="#534AB7"/>
+    <text x="252" y="38" font-size="12" fill="#666" font-family="sans-serif">${L('好安靜……', 'so quiet...')}</text></svg>`;
+}
+function showPromoResult(gain, note) {
+  $('promoEyebrow').textContent = L('📣 宣傳售票', '📣 Ticket Promo');
+  $('promoTitle').textContent = L('宣傳出去了！', 'The word is out!');
+  artInto($('promoArt'), 'promo', promoFallbackSVG());
+  $('promoNum').className = 'big-num';
+  $('promoNum').textContent = L(`報名 +${gain} 人`, `+${gain} signups`);
+  $('promoNote').textContent = note;
+  $('promoOk').textContent = L('讚 →', 'Nice →');
+  $('promoOverlay').classList.add('show');
+}
+$('promoOk').addEventListener('click', () => $('promoOverlay').classList.remove('show'));
+
+function showAnnounceModal(batch, est, remainTicks, covLine) {
+  $('annEyebrow').textContent = L('📋 議程公布', '📋 Agenda Announced');
+  $('annTitle').textContent = L('講者陣容亮相！', 'The lineup goes live!');
+  artInto($('annArt'), 'announce', announceFallbackSVG());
+  $('annTotalL').textContent = L('議程效應', 'Agenda effect');
+  $('annOk').textContent = L('太好了 →', 'Awesome →');
+  $('annRows').innerHTML = batch.map(r => {
+    const c = SPEAKER_CARDS[r.idx];
+    return `<div class="ann-row"><span class="nm"><span class="badge rar-${c.rarity}">${c.rarity}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[c.rarity]}</span></div>`;
+  }).join('');
+  $('annTotal').textContent = L(`約 +${est}／週`, `~+${est}/week`);
+  let note = L(`陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`,
+               `Lineup multiplier ×${lineupMult().toFixed(2)} — ticks at the start of every week, ${remainTicks} tick(s) left (incl. event-day rush).`);
+  if (remainTicks <= 2) note += L(' 有點晚了……能吃到的複利不多！', ' Cutting it close... not much compounding left!');
+  else note += L(' 陣容越大、每週越多——繼續邀人再公布也會疊上去。', ' Bigger lineup = bigger weekly gains — keep inviting and announcing to stack it.');
+  if (covLine) note += ` ${covLine}`;
+  $('annNote').textContent = note;
+  $('annOverlay').classList.add('show');
+}
+$('annOk').addEventListener('click', () => $('annOverlay').classList.remove('show'));
 
 /* ═══════════ modal：抽卡結果 ═══════════ */
 function fillPhoto(el, photo, name) {
@@ -813,7 +1048,6 @@ function fillPhoto(el, photo, name) {
     el.appendChild(m);
   }
 }
-/* rosterEntry 給卡冊檢視用；null = 剛抽到的揭曉模式 */
 function showSpeakerCard(c, rosterEntry) {
   const fromColl = !!rosterEntry;
   $('cardModal').className = `modal rar-${c.rarity}`;
@@ -888,30 +1122,11 @@ $('collStaff').addEventListener('click', e => {
   const idx = S.staff[+m.dataset.i]; if (idx != null) showStaffCard(STAFF_CARDS[idx], true);
 });
 
-function showAnnounceModal(batch, est, remainTicks, covLine) {
-  $('annEyebrow').textContent = L('📋 議程公布', '📋 Agenda Announced');
-  $('annTitle').textContent = L('講者陣容亮相！', 'The lineup goes live!');
-  $('annTotalL').textContent = L('議程效應', 'Agenda effect');
-  $('annOk').textContent = L('太好了 →', 'Awesome →');
-  $('annRows').innerHTML = batch.map(r => {
-    const c = SPEAKER_CARDS[r.idx];
-    return `<div class="ann-row"><span class="nm"><span class="badge rar-${c.rarity}">${c.rarity}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[c.rarity]}</span></div>`;
-  }).join('');
-  $('annTotal').textContent = L(`約 +${est}／週`, `~+${est}/week`);
-  let note = L(`陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`,
-               `Lineup multiplier ×${lineupMult().toFixed(2)} — ticks at the start of every week, ${remainTicks} tick(s) left (incl. event-day rush).`);
-  if (remainTicks <= 2) note += L(' 有點晚了……能吃到的複利不多！', ' Cutting it close... not much compounding left!');
-  else note += L(' 陣容越大、每週越多——繼續邀人再公布也會疊上去。', ' Bigger lineup = bigger weekly gains — keep inviting and announcing to stack it.');
-  if (covLine) note += ` ${covLine}`;
-  $('annNote').textContent = note;
-  $('annOverlay').classList.add('show');
-}
-$('annOk').addEventListener('click', () => $('annOverlay').classList.remove('show'));
-
 /* ═══════════ 結算 ═══════════ */
 function finale() {
-  agendaTick(L('活動日湧入', 'Event-day rush'));   // 最後一波：活動當天現場報名
+  agendaTick(L('活動日湧入', 'Event-day rush'));
   S.over = true;
+  renderScene();
   const reg = S.reg, regular = countType('regular'), ws = countType('workshop'), lt = countType('lightning');
   const cov = regularCats().size, intl = intlCount();
   const fin = $('finaleOverlay');
@@ -927,6 +1142,7 @@ function finale() {
 
   if (!reqOk) {
     $('finTitle').textContent = L('議程開天窗……', 'Gaps in the program...');
+    artInto($('finArt'), 'fail_gap', finaleFallbackSVG('fail_gap'));
     $('finGrade').textContent = 'FAIL';
     $('finGrade').className = 'grade fail';
     $('finDesc').innerHTML = L(`講者陣容沒湊齊，活動辦不起來。<br>一般講者 ${regular}/3 · Workshop ${ws}/1 · Lightning ${lt}/1`,
@@ -936,6 +1152,7 @@ function finale() {
     localStorage.setItem('ipg_boost', '1');
   } else if (reg < REG_FAIL) {
     $('finTitle').textContent = L('現場冷冷清清……', 'The venue feels... empty');
+    artInto($('finArt'), 'fail_quiet', finaleFallbackSVG('fail_quiet'));
     $('finGrade').textContent = 'FAIL';
     $('finGrade').className = 'grade fail';
     $('finDesc').innerHTML = L(`只來了 <b>${reg}</b> 人（及格線 ${REG_FAIL}）。講者很棒，但世界還不知道。`,
@@ -948,6 +1165,7 @@ function finale() {
     const score = reg + covPts + intlPts;
     const grade = score >= 430 ? 'S' : score >= 360 ? 'A' : score >= 290 ? 'B' : 'C';
     $('finTitle').textContent = reg >= REG_CAP ? L('350 人滿員成功！🎉', 'Sold out at 350! 🎉') : L('活動順利落幕！', 'The event is a wrap!');
+    artInto($('finArt'), 'success', finaleFallbackSVG('success'));
     $('finGrade').textContent = grade;
     $('finGrade').className = 'grade';
     $('finDesc').textContent = L(`${playerName} 總召——`, `Chief ${playerName} — `) + ({
@@ -971,7 +1189,7 @@ $('finRestart').addEventListener('click', () => location.reload());
 /* ═══════════ 轉盤（移植自講者抽抽樂） ═══════════ */
 const wheelCanvas = $('wheel');
 const ctx = wheelCanvas.getContext('2d');
-let wheelMode = 'speaker';       // 'speaker' | 'staff'
+let wheelMode = 'speaker';
 let rotation = 0;
 let spinning = false;
 let highlightIdx = -1;
@@ -995,16 +1213,14 @@ function labelColor(poolIdx) {
   if (r === 'N')  return '#AAAAAA';
   return '#FFFFFF';
 }
-
 function sizeCanvas() {
   const rect = wheelCanvas.getBoundingClientRect();
-  if (!rect.width) return;   // overlay 未顯示時跳過
+  if (!rect.width) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   wheelCanvas.width = rect.width * dpr;
   wheelCanvas.height = rect.height * dpr;
   drawWheel();
 }
-
 function drawWheel() {
   const w = wheelCanvas.width, h = wheelCanvas.height;
   const cx = w / 2, cy = h / 2;
@@ -1055,7 +1271,6 @@ function drawWheel() {
   ctx.beginPath(); ctx.arc(cx, cy, R * 0.2, 0, Math.PI * 2);
   ctx.fillStyle = '#000000'; ctx.fill();
 }
-
 function nextFrame(cb) {
   let done = false;
   const raf = requestAnimationFrame(() => { if (!done) { done = true; clearTimeout(to); cb(performance.now()); } });
@@ -1068,8 +1283,6 @@ function poolPosAtPointer() {
   if (a < 0) a += Math.PI * 2;
   return Math.floor(a / seg) % n;
 }
-
-/* 轉到指定 winner（遊戲邏輯先決定，轉盤演出）；轉盤以 overlay 彈出 */
 function spinWheel(mode, winnerIdx, onDone) {
   if (spinning) return;
   wheelMode = mode;
@@ -1079,7 +1292,7 @@ function spinWheel(mode, winnerIdx, onDone) {
   const n = pool.length;
   const seg = (Math.PI * 2) / n;
   const card = mode === 'speaker' ? SPEAKER_CARDS[winnerIdx] : STAFF_CARDS[winnerIdx];
-  if (card.photo) new Image().src = card.photo;   // 預載照片
+  if (card.photo) new Image().src = card.photo;
 
   const jitter = (Math.random() * 0.7 - 0.35) * seg;
   const target = POINTER_ANGLE - (winner + 0.5) * seg + jitter;
@@ -1095,7 +1308,6 @@ function spinWheel(mode, winnerIdx, onDone) {
   $('wheelMode').innerHTML = mode === 'speaker'
     ? L(`正在邀請 <b>講者</b>……（池內剩 ${n} 位）`, `Inviting a <b>speaker</b>… (${n} left in pool)`)
     : L(`正在招募 <b>工作人員</b>……（池內剩 ${n} 位）`, `Recruiting <b>staff</b>… (${n} left in pool)`);
-  $('wheelHint').innerHTML = '';
   $('wheelOverlay').classList.add('show');
   sizeCanvas();
   render();
@@ -1127,7 +1339,7 @@ function spinWheel(mode, winnerIdx, onDone) {
   setTimeout(() => nextFrame(frame), reducedMotion ? 0 : 350);
 }
 
-/* ═══════════ 音效（移植） ═══════════ */
+/* ═══════════ 音效 ═══════════ */
 let actx = null;
 function audio() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); return actx; }
 function tick() {
@@ -1156,7 +1368,7 @@ function fanfare() {
   } catch (e) {}
 }
 
-/* ═══════════ 彩帶（移植） ═══════════ */
+/* ═══════════ 彩帶 ═══════════ */
 const confettiCanvas = $('confetti');
 const cctx = confettiCanvas.getContext('2d');
 let particles = [], confettiRunning = false;
@@ -1200,19 +1412,15 @@ function confettiFrame() {
 
 /* ═══════════ render ═══════════ */
 function render() {
-  // weeks
-  $('weeks').innerHTML = Array.from({ length: TOTAL_WEEKS }, (_, i) => {
-    const w = i + 1;
-    return `<span class="wk ${w === S.week ? 'cur' : w < S.week ? 'done' : ''}">${w}</span>`;
-  }).join('');
-  // ap
+  $('timeL').innerHTML = L(`⏳ 時間 · 第 <b>${S.week}</b> / ${TOTAL_WEEKS} 週`, `⏳ Time · Week <b>${S.week}</b> / ${TOTAL_WEEKS}`);
+  $('timeFill').style.width = `${(S.week / TOTAL_WEEKS) * 100}%`;
+  $('crowdL').innerHTML = L(`🎟 會眾 · <b>${S.reg}</b> / ${REG_CAP}（及格線 ${REG_FAIL}）`, `🎟 Crowd · <b>${S.reg}</b> / ${REG_CAP} (pass: ${REG_FAIL})`);
+  $('crowdFill').style.width = `${(S.reg / REG_CAP) * 100}%`;
+  $('apL').textContent = L('行動點', 'AP');
   const base = Math.max(weeklyApBase(), S.ap);
   $('apPips').innerHTML = Array.from({ length: base }, (_, i) =>
-    `<span class="pip ${i < S.ap ? '' : 'used'}"></span>`).join('') + ` <span style="font-size:12px;color:var(--muted);margin-left:6px;">${S.ap} ${L('點', 'pts')}</span>`;
-  // reg
-  $('regFill').style.width = `${(S.reg / REG_CAP) * 100}%`;
-  $('regNum').textContent = S.reg;
-  // goals
+    `<span class="pip ${i < S.ap ? '' : 'used'}"></span>`).join('') + `<span class="ap-num">${S.ap}</span>`;
+
   const g = [
     { label: L(`一般講者 ${countType('regular')}/3`, `Regular ${countType('regular')}/3`), ok: countType('regular') >= 3 },
     { label: `Workshop ${countType('workshop')}/1`, ok: countType('workshop') >= 1 },
@@ -1220,39 +1428,34 @@ function render() {
     { label: L(`🌐 國際講者 ×${intlCount()}`, `🌐 International ×${intlCount()}`), ok: intlCount() > 0 },
   ];
   $('goals').innerHTML = g.map(x => `<span class="goal ${x.ok ? 'ok' : ''}">${x.label}</span>`).join('');
-  // cats
   const cov = regularCats();
   $('cats').innerHTML = CAT_KEYS.map(k => `<span class="cat ${cov.has(k) ? 'on' : ''}">${catL(k)}</span>`).join('');
-  // 卡冊
   renderCollection();
-  // staff
   const bonus = Math.floor(S.staff.length / 3);
   $('staffLine').innerHTML = L(
     `🙋 工作人員 <b>${S.staff.length}</b> 位${bonus ? ` → 每週行動點 +${bonus}` : ''}${S.staff.length % 3 ? `（再 ${3 - S.staff.length % 3} 位再 +1）` : ''}`,
     `🙋 Staff: <b>${S.staff.length}</b>${bonus ? ` → +${bonus} AP/week` : ''}${S.staff.length % 3 ? ` (${3 - S.staff.length % 3} more for +1)` : ''}`);
-  // 議程效應
   const annCount = S.roster.filter(r => r.announced).length;
   $('agendaLine').innerHTML = annCount
     ? L(`📈 議程效應：每週約 <b>+${estimateWeekly()}</b>（陣容 ${annCount} 位 × ${lineupMult().toFixed(2)}${S.covBonusGiven ? ' · 🌈已含多樣性加成' : ''}）`,
         `📈 Agenda effect: ~<b>+${estimateWeekly()}</b>/week (lineup ${annCount} × ${lineupMult().toFixed(2)}${S.covBonusGiven ? ' · 🌈 diversity incl.' : ''})`)
     : L('📈 議程效應：尚未公布議程——講者公布後才會每週帶來報名', '📈 Agenda effect: nothing announced yet — speakers only draw signups once announced');
-  // buttons
+
   $('actInvite').disabled = !canInvite();
   $('actStaff').disabled = !canStaff();
   $('actPromo').disabled = !canPromo();
   $('actAnnounce').disabled = !canAnnounce();
-  $('endWeek').disabled = spinning || S.over;
-  $('endWeek').textContent = S.week >= TOTAL_WEEKS ? L('🎪 迎接活動日！', '🎪 Bring on event day!') : L(`⏭ 結束第 ${S.week} 週`, `⏭ End week ${S.week}`);
+  $('endWeek').disabled = spinning || S.over || msgBusy;
+  $('endWeekL').textContent = S.week >= TOTAL_WEEKS ? L('🎪 迎接活動日', '🎪 Event day!') : L('⏭ 結束本週', '⏭ End week');
+  $('endWeekSub').textContent = S.week >= TOTAL_WEEKS ? L('結算！', 'Final tally!') : L(`第 ${S.week} 週`, `week ${S.week}`);
   const remain = S.speakerDrawLimit - S.drawsThisWeek;
-  $('inviteSub').textContent = S.freeDraws > 0 ? L(`免費抽卡 ×${S.freeDraws}！`, `Free draw ×${S.freeDraws}!`) : L(`本週剩 ${Math.max(0, remain)} 次`, `${Math.max(0, remain)} left this week`);
+  $('inviteSub').textContent = S.freeDraws > 0 ? L(`免費抽卡 ×${S.freeDraws}！`, `Free draw ×${S.freeDraws}!`) : L(`本週剩 ${Math.max(0, remain)} 次`, `${Math.max(0, remain)} left`);
   const unann = S.roster.filter(r => !r.announced).length;
-  $('announceSub').textContent = unann ? L(`${unann} 位講者待公布`, `${unann} speaker(s) to announce`) : L('沒有待公布講者', 'No one to announce');
-  // 提示（鎖卡型 / 缺必要類型）
+  $('announceSub').textContent = unann ? L(`${unann} 位待公布`, `${unann} to announce`) : L('沒有待公布', 'none pending');
   $('pityHint').innerHTML = S.forcedType
     ? `<span class="warn">🎯 ${esc(S.forcedReason)}${L('：下一抽鎖定「', ': next draw locked to "')}${typeL(S.forcedType)}${L('」', '"')}</span>`
     : (S.week >= 7 && (countType('workshop') === 0 || countType('lightning') === 0))
-      ? `<span class="warn">${L('⚠️ 還缺必要講者類型！', '⚠️ Still missing a required speaker type!')}</span>` : '';
-  // 標題列
+      ? `<span class="warn">${L('⚠️ 還缺必要講者類型！', '⚠️ Missing a required speaker type!')}</span>` : '';
   $('roleTag').innerHTML = L(`總召 <b>${esc(playerName || '???')}</b> · 距離活動日 ${TOTAL_WEEKS - S.week + 1} 週`,
                              `Chief <b>${esc(playerName || '???')}</b> · ${TOTAL_WEEKS - S.week + 1} wk to showtime`);
 }
@@ -1262,28 +1465,30 @@ function applyLang() {
   document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
   document.title = L('iPlayground 主辦模擬器', 'iPlayground Organizer Sim');
   $('langToggle').textContent = L('EN', '中文');
-  $('pageH1').innerHTML = L('如何成功舉辦一場 <span class="neon">iPlayground</span>', 'How to Host a Successful <span class="neon">iPlayground</span>');
-  $('hudWeekL').textContent = L('週次', 'Week');
-  $('hudApL').textContent = L('行動點', 'Action Points');
-  $('hudRegL').textContent = L('報名人數', 'Registrations');
-  $('regFailHint').textContent = L('（低於 200 = 失敗）', '(below 200 = fail)');
-  $('pActions').textContent = L('本週行動', 'This Week\'s Actions');
-  $('pLineup').textContent = L('講者陣容', 'Speaker Lineup');
-  $('pBinder').textContent = L('卡冊（點卡片看詳情）', 'Card Binder (tap to view)');
-  $('pLog').textContent = L('籌備日誌', 'Organizer Log');
-  $('actInviteL').textContent = L('🎤 邀請講者', '🎤 Invite Speaker');
-  $('actStaffL').textContent = L('🙋 招募工作人員', '🙋 Recruit Staff');
-  $('actPromoL').textContent = L('📣 宣傳售票', '📣 Promote Tickets');
-  $('actAnnounceL').textContent = L('📋 公布議程', '📋 Announce Agenda');
-  $('staffSub').textContent = L('每 3 位 → 每週 +1 AP', 'Every 3 → +1 AP/week');
-  $('promoSub').textContent = L('2d6 ＋ 已公布講者加成', '2d6 + announced bonus');
+  $('introLang').textContent = L('EN', '中文');
+  $('sbBinderL').textContent = L('卡冊', 'Binder');
+  $('sbLineupL').textContent = L('講者陣容', 'Lineup');
+  $('sbLogL').textContent = L('籌備日誌', 'Log');
+  $('actInviteL').textContent = L('🎤 邀請講者', '🎤 Invite');
+  $('actStaffL').textContent = L('🙋 招募人手', '🙋 Recruit');
+  $('actPromoL').textContent = L('📣 宣傳售票', '📣 Promote');
+  $('actAnnounceL').textContent = L('📋 公布議程', '📋 Announce');
+  $('staffSub').textContent = L('每 3 位 +1 AP', 'every 3 → +1 AP');
+  $('promoSub').textContent = L('2d6＋公布加成', '2d6 + bonus');
+  $('binderT').textContent = L('🃏 卡冊（點卡片看詳情）', '🃏 Card Binder (tap to view)');
+  $('lineupT').textContent = L('🎤 講者陣容', '🎤 Speaker Lineup');
+  $('logT').textContent = L('📓 籌備日誌', '📓 Organizer Log');
+  $('binderClose').textContent = L('關閉', 'Close');
+  $('lineupClose').textContent = L('關閉', 'Close');
+  $('logClose').textContent = L('關閉', 'Close');
   $('tagDivL').textContent = L('一般講者 Tag 多樣性（全亮 = 議程效應 ×1.2）', 'Regular-speaker tag diversity (all lit = agenda ×1.2)');
   $('collSpL').innerHTML = L('🎤 講者卡 ', '🎤 Speaker cards ') + '<span id="collSpCount"></span>';
   $('collStL').innerHTML = L('🙋 工作人員卡 ', '🙋 Staff cards ') + '<span id="collStCount"></span>';
+  $('rotateMsg').textContent = L('請將手機轉成橫向遊玩體驗最佳！', 'Rotate your phone to landscape for the best experience!');
+  $('rotateDismiss').textContent = L('仍要直式繼續', 'Continue in portrait anyway');
   $('footer').innerHTML = L(
     '資料來源：iplayground/SessionData <span class="neon">2026</span> · 輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> · 本遊戲為粉絲作品，非官方',
     'Data: iplayground/SessionData <span class="neon">2026</span> · Wheel engine from <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">Speaker Roulette</a> · Fan-made, unofficial');
-  // intro
   $('iEyebrow1').textContent = L('iPlayground 籌備委員會', 'iPlayground Organizing Committee');
   $('iTitle1').textContent = L('恭喜（？）你被推選為本屆總召 🫡', 'Congrats(?) — you\'re this year\'s Chief Organizer 🫡');
   $('iDesc1').textContent = L('距離活動日還有 9 週。先請教總召大名：', 'Nine weeks to event day. First, your name, Chief:');
@@ -1302,13 +1507,14 @@ function applyLang() {
   $('apNote').innerHTML = apBaseStart() === 3
     ? L('💪 籌委會追加了預算：每週基礎行動點 <b>3</b> 點！', '💪 Extra budget this year: base <b>3</b> AP per week!')
     : L('📌 每週基礎行動點只有 <b>2</b> 點——第一屆總是比較辛苦……', '📌 Only <b>2</b> base AP per week — year one is always rough...');
-  $('briefDesc').innerHTML = L('每週用行動點邀講者、招募工作人員、宣傳售票、公布議程。<b>公布議程後，講者陣容會「每週持續」帶來報名</b>——越早公布、發酵的週數越多（複利）；但陣容越大、每週的加成數字越高。太早公布人太少、太晚公布來不及，抓好時機！每週還會翻一張事件卡。',
-    'Spend AP to invite speakers, recruit staff, promote tickets, and announce the agenda. <b>Once announced, your lineup keeps bringing signups every single week</b> — announce early to compound longer, but a bigger lineup means bigger weekly gains. Too early = tiny lineup, too late = no time to compound. Timing is everything! An event card flips every week too.');
+  $('briefDesc').innerHTML = L('每週用行動點邀講者、招募工作人員、宣傳售票、公布議程。<b>公布議程後，講者陣容會「每週持續」帶來報名</b>——越早公布、發酵的週數越多（複利）；但陣容越大、每週的加成數字越高。抓好時機！每週還會發生一個事件。',
+    'Spend AP to invite speakers, recruit staff, promote tickets, and announce the agenda. <b>Once announced, your lineup keeps bringing signups every single week</b> — announce early to compound longer, but a bigger lineup means bigger weekly gains. Timing is everything! An event pops every week too.');
   $('introStart').textContent = L('開始籌備 →', 'Start organizing →');
   if (playerName) {
     $('greetTitle').textContent = L(`${playerName} 總召您好！`, `Hello, Chief ${playerName}!`);
     $('cheerLine').textContent = L(`${playerName} 總召麻煩你了，相信你可以！`, `We're counting on you, Chief ${playerName} — you've got this!`);
   }
+  renderScene();
   render();
 }
 
@@ -1319,11 +1525,23 @@ $('actStaff').addEventListener('click', actStaff);
 $('actPromo').addEventListener('click', actPromo);
 $('actAnnounce').addEventListener('click', actAnnounce);
 $('endWeek').addEventListener('click', endWeek);
-$('langToggle').addEventListener('click', () => {
+$('sbBinder').addEventListener('click', () => $('binderOverlay').classList.add('show'));
+$('sbLineup').addEventListener('click', () => $('lineupOverlay').classList.add('show'));
+$('sbLog').addEventListener('click', () => $('logOverlay').classList.add('show'));
+$('binderClose').addEventListener('click', () => $('binderOverlay').classList.remove('show'));
+$('lineupClose').addEventListener('click', () => $('lineupOverlay').classList.remove('show'));
+$('logClose').addEventListener('click', () => $('logOverlay').classList.remove('show'));
+['binderOverlay', 'lineupOverlay', 'logOverlay'].forEach(id => {
+  $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.remove('show'); });
+});
+
+function toggleLang() {
   lang = lang === 'zh' ? 'en' : 'zh';
   localStorage.setItem('ipg_lang', lang);
   applyLang();
-});
+}
+$('langToggle').addEventListener('click', toggleLang);
+$('introLang').addEventListener('click', toggleLang);
 
 function submitName() {
   playerName = $('nameInput').value.trim() || L('神秘', 'Mystery');
@@ -1334,16 +1552,24 @@ function submitName() {
 }
 $('nameOk').addEventListener('click', submitName);
 $('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
-$('introStart').addEventListener('click', () => {
+$('introStart').addEventListener('click', async () => {
   $('introOverlay').classList.remove('show');
+  if (window.innerWidth < 820) {
+    try {
+      if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+      if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+    } catch (e) {}
+  }
   startWeek();
 });
+$('rotateDismiss').addEventListener('click', () => $('rotateHint').classList.add('dismissed'));
 window.addEventListener('resize', () => {
   if ($('wheelOverlay').classList.contains('show')) sizeCanvas();
 });
 
 newGame();
 applyLang();
+say(L('（輸入你的名字，開始你的總召之旅……）', '(Enter your name to begin your journey as Chief Organizer...)'), { tag: L('序章', 'Prologue'), wait: false });
 $('nameInput').focus();
 </script>
 </body>
