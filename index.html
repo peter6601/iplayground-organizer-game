@@ -137,7 +137,13 @@
   .staff-line { font-size: 13px; color: var(--soft); margin-top: 10px; line-height: 1.6; }
   .staff-line b { color: var(--neon); }
 
-  /* 卡冊 */
+  /* 卡冊（右側 sidebar；抽卡/卡片彈窗蓋在其上） */
+  #cardOverlay, #wheelOverlay { z-index: 56; }
+  #binderOverlay { padding: 0; }
+  #binderOverlay .drawer { position: absolute; right: 0; top: 0; bottom: 0; width: min(400px, 92vw);
+    background: var(--panel); border-left: 1px solid #262626; padding: 20px 20px 26px; overflow-y: auto;
+    animation: slideIn .22s ease; }
+  @keyframes slideIn { from { transform: translateX(48px); opacity: 0; } to { transform: none; opacity: 1; } }
   .coll-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
   .coll-sub + .coll-sub { margin-top: 14px; }
   .coll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-bottom: 6px; }
@@ -401,9 +407,9 @@
   </div>
 </div>
 
-<!-- 卡冊 -->
+<!-- 卡冊（右側 sidebar） -->
 <div class="overlay" id="binderOverlay">
-  <div class="modal">
+  <div class="drawer">
     <p class="eyebrow" id="binderT"></p>
     <div class="coll-sub" id="collSpL"></div>
     <div class="coll-grid" id="collSpeakers"></div>
