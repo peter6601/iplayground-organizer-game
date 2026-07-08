@@ -467,8 +467,19 @@ const STAFF_CARDS = [{"name":"Ethan Chen","photo":"https://raw.githubusercontent
 /*__DATA_END__*/
 
 /* ═══════════ 圖片接口（方案 B：填入圖片路徑即取代內建 SVG，見 art-prompts.md） ═══════════ */
-const SCENE_IMAGES = { rainy: '', early: '', mid: '', eve: '', day: '', title: '' };
-const ACTION_IMAGES = { promo: '', announce: '', success: '', fail_gap: '', fail_quiet: '' };
+const SCENE_IMAGES = {
+  rainy: 'images/scene_rainy.jpg',
+  early: 'images/scene_early.jpg',
+  mid:   'images/scene_mid.jpg',
+  eve:   'images/scene_eve.jpg',
+  day:   'images/scene_day.jpg',
+  title: '',   // 首頁 key art（未生成前用 eve 場景圖）
+};
+const ACTION_IMAGES = {
+  promo:    'images/act_promo.jpg',
+  announce: 'images/act_announce.jpg',
+  success: '', fail_gap: '', fail_quiet: '',
+};
 const EVENT_IMAGES = {}; // 例：{ typhoon: 'images/ev_typhoon.png' }
 
 /* ═══════════ i18n ═══════════ */
@@ -658,10 +669,11 @@ function renderScene() {
   const img = SCENE_IMAGES[phase];
   $('sceneArt').innerHTML = img ? `<img src="${img}" alt="">` : sceneSVG(phase);
 }
-/* 首頁滿版背景：SCENE_IMAGES.title 有圖用圖，否則用前夜場景鋪滿 */
+/* 首頁滿版背景：title key art → 前夜場景圖 → 內建 SVG */
 function renderTitleBg() {
-  if (SCENE_IMAGES.title) {
-    $('tBg').innerHTML = `<img src="${SCENE_IMAGES.title}" alt="">`;
+  const img = SCENE_IMAGES.title || SCENE_IMAGES.eve;
+  if (img) {
+    $('tBg').innerHTML = `<img src="${img}" alt="">`;
   } else {
     $('tBg').innerHTML = sceneSVG('eve').replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ');
   }

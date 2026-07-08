@@ -1,0 +1,3 @@
+# 原始生成圖（3MB/張）不進 repo，網頁用壓縮後的 .jpg
+images/*.png
+.DS_Store
