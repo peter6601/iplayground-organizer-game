@@ -58,12 +58,13 @@
   .reg-num .fail-hint { color: var(--red); }
 
   /* ── layout ── */
-  .arena { display: grid; grid-template-columns: minmax(320px, 480px) minmax(300px, 1fr); gap: 36px; align-items: start; }
-  @media (max-width: 900px) { .arena { grid-template-columns: 1fr; gap: 28px; } }
+  .arena { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .arena { grid-template-columns: 1fr; gap: 24px; } }
+  .left-col, .right-col { display: flex; flex-direction: column; gap: 16px; }
 
-  /* ── wheel ── */
-  .wheel-col { display: flex; flex-direction: column; gap: 14px; align-items: center; }
-  .wheel-wrap { position: relative; width: 100%; max-width: 480px; aspect-ratio: 1; }
+  /* ── wheel（抽卡時才彈出） ── */
+  .wheel-overlay-inner { width: min(460px, 92vw); display: flex; flex-direction: column; gap: 16px; align-items: center; }
+  .wheel-wrap { position: relative; width: 100%; max-width: 460px; aspect-ratio: 1; }
   canvas#wheel { width: 100%; height: 100%; display: block; }
   .pointer { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 0; height: 0;
     border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--neon);
@@ -109,6 +110,36 @@
   .chip .st { font-size: 10px; margin-left: 4px; }
   .staff-line { font-size: 13px; color: var(--soft); margin-top: 10px; }
   .staff-line b { color: var(--neon); }
+  .pity-hint { font-size: 13px; margin-top: 10px; min-height: 0; }
+  .pity-hint .warn { color: var(--gold); }
+
+  /* ── 卡冊 ── */
+  .coll-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .coll-sub + .coll-sub { margin-top: 14px; }
+  .coll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; margin-bottom: 6px; }
+  .mini { background: var(--panel-2); border: 1px solid #262626; border-radius: 10px; padding: 9px 6px 7px; text-align: center;
+    cursor: pointer; transition: border-color .15s, transform .1s; }
+  .mini:hover { border-color: var(--neon-dim); transform: translateY(-2px); }
+  .mini .ph { width: 54px; height: 54px; border-radius: 10px; margin: 0 auto 6px; overflow: hidden; background: #000;
+    display: grid; place-items: center; border: 2px solid #333; }
+  .mini .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .mini .ph .mono { font-weight: 800; color: var(--neon); font-size: 20px; }
+  .mini.sr .ph { border-color: var(--gold); }
+  .mini.w .ph { border-color: var(--purple); }
+  .mini.staffc .ph { border-radius: 50%; }
+  .mini .nm { font-size: 11px; color: var(--soft); line-height: 1.3; word-break: break-all; }
+  .mini .st2 { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .mini .st2.pub { color: var(--neon); }
+  .coll-empty { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+
+  /* ── 開場輸入 ── */
+  .name-input { width: 100%; margin-top: 14px; background: var(--panel-2); border: 1px solid #333; border-radius: 10px;
+    padding: 12px 14px; color: var(--ink); font-family: var(--sans); font-size: 16px; }
+  .name-input:focus { outline: none; border-color: var(--neon-dim); box-shadow: 0 0 0 3px var(--neon-faint); }
+  .goal-list { margin: 14px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .goal-list li { font-size: 14px; color: var(--soft); padding: 10px 12px; background: var(--panel-2); border: 1px solid #262626; border-radius: 10px; }
+  .goal-list li b { color: var(--neon); }
+  .cheer { margin-top: 16px; font-size: 16px; font-weight: 800; color: var(--neon); }
 
   /* ── log ── */
   .log { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
@@ -184,7 +215,7 @@
   <header class="masthead">
     <div class="brandline">
       <span class="logo">iPLAYGROUND <span class="yr">SIM</span></span>
-      <span class="role-tag">你是 <b>總召</b> · 距離活動日 9 週</span>
+      <span class="role-tag" id="roleTag">你是 <b>總召</b> · 距離活動日 9 週</span>
     </div>
     <h1>如何成功舉辦一場 <span class="neon">iPlayground</span></h1>
   </header>
@@ -211,16 +242,7 @@
   </div>
 
   <div class="arena">
-    <div class="wheel-col">
-      <div class="wheel-mode" id="wheelMode">轉盤待命中</div>
-      <div class="wheel-wrap">
-        <div class="pointer"></div>
-        <canvas id="wheel" aria-label="抽卡轉盤"></canvas>
-      </div>
-      <div class="wheel-hint" id="wheelHint"></div>
-    </div>
-
-    <div class="right-col">
+    <div class="left-col">
       <div class="panel">
         <h2>本週行動</h2>
         <div class="actions">
@@ -242,6 +264,7 @@
           </button>
         </div>
         <button class="endweek" id="endWeek">⏭ 結束本週</button>
+        <div class="pity-hint" id="pityHint"></div>
       </div>
 
       <div class="panel">
@@ -249,8 +272,17 @@
         <div class="goals" id="goals"></div>
         <div class="hud-label" style="margin-bottom:6px;">一般講者 Tag 多樣性（全亮 = 報名加成）</div>
         <div class="cats" id="cats"></div>
-        <div class="chips" id="rosterChips"></div>
         <div class="staff-line" id="staffLine"></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="panel">
+        <h2>卡冊（點卡片看詳情）</h2>
+        <div class="coll-sub">🎤 講者卡 <span id="collSpCount"></span></div>
+        <div class="coll-grid" id="collSpeakers"></div>
+        <div class="coll-sub">🙋 工作人員卡 <span id="collStCount"></span></div>
+        <div class="coll-grid" id="collStaff"></div>
       </div>
 
       <div class="panel">
@@ -267,21 +299,41 @@
   </footer>
 </div>
 
-<!-- 開場 -->
+<!-- 開場：輸入名字 -->
 <div class="overlay show" id="introOverlay">
-  <div class="modal">
+  <div class="modal" id="introStep1">
+    <p class="eyebrow">iPlayground 籌備委員會</p>
+    <h3>恭喜（？）你被推選為本屆總召 🫡</h3>
+    <p class="desc">距離活動日還有 9 週。先請教總召大名：</p>
+    <input class="name-input" id="nameInput" maxlength="12" placeholder="輸入你的名字" autocomplete="off">
+    <div class="btn-row"><button class="btn" id="nameOk">就是我 →</button></div>
+  </div>
+  <div class="modal" id="introStep2" style="display:none;">
     <p class="eyebrow">Mission Briefing</p>
-    <h3>總召，交給你了 🫡</h3>
-    <p class="desc">
-      距離 iPlayground 活動日還有 <b>9 週</b>。每週有限的行動點要花在：<br><br>
-      🎤 <b>邀請講者</b>（每週最多 3 次）——轉輪盤抽講者卡<br>
-      🙋 <b>招募工作人員</b>——每 3 位每週多 1 行動點<br>
-      📣 <b>宣傳售票</b>——把報名人數往上推<br>
-      📋 <b>公布議程</b>——講者不公布不會帶來報名！一次公布越多張，話題加成越高，但拖太晚會來不及發酵<br><br>
-      🎯 目標：<b>一般講者 ≥3、Workshop ≥1、Lightning Talk ≥1</b>，湊滿 6 種主題 tag，把報名衝到 <b>350 滿員</b>。低於 200 人就……明年再見。<br><br>
-      每週還會發生一張<b>事件卡</b>，祝你好運。
-    </p>
+    <h3 id="greetTitle">總召您好！</h3>
+    <p class="desc">這次的目標，需要完成的事項如下：</p>
+    <ul class="goal-list">
+      <li>🎤 一般講者至少 <b>3</b> 位</li>
+      <li>🛠 Workshop 講者至少 <b>1</b> 位</li>
+      <li>⚡ Lightning Talk 講者至少 <b>1</b> 位</li>
+      <li>🌈 講者主題湊滿 <b>6 大 tag</b>（有報名加成）</li>
+      <li>🎟 報名衝上 <b>350 滿員</b>——低於 200 人就失敗</li>
+    </ul>
+    <p class="desc">每週用行動點邀講者、招募工作人員、宣傳售票、公布議程（講者不公布不會帶來報名！），每週還會翻一張事件卡。</p>
+    <p class="cheer" id="cheerLine">總召麻煩你了，相信你可以！</p>
     <div class="btn-row"><button class="btn" id="introStart">開始籌備 →</button></div>
+  </div>
+</div>
+
+<!-- 轉盤（抽卡時彈出） -->
+<div class="overlay" id="wheelOverlay">
+  <div class="wheel-overlay-inner">
+    <div class="wheel-mode" id="wheelMode"></div>
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel" aria-label="抽卡轉盤"></canvas>
+    </div>
+    <div class="wheel-hint" id="wheelHint"></div>
   </div>
 </div>
 
@@ -679,9 +731,11 @@ function fillPhoto(el, photo, name) {
     el.appendChild(m);
   }
 }
-function showSpeakerCard(c) {
+/* rosterEntry 給卡冊檢視用；null = 剛抽到的揭曉模式 */
+function showSpeakerCard(c, rosterEntry) {
+  const fromColl = !!rosterEntry;
   $('cardModal').className = `modal rar-${c.rarity}`;
-  $('cardEyebrow').textContent = '🎉 抽中講者卡';
+  $('cardEyebrow').textContent = fromColl ? '📇 講者卡' : '🎉 抽中講者卡';
   fillPhoto($('cardPhoto'), c.photo, c.name);
   $('cardName').textContent = c.name;
   const badges = [`<span class="badge rar-${c.rarity}">${RARITY_LABELS[c.rarity]}</span>`];
@@ -690,12 +744,16 @@ function showSpeakerCard(c) {
   if (c.intl) badges.push('<span class="badge intl">🌐 國際講者</span>');
   $('cardBadges').innerHTML = badges.join('');
   $('cardTalk').innerHTML = `《${esc(c.talk)}》${c.title ? `<br>${esc(c.title)}` : ''}`;
-  $('cardEffect').textContent = announceHint(c) + (c.types.length > 1 ? '（雙棲卡：同時計入兩種講者名額！）' : '');
+  const dual = c.types.length > 1 ? '（雙棲卡：同時計入兩種講者名額！）' : '';
+  $('cardEffect').textContent = fromColl
+    ? (rosterEntry.announced ? `✓ 已公布 · 為活動帶來 ${rosterEntry.contrib} 名報名${dual}` : `尚未公布 · ${announceHint(c)}${dual}`)
+    : announceHint(c) + dual;
+  $('cardOk').textContent = fromColl ? '關閉' : '收下 →';
   $('cardOverlay').classList.add('show');
 }
-function showStaffCard(c) {
+function showStaffCard(c, fromColl) {
   $('cardModal').className = 'modal';
-  $('cardEyebrow').textContent = '🙌 招募到工作人員';
+  $('cardEyebrow').textContent = fromColl ? '📇 工作人員卡' : '🙌 招募到工作人員';
   fillPhoto($('cardPhoto'), c.photo, c.name);
   $('cardName').textContent = c.name;
   const isDinDin = /dindin/i.test(c.name);
@@ -703,13 +761,48 @@ function showStaffCard(c) {
     ? '<span class="badge intl">🏠 地主卡 · 場地組組長</span>'
     : '<span class="badge">🙋 工作人員</span>';
   $('cardTalk').textContent = isDinDin ? '「等等，這不是我自己嗎？」——你抽到了你自己。' : '';
+  const bonus = Math.floor(S.staff.length / 3);
   const next = 3 - (S.staff.length % 3);
-  $('cardEffect').textContent = S.staff.length % 3 === 0
-    ? `戰力 +1！目前 ${S.staff.length} 位 → 每週行動點 +${Math.floor(S.staff.length / 3)}`
-    : `戰力 +1！目前 ${S.staff.length} 位，再 ${next} 位 → 每週行動點再 +1`;
+  $('cardEffect').textContent = (fromColl ? '' : '戰力 +1！') +
+    `目前 ${S.staff.length} 位 → 每週行動點 +${bonus}` +
+    (S.staff.length % 3 ? `（再 ${next} 位再 +1）` : '');
+  $('cardOk').textContent = fromColl ? '關閉' : '收下 →';
   $('cardOverlay').classList.add('show');
 }
 $('cardOk').addEventListener('click', () => $('cardOverlay').classList.remove('show'));
+
+/* ═══════════ 卡冊 ═══════════ */
+function miniPh(photo, name) {
+  return `<div class="ph">${photo ? `<img src="${photo}" alt="" loading="lazy">` : `<div class="mono">${esc([...name][0].toUpperCase())}</div>`}</div>`;
+}
+function renderCollection() {
+  $('collSpCount').textContent = S.roster.length ? `×${S.roster.length}` : '';
+  $('collStCount').textContent = S.staff.length ? `×${S.staff.length}` : '';
+  $('collSpeakers').innerHTML = S.roster.map((r, i) => {
+    const c = SPEAKER_CARDS[r.idx];
+    const cls = c.rarity === 'SR' ? 'sr' : c.rarity === 'W' ? 'w' : '';
+    return `<div class="mini ${cls}" data-i="${i}">
+      ${miniPh(c.photo, c.name)}
+      <div class="nm">${esc(c.name)}</div>
+      <div class="st2 ${r.announced ? 'pub' : ''}">${r.announced ? '✓ 已公布' : '未公布'}</div>
+    </div>`;
+  }).join('') || '<div class="coll-empty">還沒抽到講者卡——快去邀請講者！</div>';
+  $('collStaff').innerHTML = S.staff.map((idx, i) => {
+    const c = STAFF_CARDS[idx];
+    return `<div class="mini staffc" data-i="${i}">
+      ${miniPh(c.photo, c.name)}
+      <div class="nm">${esc(c.name)}</div>
+    </div>`;
+  }).join('') || '<div class="coll-empty">還沒招募到工作人員</div>';
+}
+$('collSpeakers').addEventListener('click', e => {
+  const m = e.target.closest('.mini'); if (!m) return;
+  const r = S.roster[+m.dataset.i]; if (r) showSpeakerCard(SPEAKER_CARDS[r.idx], r);
+});
+$('collStaff').addEventListener('click', e => {
+  const m = e.target.closest('.mini'); if (!m) return;
+  const idx = S.staff[+m.dataset.i]; if (idx != null) showStaffCard(STAFF_CARDS[idx], true);
+});
 
 function showAnnounceModal(rows, total, combo, late, covLine) {
   $('annRows').innerHTML = rows.map(r =>
@@ -754,8 +847,8 @@ function finale() {
     $('finTitle').textContent = reg >= REG_CAP ? '350 人滿員成功！🎉' : '活動順利落幕！';
     $('finGrade').textContent = grade;
     $('finGrade').className = 'grade';
-    $('finDesc').textContent = ({
-      S: '傳說級的一屆——連走廊都是精彩的討論。',
+    $('finDesc').textContent = `${playerName} 總召——` + ({
+      S: '傳說級的一屆！連走廊都是精彩的討論。',
       A: '賓主盡歡，社群都在敲碗明年。',
       B: '穩穩的一場好活動，還有進步空間。',
       C: '驚險過關！明年會更好。',
@@ -802,6 +895,7 @@ function labelColor(poolIdx) {
 
 function sizeCanvas() {
   const rect = wheelCanvas.getBoundingClientRect();
+  if (!rect.width) return;   // overlay 未顯示時跳過
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   wheelCanvas.width = rect.width * dpr;
   wheelCanvas.height = rect.height * dpr;
@@ -872,7 +966,7 @@ function poolPosAtPointer() {
   return Math.floor(a / seg) % n;
 }
 
-/* 轉到指定 winner（遊戲邏輯先決定，轉盤演出） */
+/* 轉到指定 winner（遊戲邏輯先決定，轉盤演出）；轉盤以 overlay 彈出 */
 function spinWheel(mode, winnerIdx, onDone) {
   if (spinning) return;
   wheelMode = mode;
@@ -892,14 +986,20 @@ function spinWheel(mode, winnerIdx, onDone) {
 
   const start = rotation, delta = final - start;
   const dur = reducedMotion ? 500 : 2400 + Math.random() * 600;
-  const t0 = performance.now();
   let lastTickPos = poolPosAtPointer();
 
   spinning = true;
-  $('wheelMode').innerHTML = mode === 'speaker' ? '正在邀請 <b>講者</b>……' : '正在招募 <b>工作人員</b>……';
+  $('wheelMode').innerHTML = mode === 'speaker'
+    ? `正在邀請 <b>講者</b>……（池內剩 ${n} 位）`
+    : `正在招募 <b>工作人員</b>……（池內剩 ${n} 位）`;
+  $('wheelHint').innerHTML = '';
+  $('wheelOverlay').classList.add('show');
+  sizeCanvas();
   render();
 
+  let t0 = null;
   function frame(now) {
+    if (t0 === null) t0 = now;
     const t = Math.min(1, (now - t0) / dur);
     const ease = 1 - Math.pow(1 - t, 3.2);
     rotation = start + delta * ease;
@@ -914,10 +1014,14 @@ function spinWheel(mode, winnerIdx, onDone) {
       drawWheel();
       fanfare();
       if (!reducedMotion) burstConfetti();
-      setTimeout(() => { highlightIdx = -1; onDone(); }, reducedMotion ? 0 : 420);
+      setTimeout(() => {
+        highlightIdx = -1;
+        $('wheelOverlay').classList.remove('show');
+        onDone();
+      }, reducedMotion ? 0 : 700);
     }
   }
-  nextFrame(frame);
+  setTimeout(() => nextFrame(frame), reducedMotion ? 0 : 350);
 }
 
 /* ═══════════ 音效（移植） ═══════════ */
@@ -963,7 +1067,9 @@ function burstConfetti() {
   sizeConfetti();
   const colors = ['#D7FF00', '#FFFFFF', '#D9D9D9', '#9DBB00'];
   const rect = wheelCanvas.getBoundingClientRect();
-  const ox = rect.left + rect.width / 2, oy = rect.top + rect.height / 2;
+  const wheelVisible = rect.width > 0 && $('wheelOverlay').classList.contains('show');
+  const ox = wheelVisible ? rect.left + rect.width / 2 : innerWidth / 2;
+  const oy = wheelVisible ? rect.top + rect.height / 2 : innerHeight / 2;
   for (let i = 0; i < 120; i++) {
     const ang = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
     particles.push({ x: ox, y: oy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 3,
@@ -1014,12 +1120,8 @@ function render() {
   // cats
   const cov = regularCats();
   $('cats').innerHTML = CAT_KEYS.map(k => `<span class="cat ${cov.has(k) ? 'on' : ''}">${CAT_LABELS[k]}</span>`).join('');
-  // roster chips
-  $('rosterChips').innerHTML = S.roster.map(r => {
-    const c = SPEAKER_CARDS[r.idx];
-    const cls = c.rarity === 'SR' ? 'sr' : c.rarity === 'W' ? 'w' : c.rarity === 'N' ? 'n' : '';
-    return `<span class="chip ${cls} ${r.announced ? '' : 'unannounced'}">${esc(c.name)}<span class="st">${r.announced ? '✓' : '未公布'}</span></span>`;
-  }).join('') || '<span style="font-size:13px;color:var(--muted);">還沒邀到任何講者……</span>';
+  // 卡冊
+  renderCollection();
   // staff
   const bonus = Math.floor(S.staff.length / 3);
   $('staffLine').innerHTML = `🙋 工作人員 <b>${S.staff.length}</b> 位${bonus ? ` → 每週行動點 +${bonus}` : ''}${S.staff.length % 3 ? `（再 ${3 - S.staff.length % 3} 位再 +1）` : ''}${S.staff.map(i => ` · ${esc(STAFF_CARDS[i].name)}`).join('')}`;
@@ -1034,32 +1136,43 @@ function render() {
   $('inviteSub').textContent = S.freeDraws > 0 ? `免費抽卡 ×${S.freeDraws}！` : `本週剩 ${Math.max(0, remain)} 次`;
   const unann = S.roster.filter(r => !r.announced).length;
   $('announceSub').textContent = unann ? `${unann} 位講者待公布` : '沒有待公布講者';
-  // wheel labels
-  if (!spinning) {
-    $('wheelMode').innerHTML = `講者池 <b>${S.speakerPool.length}</b> · 工作人員池 <b>${S.staffPool.length}</b>`;
-  }
-  $('wheelHint').innerHTML = S.forcedType
+  // 提示（鎖卡型 / 缺必要類型）
+  $('pityHint').innerHTML = S.forcedType
     ? `<span class="warn">🎯 ${esc(S.forcedReason)}：下一抽鎖定「${TYPE_LABELS[S.forcedType]}」</span>`
     : (S.week >= 7 && (countType('workshop') === 0 || countType('lightning') === 0))
       ? '<span class="warn">⚠️ 還缺必要講者類型！</span>' : '';
-  drawWheel();
+  // 標題列
+  $('roleTag').innerHTML = `總召 <b>${esc(playerName || '???')}</b> · 距離活動日 ${TOTAL_WEEKS - S.week + 1} 週`;
 }
 
 /* ═══════════ 綁定 & 啟動 ═══════════ */
+let playerName = '';
 $('actInvite').addEventListener('click', actInvite);
 $('actStaff').addEventListener('click', actStaff);
 $('actPromo').addEventListener('click', actPromo);
 $('actAnnounce').addEventListener('click', actAnnounce);
 $('endWeek').addEventListener('click', endWeek);
+
+function submitName() {
+  playerName = $('nameInput').value.trim() || '神秘';
+  $('greetTitle').textContent = `${playerName} 總召您好！`;
+  $('cheerLine').textContent = `${playerName} 總召麻煩你了，相信你可以！`;
+  $('introStep1').style.display = 'none';
+  $('introStep2').style.display = '';
+}
+$('nameOk').addEventListener('click', submitName);
+$('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
 $('introStart').addEventListener('click', () => {
   $('introOverlay').classList.remove('show');
   startWeek();
 });
-window.addEventListener('resize', sizeCanvas);
+window.addEventListener('resize', () => {
+  if ($('wheelOverlay').classList.contains('show')) sizeCanvas();
+});
 
 newGame();
 render();
-sizeCanvas();
+$('nameInput').focus();
 </script>
 </body>
 </html>
