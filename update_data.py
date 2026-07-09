@@ -122,11 +122,17 @@ def build_speakers():
             prof = profiles.get(name, {})
             prof_en = profiles_en.get(prof.get("id"), {})
 
+            day_label = {"day1": "Day 1", "day2": "Day 2",
+                         "workshop_day1": "WS Day 1", "workshop_day2": "WS Day 2"}.get(day, day)
+            session = {"day": day_label, "time": it["time"],
+                       "title": it["title"], "title_en": en.get("title", it["title"])}
+
             if name in cards:  # 雙棲講者（talk + workshop）
                 c = cards[name]
                 if stype not in c["types"]:
                     c["types"].append(stype)
                 c["cats"] = sorted(set(c["cats"]) | cats)
+                c["sessions"].append(session)
                 continue
             rarity = ("SR" if (stype == "regular" and dur and dur >= 40)
                       else "R" if stype == "regular"
@@ -140,8 +146,11 @@ def build_speakers():
                 "intl": intl,
                 "title": prof.get("title", ""),
                 "title_en": prof_en.get("title", prof.get("title", "")),
+                "intro": prof.get("intro", ""),
+                "intro_en": prof_en.get("intro", prof.get("intro", "")),
                 "talk": it["title"],
                 "talk_en": en.get("title", it["title"]),
+                "sessions": [session],
                 "photo": photo_url(prof.get("photo", "")),
             }
     return list(cards.values())
