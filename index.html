@@ -272,34 +272,46 @@
   .speaker-card.acc-lt  { border-color: var(--blue); box-shadow: 0 0 60px rgba(125,211,252,.28), 0 24px 70px rgba(0,0,0,.7); background: linear-gradient(165deg, #1A1A1A 0%, #0a0a0a 55%, #08141f 100%); }
   .speaker-card.acc-intl{ border-color: var(--orange); box-shadow: 0 0 60px rgba(255,158,69,.28), 0 24px 70px rgba(0,0,0,.7); background: linear-gradient(165deg, #1A1A1A 0%, #0a0a0a 55%, #1f1204 100%); }
   .speaker-card.acc-dual{ border-color: var(--sun); box-shadow: 0 0 60px rgba(255,216,77,.3), 0 24px 70px rgba(0,0,0,.7); background: linear-gradient(165deg, #1A1A1A 0%, #0a0a0a 55%, #1f1a04 100%); }
-  /* ── 💎 鑽石卡（抽到本人時）：漸層邊框＋冰藍棱鏡光暈＋持續閃光 ── */
+  /* ── 🌈 本人卡（抽到自己）：七彩虹光邊框＋持續流動＋彩虹光掃 ── */
   .speaker-card.diamond {
-    border: 1.6px solid transparent;
+    border: 1.8px solid transparent;
     background:
-      linear-gradient(165deg, #111c30 0%, #0a0a14 52%, #171130 100%) padding-box,
-      linear-gradient(135deg, #b8f0ff, #ffffff 30%, #e6c9ff 55%, #a0e9ff 80%, #d4f6ff) border-box;
-    box-shadow: 0 0 70px rgba(160,233,255,.5), 0 0 130px rgba(214,177,255,.22), 0 24px 70px rgba(0,0,0,.75);
+      linear-gradient(165deg, #1a1226 0%, #0a0a12 52%, #1a1020 100%) padding-box,
+      linear-gradient(120deg, #ff5d8f, #ff9e45, #ffe14d, #5dffa0, #45d0ff, #b45dff, #ff5d8f) border-box;
+    background-size: auto, 300% 100%;
+    box-shadow: 0 0 70px rgba(255,120,180,.35), 0 0 130px rgba(90,200,255,.22), 0 24px 70px rgba(0,0,0,.75);
+    animation: rainbow-flow 6s linear infinite;
   }
+  @keyframes rainbow-flow { to { background-position: 0 0, 300% 0; } }
   .speaker-card.diamond .card-eyebrow {
-    color: #06283d;
-    background: linear-gradient(135deg, #d4f6ff, #ffffff 45%, #ecd9ff);
-    box-shadow: 0 0 20px rgba(184,240,255,.7);
+    color: #2a0a2a;
+    background: linear-gradient(120deg, #ff9ec4, #ffe14d 45%, #9be8ff);
+    box-shadow: 0 0 20px rgba(255,180,220,.7);
   }
-  .speaker-card.diamond .card-name { background: linear-gradient(120deg, #eafaff, #ffffff 40%, #eadcff, #c8f2ff);
-    -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 24px rgba(184,240,255,.35); }
-  .speaker-card.diamond .card-title { color: #b8f0ff; }
-  .speaker-card.diamond .card-sessions { border-top-color: rgba(184,240,255,.22); }
-  .speaker-card.diamond .card-session .d { color: #b8f0ff; border-color: rgba(184,240,255,.4); }
-  .speaker-card.diamond .card-photo::after { background: linear-gradient(to top, rgba(10,12,22,.95), transparent); }
-  .speaker-card.diamond .card-photo .monogram { color: #cdf3ff; text-shadow: 0 0 34px rgba(184,240,255,.5);
-    background: radial-gradient(circle at 50% 35%, #16223a 0%, #0a0a14 75%); }
-  .speaker-card.diamond .badge.b-dual { color: #cdf3ff; border-color: rgba(184,240,255,.55); }
-  /* 鑽石卡的光掃：更亮、翻卡後持續每 2.6s 掃一次 */
+  .speaker-card.diamond .card-name {
+    background: linear-gradient(110deg, #ff8fb4, #ffd24d 30%, #7dffb0 55%, #7dd3ff 78%, #c99bff);
+    background-size: 250% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 24px rgba(255,180,220,.3);
+    animation: rainbow-flow 6s linear infinite;
+  }
+  .speaker-card.diamond .card-title { color: #ffd24d; }
+  .speaker-card.diamond .card-sessions { border-top-color: rgba(255,225,120,.22); }
+  .speaker-card.diamond .card-session .d { color: #ffd24d; border-color: rgba(255,225,120,.4); }
+  .speaker-card.diamond .card-photo::after { background: linear-gradient(to top, rgba(12,10,18,.95), transparent); }
+  .speaker-card.diamond .card-photo .monogram {
+    background: linear-gradient(120deg, #ff8fb4, #ffd24d, #7dffb0, #7dd3ff, #c99bff);
+    -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
+  .speaker-card.diamond .badge.b-dual { color: #ffd24d; border-color: rgba(255,225,120,.55); }
+  /* 本人卡的光掃：彩虹色、翻卡後持續每 2.6s 掃一次 */
   .speaker-card.diamond::after {
-    background: linear-gradient(115deg, transparent 28%, rgba(255,255,255,.4) 45%, rgba(184,240,255,.45) 50%, rgba(230,201,255,.35) 55%, transparent 70%);
+    background: linear-gradient(115deg, transparent 26%, rgba(255,255,255,.4) 44%, rgba(255,158,180,.4) 49%, rgba(125,211,255,.4) 54%, rgba(180,120,255,.35) 59%, transparent 72%);
   }
+  #cardOverlay.show .speaker-card.diamond { animation: card-flip .65s cubic-bezier(.2,1.25,.4,1) forwards, rainbow-flow 6s linear infinite; }
   #cardOverlay.show .speaker-card.diamond::after { animation: card-shine 2.6s ease .6s infinite; }
   @media (prefers-reduced-motion: reduce) {
+    #cardOverlay.show .speaker-card.diamond { animation: none; }
+    .speaker-card.diamond .card-name { animation: none; }
     #cardOverlay.show .speaker-card.diamond::after { animation: none; }
   }
   .card-photo { position: relative; width: 100%; aspect-ratio: 5 / 3.4; flex: none; background: #111; overflow: hidden; }
@@ -455,8 +467,6 @@
     <a class="cta primary" id="ctaTicket" href="https://iplayground.kktix.cc/events/2026" target="_blank" rel="noopener"></a>
     <a class="cta ghost" id="ctaSite" href="https://iplayground.io/2026/" target="_blank" rel="noopener"></a>
   </div>
-
-  <footer id="footer"></footer>
 </div>
 
 <!-- 首頁（滿版） -->
@@ -1883,9 +1893,6 @@ function applyLang() {
   $('ctaSite').textContent = L('想知道更多 → 官網走起', 'Learn more → official site');
   $('finTicket').textContent = L('🎟️ 來參加真的 iPlayground！立即購票', '🎟️ Join the real iPlayground — get tickets');
   $('finSite').textContent = L('想知道更多 → 官網走起', 'Learn more → official site');
-  $('footer').innerHTML = L(
-    '資料來源：iplayground/SessionData <span class="neon">2026</span> · 輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> · 本遊戲為粉絲作品，非官方',
-    'Data: iplayground/SessionData <span class="neon">2026</span> · Wheel engine from <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">Speaker Roulette</a> · Fan-made, unofficial');
   $('introArt').innerHTML = INTRO_IMAGE ? `<img src="${INTRO_IMAGE}" alt="">` : '';
   $('iEyebrow1').textContent = L('iPlayground 籌備委員會', 'iPlayground Organizing Committee');
   $('iTitle1').textContent = L('恭喜（？）你被推選為本屆總召 🫡', 'Congrats(?) — you\'re this year\'s Chief Organizer 🫡');
