@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>iPlayground 主辦模擬器</title>
 <meta name="description" content="日式文字遊戲風的肉鴿抽卡小遊戲：扮演 iPlayground 總召，9 週內湊齊講者陣容、宣傳售票，成功舉辦一場 350 人滿員的研討會！">
+<meta property="og:title" content="iPlayground 主辦模擬器">
+<meta property="og:description" content="扮演 iPlayground 總召，9 週內湊齊講者、宣傳售票，辦出一場 350 人滿員的研討會！">
+<meta property="og:type" content="website">
+<meta property="og:image" content="images/og.jpg"><!-- 部署後改成絕對網址 -->
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root {
     --bg: #000000;
@@ -334,6 +339,7 @@
   <div class="modal" id="introStep1">
     <div class="intro-top"><button class="lang-btn" id="introLang">EN</button></div>
     <p class="eyebrow" id="iEyebrow1"></p>
+    <div class="art-slot" id="introArt"></div>
     <h3 id="iTitle1"></h3>
     <p class="desc" id="iDesc1"></p>
     <input class="name-input" id="nameInput" maxlength="12" autocomplete="off">
@@ -474,13 +480,16 @@ const SCENE_IMAGES = {
   mid:   'images/scene_mid.jpg',
   eve:   'images/scene_eve.jpg',
   day:   'images/scene_day.jpg',
-  title: '',   // 首頁 key art（未生成前用 eve 場景圖）
+  title: 'images/scene_title.jpg',
 };
 const ACTION_IMAGES = {
   promo:    'images/act_promo.jpg',
   announce: 'images/act_announce.jpg',
-  success: '', fail_gap: '', fail_quiet: '',
+  success:  'images/end_success.jpg',
+  fail_gap: 'images/end_fail_gap.jpg',
+  fail_quiet: 'images/end_fail_quiet.jpg',
 };
+const INTRO_IMAGE = 'images/intro.jpg';   // 開場（委員會任命）
 const EVENT_IMAGES = {}; // 例：{ typhoon: 'images/ev_typhoon.png' }
 
 /* ═══════════ i18n ═══════════ */
@@ -1162,11 +1171,12 @@ function showStaffCard(c, fromColl) {
   $('cardEyebrow').textContent = fromColl ? L('📇 工作人員卡', '📇 Staff Card') : L('🙌 招募到工作人員', '🙌 Staff Recruited!');
   fillPhoto($('cardPhoto'), c.photo, c.name);
   $('cardName').textContent = c.name;
-  const isDinDin = /dindin/i.test(c.name);
-  $('cardBadges').innerHTML = isDinDin
-    ? `<span class="badge intl">${L('🏠 地主卡 · 場地組組長', '🏠 The Landlord · Venue Lead')}</span>`
+  // 彩蛋：抽到跟總召同名的工作人員（不分大小寫）
+  const isSelf = !!playerName && c.name.trim().toLowerCase() === playerName.trim().toLowerCase();
+  $('cardBadges').innerHTML = isSelf
+    ? `<span class="badge intl">${L('🪞 本人卡 · 總召親自下場', '🪞 It\'s You · The Chief in person')}</span>`
     : `<span class="badge">${L('🙋 工作人員', '🙋 Staff')}</span>`;
-  $('cardTalk').textContent = isDinDin ? L('「等等，這不是我自己嗎？」——你抽到了你自己。', '"Wait, isn\'t that... me?" — You drew yourself.') : '';
+  $('cardTalk').textContent = isSelf ? L('「等等，這不是我自己嗎？」——你抽到了你自己。', '"Wait, isn\'t that... me?" — You drew yourself.') : '';
   const bonus = Math.floor(S.staff.length / 3);
   const next = 3 - (S.staff.length % 3);
   $('cardEffect').textContent = (fromColl ? '' : L('戰力 +1！', 'Crew +1! ')) +
@@ -1588,6 +1598,7 @@ function applyLang() {
   $('footer').innerHTML = L(
     '資料來源：iplayground/SessionData <span class="neon">2026</span> · 輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> · 本遊戲為粉絲作品，非官方',
     'Data: iplayground/SessionData <span class="neon">2026</span> · Wheel engine from <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">Speaker Roulette</a> · Fan-made, unofficial');
+  $('introArt').innerHTML = INTRO_IMAGE ? `<img src="${INTRO_IMAGE}" alt="">` : '';
   $('iEyebrow1').textContent = L('iPlayground 籌備委員會', 'iPlayground Organizing Committee');
   $('iTitle1').textContent = L('恭喜（？）你被推選為本屆總召 🫡', 'Congrats(?) — you\'re this year\'s Chief Organizer 🫡');
   $('iDesc1').textContent = L('距離活動日還有 9 週。先請教總召大名：', 'Nine weeks to event day. First, your name, Chief:');
