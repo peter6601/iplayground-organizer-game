@@ -184,6 +184,24 @@
   .callout b { color: var(--neon); }
   .cheer { margin-top: 16px; font-size: 16px; font-weight: 800; color: var(--neon); }
   .intro-top { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+  .brief-cols { display: grid; grid-template-columns: 1fr; gap: 4px 22px; align-items: start; }
+  /* 手機打橫：Mission Briefing 變雙欄（右欄從「⚠️ 200 位」開始）＋整體緊湊 */
+  @media (orientation: landscape) and (max-height: 560px) {
+    #introStep2 { width: min(880px, 96vw); padding: 16px 22px 18px; }
+    #introStep2 .eyebrow { margin-bottom: 4px; }
+    .brief-cols { grid-template-columns: 1fr 1fr; }
+    .brief-cols .callout:first-child { margin-top: 10px; }
+    #introStep2 h3 { font-size: 19px; margin-bottom: 2px; }
+    .goal-list li b { font-weight: 800; }
+    .goal-list { margin-top: 10px; gap: 6px; }
+    .goal-list li { padding: 7px 10px; font-size: 13px; }
+    .callout { padding: 8px 12px; font-size: 13px; margin-top: 8px; }
+    #introStep2 p.desc { font-size: 13px; line-height: 1.55; }
+    #briefDesc { display: none; }   /* 機制長說明收起：公布議程視窗內會再教 */
+    .cheer { margin-top: 12px; font-size: 14px; }
+    #introStep2 .btn-row { margin-top: 12px; }
+    #introArt { display: none; }   /* 橫式矮螢幕收起開場圖，留空間給輸入框 */
+  }
 
   /* 首頁（滿版獨立頁） */
   #titleOverlay { background: #000; padding: 0; }
@@ -366,13 +384,19 @@
   <div class="modal" id="introStep2" style="display:none;">
     <p class="eyebrow">Mission Briefing</p>
     <h3 id="greetTitle"></h3>
-    <p class="desc" id="briefLead"></p>
-    <ul class="goal-list" id="goalList"></ul>
-    <div class="callout" id="c200"></div>
-    <div class="callout" id="cTags"></div>
-    <div class="callout" id="apNote"></div>
-    <p class="desc" id="briefDesc"></p>
-    <p class="cheer" id="cheerLine"></p>
+    <div class="brief-cols">
+      <div>
+        <p class="desc" id="briefLead"></p>
+        <ul class="goal-list" id="goalList"></ul>
+      </div>
+      <div>
+        <div class="callout" id="c200"></div>
+        <div class="callout" id="cTags"></div>
+        <div class="callout" id="apNote"></div>
+        <p class="desc" id="briefDesc"></p>
+        <p class="cheer" id="cheerLine"></p>
+      </div>
+    </div>
     <div class="btn-row"><button class="btn" id="introStart"></button></div>
   </div>
 </div>
