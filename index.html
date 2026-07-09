@@ -185,6 +185,15 @@
   .cheer { margin-top: 16px; font-size: 16px; font-weight: 800; color: var(--neon); }
   .intro-top { display: flex; justify-content: flex-end; margin-bottom: 4px; }
   .brief-cols { display: grid; grid-template-columns: 1fr; gap: 4px 22px; align-items: start; }
+
+  /* 操作說明 */
+  .help-rows { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .help-row { display: flex; gap: 12px; align-items: flex-start; background: var(--panel-2); border: 1px solid #262626;
+    border-radius: 10px; padding: 11px 13px; }
+  .help-row .hi { font-size: 22px; line-height: 1.2; }
+  .help-row b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .help-row b .neon { color: var(--neon); }
+  .help-row p { margin: 0; font-size: 13px; color: var(--soft); line-height: 1.55; }
   /* 手機打橫：Mission Briefing 變雙欄（右欄從「⚠️ 200 位」開始）＋整體緊湊 */
   @media (orientation: landscape) and (max-height: 560px) {
     #introStep2 { width: min(880px, 96vw); padding: 16px 22px 18px; }
@@ -201,6 +210,14 @@
     .cheer { margin-top: 12px; font-size: 14px; }
     #introStep2 .btn-row { margin-top: 12px; }
     #introArt { display: none; }   /* 橫式矮螢幕收起開場圖，留空間給輸入框 */
+    #helpModal { width: min(880px, 96vw); padding: 16px 22px 18px; }
+    #helpModal h3 { font-size: 19px; }
+    .help-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .help-row { padding: 8px 11px; }
+    .help-row .hi { font-size: 18px; }
+    .help-row b { font-size: 13px; }
+    .help-row p { font-size: 12px; }
+    #helpModal .btn-row { margin-top: 12px; }
   }
 
   /* 首頁（滿版獨立頁） */
@@ -417,6 +434,16 @@
       </div>
     </div>
     <div class="btn-row"><button class="btn" id="introStart"></button></div>
+  </div>
+</div>
+
+<!-- 操作說明（進主畫面前） -->
+<div class="overlay" id="helpOverlay">
+  <div class="modal" id="helpModal">
+    <p class="eyebrow" id="helpEyebrow"></p>
+    <h3 id="helpTitle"></h3>
+    <div class="help-rows" id="helpRows"></div>
+    <div class="btn-row"><button class="btn" id="helpOk"></button></div>
   </div>
 </div>
 
@@ -779,7 +806,7 @@ function renderTitleBg() {
 }
 
 /* ═══════════ 訊息窗（打字機） ═══════════ */
-let msgBusy = false, typing = false, awaitingAck = false;
+let msgBusy = false, typing = false, awaitingAck = false, ackShown = 0;
 let curFinish = null, ackResolve = null, typeTimer = null;
 
 function say(text, opts = {}) {
@@ -823,10 +850,12 @@ function say(text, opts = {}) {
       } else if (opts.wait === false) {
         msgBusy = false; resolve(); render();
       } else {
+        // 前幾次帶「點擊繼續」教學字樣，之後只留 ▼
+        $('msgAdv').textContent = ackShown < 3 ? L('👆 點訊息欄繼續 ▼', '👆 tap message box ▼') : '▼';
         $('msgAdv').style.display = '';
         awaitingAck = true;
         ackResolve = () => {
-          awaitingAck = false;
+          awaitingAck = false; ackShown++;
           $('msgAdv').style.display = 'none';
           msgBusy = false; resolve(); render();
         };
@@ -1734,6 +1763,20 @@ function applyLang() {
   $('briefDesc').innerHTML = L('每週用行動點邀講者、招募工作人員、宣傳售票、公布議程。<b>公布議程後，講者陣容會「每週持續」帶來報名</b>——越早公布、發酵的週數越多（複利）；但陣容越大、每週的加成數字越高。抓好時機！每週還會發生一個事件。',
     'Spend AP to invite speakers, recruit staff, promote tickets, and announce the agenda. <b>Once announced, your lineup keeps bringing signups every single week</b> — announce early to compound longer, but a bigger lineup means bigger weekly gains. Timing is everything! An event pops every week too.');
   $('introStart').textContent = L('開始籌備 →', 'Start organizing →');
+  // 操作說明
+  $('helpEyebrow').textContent = L('操作說明', 'How to play');
+  $('helpTitle').textContent = L('開工前 30 秒看懂玩法 👀', '30 seconds before you start 👀');
+  $('helpRows').innerHTML = [
+    [ '💬', L('劇情都在<span class="neon">訊息欄</span>', 'The story lives in the <span class="neon">message box</span>'),
+      L('場景下方的黑框會逐字打出劇情與事件——看到「▼」就<b>點一下訊息欄</b>繼續，選項也會出現在裡面。訊息沒走完，按鈕會先鎖住。', 'The box under the scene types out the story — when you see “▼”, <b>tap the box</b> to continue. Choices appear there too. Buttons stay locked until the message finishes.') ],
+    [ '🎛', L('底部按鈕＝花行動點做事', 'Bottom buttons = spend AP'),
+      L('邀講者、招募人手、宣傳、公布議程。行動點用完就按「結束本週」進下一週。', 'Invite, recruit, promote, announce. Out of AP? Hit “End week” to move on.') ],
+    [ '🃏', L('右側三顆隨時查', 'Side buttons = quick reference'),
+      L('卡冊看抽到的卡、講者陣容看目標進度、籌備日誌看流水帳。', 'Binder for your cards, Lineup for goal progress, Log for the history.') ],
+    [ '⏳', L('上方進度條', 'Top bars'),
+      L('9 週內把報名衝過 200 人及格線，目標 350 滿員！', 'Pass 200 signups within 9 weeks — 350 is a full house!') ],
+  ].map(([icon, title, desc]) => `<div class="help-row"><span class="hi">${icon}</span><div><b>${title}</b><p>${desc}</p></div></div>`).join('');
+  $('helpOk').textContent = L('知道了，開工！→', 'Got it, let\'s go! →');
   if (playerName) {
     $('greetTitle').textContent = L(`${playerName} 總召您好！`, `Hello, Chief ${playerName}!`);
     $('cheerLine').textContent = L(`${playerName} 總召麻煩你了，相信你可以！`, `We're counting on you, Chief ${playerName} — you've got this!`);
@@ -1810,6 +1853,10 @@ $('introStart').addEventListener('click', async () => {
       if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
     } catch (e) {}
   }
+  $('helpOverlay').classList.add('show');   // 開工前先看操作說明
+});
+$('helpOk').addEventListener('click', () => {
+  $('helpOverlay').classList.remove('show');
   startWeek();
 });
 $('rotateDismiss').addEventListener('click', () => $('rotateHint').classList.add('dismissed'));
