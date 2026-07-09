@@ -7,6 +7,7 @@
 原始 tags 收斂為 6 大遊戲分類，無 tag 講者由 MANUAL 表補指派。
 """
 import json
+import os
 import re
 import urllib.parse
 import urllib.request
@@ -49,14 +50,28 @@ SUPPLEMENT = {'Hedula': ['ai']}
 
 
 def fetch(name):
-    with urllib.request.urlopen(BASE + name) as resp:
-        return json.load(resp)
+    try:
+        with urllib.request.urlopen(BASE + name) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError:
+        # raw.githubusercontent 被限流時改走已登入的 gh api
+        import subprocess
+        r = subprocess.run(
+            ["gh", "api", f"repos/iplayground/SessionData/contents/{name}?ref=2026/v1",
+             "-H", "Accept: application/vnd.github.raw"],
+            capture_output=True, check=True)
+        return json.loads(r.stdout)
 
 
-def photo_url(url):
-    """percent-encode 非 ASCII 路徑，無照片回傳空字串。"""
+def photo_url(url, kind="speakers"):
+    """優先用本機鏡像（images/speakers|staff/，跑 mirror_photos.py 產生），
+    沒有鏡像才回傳 percent-encode 過的遠端 URL；無照片回傳空字串。"""
     if not url or "." not in url.rsplit("/", 1)[-1]:
         return ""
+    stem = url.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    local = f"images/{kind}/{stem}.jpg"
+    if os.path.exists(local):
+        return local
     p = urllib.parse.urlsplit(url)
     return urllib.parse.urlunsplit((p.scheme, p.netloc, urllib.parse.quote(p.path), p.query, p.fragment))
 
@@ -133,7 +148,7 @@ def build_speakers():
 
 
 def build_staffs():
-    return [{"name": s["name"], "photo": photo_url(s.get("photo", ""))} for s in fetch("staffs.json")]
+    return [{"name": s["name"], "photo": photo_url(s.get("photo", ""), kind="staff")} for s in fetch("staffs.json")]
 
 
 def main():
