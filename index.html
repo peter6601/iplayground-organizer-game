@@ -289,6 +289,20 @@
   }
 
   canvas#confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
+
+  /* CTA（購票／官網，同講者抽抽樂） */
+  .cta-row { margin-top: 26px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .cta { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 999px;
+    font-size: 14px; font-weight: 700; letter-spacing: .04em; text-decoration: none;
+    transition: transform .12s ease, box-shadow .2s ease, border-color .15s ease, color .15s ease; }
+  .cta:hover { transform: translateY(-1px); }
+  .cta:focus-visible { outline: 2px solid var(--neon); outline-offset: 3px; }
+  .cta.primary { background: var(--neon); color: #000; box-shadow: 0 0 24px rgba(215,255,0,.22); }
+  .cta.primary:hover { box-shadow: 0 0 40px rgba(215,255,0,.45); }
+  .cta.ghost { color: var(--soft); border: 1px solid #333; background: transparent; }
+  .cta.ghost:hover { border-color: var(--neon-dim); color: var(--neon); }
+  .finale .cta-row { margin-top: 16px; }
+
   footer { margin-top: 26px; font-size: 12px; color: var(--muted); }
   footer .neon { color: var(--neon); }
   footer a { color: var(--soft); }
@@ -341,6 +355,11 @@
     <button class="cmd" id="actPromo"><span id="actPromoL"></span><small id="promoSub"></small></button>
     <button class="cmd" id="actAnnounce"><span id="actAnnounceL"></span><small id="announceSub"></small></button>
     <button class="cmd endw" id="endWeek"><span id="endWeekL"></span><small id="endWeekSub"></small></button>
+  </div>
+
+  <div class="cta-row">
+    <a class="cta primary" id="ctaTicket" href="https://iplayground.kktix.cc/events/2026" target="_blank" rel="noopener"></a>
+    <a class="cta ghost" id="ctaSite" href="https://iplayground.io/2026/" target="_blank" rel="noopener"></a>
   </div>
 
   <footer id="footer"></footer>
@@ -496,6 +515,10 @@
     <p class="desc" id="finDesc"></p>
     <div class="score-rows" id="finScores"></div>
     <div class="slogan" id="finSlogan"></div>
+    <div class="cta-row">
+      <a class="cta primary" id="finTicket" href="https://iplayground.kktix.cc/events/2026" target="_blank" rel="noopener"></a>
+      <a class="cta ghost" id="finSite" href="https://iplayground.io/2026/" target="_blank" rel="noopener"></a>
+    </div>
     <div class="btn-row"><button class="btn" id="finRestart"></button></div>
   </div>
 </div>
@@ -607,7 +630,7 @@ function sum(a) { return a.reduce((x, y) => x + y, 0); }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function clampReg() { S.reg = Math.max(0, Math.min(REG_CAP, S.reg)); }
 
-function weeklyApBase() { return Math.min(5, apBaseStart() + Math.floor(S.staff.length / 3)); }
+function weeklyApBase() { return Math.min(5, apBaseStart() + Math.floor(S.staff.length / 3)) + (selfStaffRecruited() ? 1 : 0); }
 function countType(t) { return S.roster.filter(r => SPEAKER_CARDS[r.idx].types.includes(t)).length; }
 function regularCats() {
   const set = new Set();
@@ -615,6 +638,20 @@ function regularCats() {
   return set;
 }
 function intlCount() { return S.roster.filter(r => SPEAKER_CARDS[r.idx].intl).length; }
+
+/* 本人卡：玩家名字對到講者/工作人員時的彩蛋加成 */
+const SELF_LUCK = 5; // 抽卡時本人卡的權重（其他卡為 1）
+function isSelfName(name) {
+  return !!playerName && String(name || '').trim().toLowerCase() === playerName.trim().toLowerCase();
+}
+function isSelfSpeaker(c) { return isSelfName(c.name) || isSelfName(c.name_en); }
+function selfStaffRecruited() { return S.staff.some(i => isSelfName(STAFF_CARDS[i].name)); }
+function pickCard(pool, isSelf) {
+  const w = pool.map(i => (isSelf(i) ? SELF_LUCK : 1));
+  let t = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let k = 0; k < pool.length; k++) { t -= w[k]; if (t < 0) return pool[k]; }
+  return pool[pool.length - 1];
+}
 
 function log(msg, cls) {
   const p = document.createElement('p');
@@ -644,14 +681,14 @@ function lineupMult() {
 function estimateWeekly() {
   const ann = S.roster.filter(r => r.announced);
   if (!ann.length) return 0;
-  return Math.round(ann.reduce((s, r) => s + WEEKLY_AVG[typeKey(SPEAKER_CARDS[r.idx])], 0) * lineupMult());
+  return Math.round(ann.reduce((s, r) => { const c = SPEAKER_CARDS[r.idx]; return s + WEEKLY_AVG[typeKey(c)] * (isSelfSpeaker(c) ? 2 : 1); }, 0) * lineupMult());
 }
 function agendaTick(label) {
   const ann = S.roster.filter(r => r.announced);
   if (!ann.length) return 0;
   const m = lineupMult();
   let raw = 0;
-  ann.forEach(r => { const v = weeklyRoll(SPEAKER_CARDS[r.idx]); raw += v; r.contrib += v; });
+  ann.forEach(r => { const c = SPEAKER_CARDS[r.idx]; let v = weeklyRoll(c); if (isSelfSpeaker(c)) v *= 2; raw += v; r.contrib += v; });
   const gain = Math.round(raw * m);
   S.reg += gain; clampReg();
   log(L(`📈 ${label}：${ann.length} 位已公布講者持續發酵，報名 +${gain}（陣容乘數 ×${m.toFixed(2)}）`,
@@ -1039,13 +1076,16 @@ function actInvite() {
     if (sub.length) candidates = sub;
     S.forcedType = null; S.forcedReason = '';
   }
-  const winnerIdx = candidates[Math.floor(Math.random() * candidates.length)];
+  const winnerIdx = pickCard(candidates, i => isSelfSpeaker(SPEAKER_CARDS[i]));
   spinWheel('speaker', winnerIdx, () => {
     S.speakerPool = S.speakerPool.filter(i => i !== winnerIdx);
     S.roster.push({ idx: winnerIdx, announced: false, contrib: 0 });
     const c = SPEAKER_CARDS[winnerIdx];
     log(L(`🎤 邀請成功：<b>${esc(nm(c))}</b>（${typeBadges(c)}）${usedFree ? ' · 免費' : ''}`,
           `🎤 Invited: <b>${esc(nm(c))}</b> (${typeBadges(c)})${usedFree ? ' · free' : ''}`), 'good');
+    if (isSelfSpeaker(c)) {
+      log(L('🪞 講者就是總召本人！號召力驚人，公布後每週報名 ×2', '🪞 The speaker IS the Chief! Star power: ×2 weekly signups once announced'), 'good');
+    }
     showSpeakerCard(c);
     render();
   });
@@ -1056,13 +1096,17 @@ function canStaff() { return !S.over && !spinning && !msgBusy && S.ap >= 1 && S.
 function actStaff() {
   if (!canStaff()) return;
   S.ap -= 1;
-  const winnerIdx = S.staffPool[Math.floor(Math.random() * S.staffPool.length)];
+  const winnerIdx = pickCard(S.staffPool, i => isSelfName(STAFF_CARDS[i].name));
   spinWheel('staff', winnerIdx, () => {
     S.staffPool = S.staffPool.filter(i => i !== winnerIdx);
     S.staff.push(winnerIdx);
     const c = STAFF_CARDS[winnerIdx];
     log(L(`🙋 招募成功：<b>${esc(c.name)}</b>（工作人員 ${S.staff.length} 位）`,
           `🙋 Recruited: <b>${esc(c.name)}</b> (${S.staff.length} staff)`), 'good');
+    if (isSelfName(c.name)) {
+      S.ap += 1;
+      log(L('🪞 總召親自下場！行動點立刻 +1，之後每週固定 +1', '🪞 The Chief joins the crew! +1 AP now, and +1 every week from now on'), 'good');
+    }
     showStaffCard(c);
     render();
   });
@@ -1174,7 +1218,7 @@ function showAnnounceModal(batch, est, remainTicks, covLine) {
     const c = SPEAKER_CARDS[r.idx];
     const acc = accentOf(c);
     const bCls = acc === 'dual' ? 'b-dual' : acc === 'w' ? 'b-w' : acc === 'lt' ? 'b-lt' : acc === 'intl' ? 'b-intl' : '';
-    return `<div class="ann-row"><span class="nm"><span class="badge ${bCls}">${acc === 'dual' ? L('雙棲', 'Dual') : typeL(primaryType(c))}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[typeKey(c)]}</span></div>`;
+    return `<div class="ann-row"><span class="nm"><span class="badge ${bCls}">${acc === 'dual' ? L('雙棲', 'Dual') : typeL(primaryType(c))}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[typeKey(c)]}${isSelfSpeaker(c) ? ' ×2 🪞' : ''}</span></div>`;
   }).join('');
   $('annTotal').textContent = L(`約 +${est}／週`, `~+${est}/week`);
   let note = L(`陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`,
@@ -1211,16 +1255,19 @@ function showSpeakerCard(c, rosterEntry) {
   $('cardName').textContent = nm(c);
   const badges = c.types.map(t => `<span class="badge ${t === 'workshop' ? 'b-w' : t === 'lightning' ? 'b-lt' : ''}">${typeL(t)}</span>`);
   if (acc === 'dual') badges.unshift(`<span class="badge b-dual">${L('🌗 雙棲', '🌗 Dual')}</span>`);
+  const isSelf = isSelfSpeaker(c);
+  if (isSelf) badges.unshift(`<span class="badge b-dual">${L('🪞 本人卡 · 總召親自登台', '🪞 It\'s You · The Chief on stage')}</span>`);
   c.cats.forEach(k => badges.push(`<span class="badge">${catL(k)}</span>`));
   if (c.intl) badges.push(`<span class="badge b-intl">${L('🌐 國際講者', '🌐 International')}</span>`);
   $('cardBadges').innerHTML = badges.join('');
   $('cardTalk').innerHTML = `${L('《', '“')}${esc(tk(c))}${L('》', '”')}${tt(c) ? `<br>${esc(tt(c))}` : ''}`;
   const dual = c.types.length > 1 ? L('（雙棲卡：同時計入兩種講者名額！）', ' (Dual card: counts for both speaker slots!)') : '';
-  $('cardEffect').textContent = fromColl
+  const selfNote = isSelf ? L('　🪞 本人加成：每週報名 ×2！', ' 🪞 Self bonus: ×2 weekly signups!') : '';
+  $('cardEffect').textContent = (fromColl
     ? (rosterEntry.announced
         ? L(`✓ 已公布 · 至今帶來 ${rosterEntry.contrib} 名報名${dual}`, `✓ Announced · ${rosterEntry.contrib} signups so far${dual}`)
         : L(`尚未公布 · ${announceHint(c)}${dual}`, `Not announced yet · ${announceHint(c)}${dual}`))
-    : announceHint(c) + dual;
+    : announceHint(c) + dual) + selfNote;
   $('cardOk').textContent = fromColl ? L('關閉', 'Close') : L('收下 →', 'Take it →');
   $('cardOverlay').classList.add('show');
 }
@@ -1230,7 +1277,7 @@ function showStaffCard(c, fromColl) {
   fillPhoto($('cardPhoto'), c.photo, c.name);
   $('cardName').textContent = c.name;
   // 彩蛋：抽到跟總召同名的工作人員（不分大小寫）
-  const isSelf = !!playerName && c.name.trim().toLowerCase() === playerName.trim().toLowerCase();
+  const isSelf = isSelfName(c.name);
   $('cardBadges').innerHTML = isSelf
     ? `<span class="badge intl">${L('🪞 本人卡 · 總召親自下場', '🪞 It\'s You · The Chief in person')}</span>`
     : `<span class="badge">${L('🙋 工作人員', '🙋 Staff')}</span>`;
@@ -1239,7 +1286,8 @@ function showStaffCard(c, fromColl) {
   const next = 3 - (S.staff.length % 3);
   $('cardEffect').textContent = (fromColl ? '' : L('戰力 +1！', 'Crew +1! ')) +
     L(`目前 ${S.staff.length} 位 → 每週行動點 +${bonus}`, `${S.staff.length} staff → +${bonus} AP per week`) +
-    (S.staff.length % 3 ? L(`（再 ${next} 位再 +1）`, ` (${next} more for another +1)`) : '');
+    (S.staff.length % 3 ? L(`（再 ${next} 位再 +1）`, ` (${next} more for another +1)`) : '') +
+    (isSelf ? L('　🪞 本人加成：行動點立刻 +1，每週再固定 +1！', ' 🪞 Self bonus: +1 AP now, +1 every week!') : '');
   $('cardOk').textContent = fromColl ? L('關閉', 'Close') : L('收下 →', 'Take it →');
   $('cardOverlay').classList.add('show');
 }
@@ -1657,6 +1705,10 @@ function applyLang() {
   ['dEasy', 'dNormal', 'dHard'].forEach((id, i) => {
     $(id).classList.toggle('sel', ['easy', 'normal', 'hard'][i] === difficulty);
   });
+  $('ctaTicket').textContent = L('🎟️ 想去現場玩？立即購票', '🎟️ Ready for the real thing? Get tickets');
+  $('ctaSite').textContent = L('想知道更多 → 官網走起', 'Learn more → official site');
+  $('finTicket').textContent = L('🎟️ 來參加真的 iPlayground！立即購票', '🎟️ Join the real iPlayground — get tickets');
+  $('finSite').textContent = L('想知道更多 → 官網走起', 'Learn more → official site');
   $('footer').innerHTML = L(
     '資料來源：iplayground/SessionData <span class="neon">2026</span> · 輪盤引擎源自 <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">講者抽抽樂</a> · 本遊戲為粉絲作品，非官方',
     'Data: iplayground/SessionData <span class="neon">2026</span> · Wheel engine from <a href="https://iplayground-speaker-wheel.vercel.app/" target="_blank" rel="noopener">Speaker Roulette</a> · Fan-made, unofficial');
