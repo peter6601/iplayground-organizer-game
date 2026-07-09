@@ -272,6 +272,36 @@
   .speaker-card.acc-lt  { border-color: var(--blue); box-shadow: 0 0 60px rgba(125,211,252,.28), 0 24px 70px rgba(0,0,0,.7); background: linear-gradient(165deg, #1A1A1A 0%, #0a0a0a 55%, #08141f 100%); }
   .speaker-card.acc-intl{ border-color: var(--orange); box-shadow: 0 0 60px rgba(255,158,69,.28), 0 24px 70px rgba(0,0,0,.7); background: linear-gradient(165deg, #1A1A1A 0%, #0a0a0a 55%, #1f1204 100%); }
   .speaker-card.acc-dual{ border-color: var(--sun); box-shadow: 0 0 60px rgba(255,216,77,.3), 0 24px 70px rgba(0,0,0,.7); background: linear-gradient(165deg, #1A1A1A 0%, #0a0a0a 55%, #1f1a04 100%); }
+  /* ── 💎 鑽石卡（抽到本人時）：漸層邊框＋冰藍棱鏡光暈＋持續閃光 ── */
+  .speaker-card.diamond {
+    border: 1.6px solid transparent;
+    background:
+      linear-gradient(165deg, #111c30 0%, #0a0a14 52%, #171130 100%) padding-box,
+      linear-gradient(135deg, #b8f0ff, #ffffff 30%, #e6c9ff 55%, #a0e9ff 80%, #d4f6ff) border-box;
+    box-shadow: 0 0 70px rgba(160,233,255,.5), 0 0 130px rgba(214,177,255,.22), 0 24px 70px rgba(0,0,0,.75);
+  }
+  .speaker-card.diamond .card-eyebrow {
+    color: #06283d;
+    background: linear-gradient(135deg, #d4f6ff, #ffffff 45%, #ecd9ff);
+    box-shadow: 0 0 20px rgba(184,240,255,.7);
+  }
+  .speaker-card.diamond .card-name { background: linear-gradient(120deg, #eafaff, #ffffff 40%, #eadcff, #c8f2ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 24px rgba(184,240,255,.35); }
+  .speaker-card.diamond .card-title { color: #b8f0ff; }
+  .speaker-card.diamond .card-sessions { border-top-color: rgba(184,240,255,.22); }
+  .speaker-card.diamond .card-session .d { color: #b8f0ff; border-color: rgba(184,240,255,.4); }
+  .speaker-card.diamond .card-photo::after { background: linear-gradient(to top, rgba(10,12,22,.95), transparent); }
+  .speaker-card.diamond .card-photo .monogram { color: #cdf3ff; text-shadow: 0 0 34px rgba(184,240,255,.5);
+    background: radial-gradient(circle at 50% 35%, #16223a 0%, #0a0a14 75%); }
+  .speaker-card.diamond .badge.b-dual { color: #cdf3ff; border-color: rgba(184,240,255,.55); }
+  /* 鑽石卡的光掃：更亮、翻卡後持續每 2.6s 掃一次 */
+  .speaker-card.diamond::after {
+    background: linear-gradient(115deg, transparent 28%, rgba(255,255,255,.4) 45%, rgba(184,240,255,.45) 50%, rgba(230,201,255,.35) 55%, transparent 70%);
+  }
+  #cardOverlay.show .speaker-card.diamond::after { animation: card-shine 2.6s ease .6s infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    #cardOverlay.show .speaker-card.diamond::after { animation: none; }
+  }
   .card-photo { position: relative; width: 100%; aspect-ratio: 5 / 3.4; flex: none; background: #111; overflow: hidden; }
   .card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .card-photo .monogram { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
@@ -1381,15 +1411,16 @@ $('introMore').addEventListener('click', toggleIntro);
 function showSpeakerCard(c, rosterEntry) {
   const fromColl = !!rosterEntry;
   const acc = accentOf(c);
-  $('cardModal').className = `speaker-card${acc ? ' acc-' + acc : ''}`;
-  $('cardEyebrow').textContent = fromColl ? L('📇 講者卡', '📇 Speaker Card') : L('🎉 抽中講者卡', '🎉 Speaker Card Drawn!');
+  const isSelf = isSelfSpeaker(c);
+  $('cardModal').className = isSelf ? 'speaker-card diamond' : `speaker-card${acc ? ' acc-' + acc : ''}`;
+  $('cardEyebrow').textContent = isSelf ? L('💎 本人卡！', '💎 It\'s You!')
+    : fromColl ? L('📇 講者卡', '📇 Speaker Card') : L('🎉 抽中講者卡', '🎉 Speaker Card Drawn!');
   fillPhoto($('cardPhoto'), nm(c), c.photo_hd, c.photo);
   $('cardName').textContent = nm(c);
   $('cardTitle').style.display = tt(c) ? '' : 'none';
   $('cardTitle').textContent = tt(c);
   const badges = c.types.map(t => `<span class="badge ${t === 'workshop' ? 'b-w' : t === 'lightning' ? 'b-lt' : ''}">${typeL(t)}</span>`);
   if (acc === 'dual') badges.unshift(`<span class="badge b-dual">${L('🌗 雙棲', '🌗 Dual')}</span>`);
-  const isSelf = isSelfSpeaker(c);
   if (isSelf) badges.unshift(`<span class="badge b-dual">${L('🪞 本人卡 · 總召親自登台', '🪞 It\'s You · The Chief on stage')}</span>`);
   c.cats.forEach(k => badges.push(`<span class="badge">${catL(k)}</span>`));
   if (c.intl) badges.push(`<span class="badge b-intl">${L('🌐 國際講者', '🌐 International')}</span>`);
@@ -1410,13 +1441,14 @@ function showSpeakerCard(c, rosterEntry) {
   $('cardOverlay').classList.add('show');
 }
 function showStaffCard(c, fromColl) {
-  $('cardModal').className = 'speaker-card';
-  $('cardEyebrow').textContent = fromColl ? L('📇 工作人員卡', '📇 Staff Card') : L('🙌 招募到工作人員', '🙌 Staff Recruited!');
+  // 彩蛋：抽到跟總召同名的工作人員（名字任一 token 命中）→ 鑽石卡
+  const isSelf = isSelfName(c.name);
+  $('cardModal').className = isSelf ? 'speaker-card diamond' : 'speaker-card';
+  $('cardEyebrow').textContent = isSelf ? L('💎 本人卡！', '💎 It\'s You!')
+    : fromColl ? L('📇 工作人員卡', '📇 Staff Card') : L('🙌 招募到工作人員', '🙌 Staff Recruited!');
   fillPhoto($('cardPhoto'), c.name, c.photo_hd, c.photo);
   $('cardName').textContent = c.name;
   $('cardTitle').style.display = 'none';
-  // 彩蛋：抽到跟總召同名的工作人員（不分大小寫）
-  const isSelf = isSelfName(c.name);
   $('cardBadges').innerHTML = isSelf
     ? `<span class="badge intl">${L('🪞 本人卡 · 總召親自下場', '🪞 It\'s You · The Chief in person')}</span>`
     : `<span class="badge">${L('🙋 工作人員', '🙋 Staff')}</span>`;
