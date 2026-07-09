@@ -18,12 +18,17 @@ import urllib.request
 
 BASE = "https://raw.githubusercontent.com/iplayground/SessionData/2026/v1/"
 KNOWN_REFS = ["2026/v1", "2025/v1", "develop"]
-SIZE = 240  # 卡面 104px、縮圖 52px，240 足夠 retina
+SIZE = 800  # gacha 大卡約 380px 寬，800px 含 retina 2x 都清晰；本機檔約 100KB 載入快
 
 
 def fetch_json(name):
-    with urllib.request.urlopen(BASE + name) as resp:
-        return json.load(resp)
+    try:
+        with urllib.request.urlopen(BASE + name) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError:  # raw 被限流時改走已登入的 gh api
+        r = subprocess.run(["gh", "api", f"repos/iplayground/SessionData/contents/{name}?ref=2026/v1",
+                            "-H", "Accept: application/vnd.github.raw"], capture_output=True, check=True)
+        return json.loads(r.stdout)
 
 
 def split_ref_path(url):
@@ -46,9 +51,13 @@ def mirror(url, out_dir):
         return None
     ref, path = split_ref_path(url)
     out = pathlib.Path(out_dir) / local_name(path)
-    if out.exists():
-        print(f"  skip（已存在）: {out.name}")
-        return str(out)
+    if out.exists():  # 已達目標尺寸才跳過；舊的小圖會重新鏡像升級
+        chk = subprocess.run(["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(out)],
+                             capture_output=True, text=True)
+        dims = [int(x.split(":")[-1]) for x in chk.stdout.splitlines() if "pixel" in x]
+        if dims and max(dims) >= SIZE - 20:
+            print(f"  skip（已達尺寸）: {out.name}")
+            return str(out)
     api = f"repos/iplayground/SessionData/contents/{urllib.parse.quote(path)}?ref={urllib.parse.quote(ref)}"
     with tempfile.NamedTemporaryFile(suffix=pathlib.Path(path).suffix, delete=False) as tmp:
         r = subprocess.run(["gh", "api", api, "-H", "Accept: application/vnd.github.raw"],

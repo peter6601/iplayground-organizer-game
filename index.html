@@ -1415,7 +1415,7 @@ function showSpeakerCard(c, rosterEntry) {
   $('cardModal').className = isSelf ? 'speaker-card diamond' : `speaker-card${acc ? ' acc-' + acc : ''}`;
   $('cardEyebrow').textContent = isSelf ? L('💎 本人卡！', '💎 It\'s You!')
     : fromColl ? L('📇 講者卡', '📇 Speaker Card') : L('🎉 抽中講者卡', '🎉 Speaker Card Drawn!');
-  fillPhoto($('cardPhoto'), nm(c), c.photo_hd, c.photo);
+  fillPhoto($('cardPhoto'), nm(c), c.photo, c.photo_hd);
   $('cardName').textContent = nm(c);
   $('cardTitle').style.display = tt(c) ? '' : 'none';
   $('cardTitle').textContent = tt(c);
@@ -1446,7 +1446,7 @@ function showStaffCard(c, fromColl) {
   $('cardModal').className = isSelf ? 'speaker-card diamond' : 'speaker-card';
   $('cardEyebrow').textContent = isSelf ? L('💎 本人卡！', '💎 It\'s You!')
     : fromColl ? L('📇 工作人員卡', '📇 Staff Card') : L('🙌 招募到工作人員', '🙌 Staff Recruited!');
-  fillPhoto($('cardPhoto'), c.name, c.photo_hd, c.photo);
+  fillPhoto($('cardPhoto'), c.name, c.photo, c.photo_hd);
   $('cardName').textContent = c.name;
   $('cardTitle').style.display = 'none';
   $('cardBadges').innerHTML = isSelf
