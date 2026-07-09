@@ -63,17 +63,24 @@ def fetch(name):
         return json.loads(r.stdout)
 
 
+def remote_photo(url):
+    """percent-encode 過的原始遠端 URL（高清、不壓縮），供大卡使用；無照片回傳空字串。"""
+    if not url or "." not in url.rsplit("/", 1)[-1]:
+        return ""
+    p = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit((p.scheme, p.netloc, urllib.parse.quote(p.path), p.query, p.fragment))
+
+
 def photo_url(url, kind="speakers"):
-    """優先用本機鏡像（images/speakers|staff/，跑 mirror_photos.py 產生），
-    沒有鏡像才回傳 percent-encode 過的遠端 URL；無照片回傳空字串。"""
+    """縮圖用：優先本機鏡像（images/speakers|staff/，跑 mirror_photos.py 產生），
+    沒有鏡像才回傳遠端 URL；無照片回傳空字串。"""
     if not url or "." not in url.rsplit("/", 1)[-1]:
         return ""
     stem = url.rsplit("/", 1)[-1].rsplit(".", 1)[0]
     local = f"images/{kind}/{stem}.jpg"
     if os.path.exists(local):
         return local
-    p = urllib.parse.urlsplit(url)
-    return urllib.parse.urlunsplit((p.scheme, p.netloc, urllib.parse.quote(p.path), p.query, p.fragment))
+    return remote_photo(url)
 
 
 def duration_min(time_str):
@@ -152,12 +159,14 @@ def build_speakers():
                 "talk_en": en.get("title", it["title"]),
                 "sessions": [session],
                 "photo": photo_url(prof.get("photo", "")),
+                "photo_hd": remote_photo(prof.get("photo", "")),
             }
     return list(cards.values())
 
 
 def build_staffs():
-    return [{"name": s["name"], "photo": photo_url(s.get("photo", ""), kind="staff")} for s in fetch("staffs.json")]
+    return [{"name": s["name"], "photo": photo_url(s.get("photo", ""), kind="staff"),
+             "photo_hd": remote_photo(s.get("photo", ""))} for s in fetch("staffs.json")]
 
 
 def main():
