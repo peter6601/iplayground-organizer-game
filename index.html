@@ -24,6 +24,8 @@
     --gold: #FFB800;
     --purple: #C084FC;
     --blue: #7DD3FC;
+    --orange: #FF9E45;
+    --sun: #FFD84D;
     --red: #FF5D5D;
     --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, system-ui, "PingFang TC", "Noto Sans TC", sans-serif;
   }
@@ -160,7 +162,10 @@
     display: grid; place-items: center; border: 2px solid #333; }
   .mini .ph img { width: 100%; height: 100%; object-fit: cover; }
   .mini .ph .mono { font-weight: 800; color: var(--neon); font-size: 20px; }
-  .mini.w .ph { border-color: var(--purple); }
+  .mini.acc-w .ph { border-color: var(--purple); }
+  .mini.acc-lt .ph { border-color: var(--blue); }
+  .mini.acc-intl .ph { border-color: var(--orange); }
+  .mini.acc-dual .ph { border-color: var(--sun); }
   .mini.staffc .ph { border-radius: 50%; }
   .mini .nm { font-size: 11px; color: var(--soft); line-height: 1.3; word-break: break-all; }
   .mini .st2 { font-size: 10px; color: var(--muted); margin-top: 2px; }
@@ -214,11 +219,23 @@
     border: 2px solid var(--neon-dim); margin-bottom: 12px; display: grid; place-items: center; }
   .card-photo img { width: 100%; height: 100%; object-fit: cover; }
   .card-photo .monogram { font-size: 40px; font-weight: 800; color: var(--neon); }
-  .modal.rar-W .card-photo { border-color: var(--purple); box-shadow: 0 0 18px rgba(192,132,252,.35); }
+  .modal.acc-w .card-photo { border-color: var(--purple); box-shadow: 0 0 18px rgba(192,132,252,.35); }
+  .modal.acc-lt .card-photo { border-color: var(--blue); box-shadow: 0 0 18px rgba(125,211,252,.3); }
+  .modal.acc-intl .card-photo { border-color: var(--orange); box-shadow: 0 0 18px rgba(255,158,69,.3); }
+  .modal.acc-dual .card-photo { border-color: var(--sun); box-shadow: 0 0 18px rgba(255,216,77,.35); }
   .badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 2px; }
   .badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid #333; color: var(--soft); }
-  .badge.rar-W { color: var(--purple); border-color: rgba(192,132,252,.5); }
+  .badge.b-w { color: var(--purple); border-color: rgba(192,132,252,.5); }
+  .badge.b-lt { color: var(--blue); border-color: rgba(125,211,252,.45); }
+  .badge.b-intl { color: var(--orange); border-color: rgba(255,158,69,.5); }
+  .badge.b-dual { color: var(--sun); border-color: rgba(255,216,77,.5); }
   .badge.intl { color: var(--neon); border-color: var(--neon-dim); }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--soft); margin-top: 12px; }
+  .legend span::before { content: '●'; margin-right: 4px; }
+  .legend .lg-w::before { color: var(--purple); }
+  .legend .lg-lt::before { color: var(--blue); }
+  .legend .lg-intl::before { color: var(--orange); }
+  .legend .lg-dual::before { color: var(--sun); }
   .card-talk { margin: 10px 0 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
   .card-effect { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--neon-faint);
     border: 1px solid var(--neon-dim); font-size: 13px; color: var(--ink); line-height: 1.6; }
@@ -417,6 +434,7 @@
     <div class="coll-grid" id="collSpeakers"></div>
     <div class="coll-sub" id="collStL"></div>
     <div class="coll-grid" id="collStaff"></div>
+    <div class="legend" id="legendBinder"></div>
     <div class="btn-row"><button class="btn ghost" id="binderClose"></button></div>
   </div>
 </div>
@@ -430,6 +448,7 @@
     <div class="cats" id="cats"></div>
     <div class="staff-line" id="agendaLine"></div>
     <div class="staff-line" id="staffLine"></div>
+    <div class="legend" id="legendLineup"></div>
     <div class="btn-row"><button class="btn ghost" id="lineupClose"></button></div>
   </div>
 </div>
@@ -518,6 +537,17 @@ const typeL = t => TYPE_LABELS[t][lang];
 function typeKey(c) { return c.types.includes('regular') ? 'R' : c.types.includes('workshop') ? 'W' : 'N'; }
 function primaryType(c) { return c.types.includes('regular') ? 'regular' : c.types.includes('workshop') ? 'workshop' : 'lightning'; }
 const typeBadges = c => c.types.map(t => typeL(t)).join(' + ');
+
+/* 標籤色系：雙棲(黃) > Workshop(紫) > Lightning(藍) > 國際講者(橘) > 一般(無) */
+function accentOf(c) {
+  if (c.types.length > 1) return 'dual';
+  if (c.types.includes('workshop')) return 'w';
+  if (c.types.includes('lightning')) return 'lt';
+  if (c.intl) return 'intl';
+  return '';
+}
+const ACCENT_FILL = { dual: 'rgba(255,216,77,0.18)', w: 'rgba(192,132,252,0.16)', lt: 'rgba(125,211,252,0.15)', intl: 'rgba(255,158,69,0.15)' };
+const ACCENT_INK  = { dual: '#FFD84D', w: '#C084FC', lt: '#7DD3FC', intl: '#FF9E45' };
 
 const nm = c => (lang === 'en' && c.name_en) ? c.name_en : c.name;
 const tk = c => (lang === 'en' && c.talk_en) ? c.talk_en : c.talk;
@@ -1118,8 +1148,9 @@ function showAnnounceModal(batch, est, remainTicks, covLine) {
   $('annOk').textContent = L('太好了 →', 'Awesome →');
   $('annRows').innerHTML = batch.map(r => {
     const c = SPEAKER_CARDS[r.idx];
-    const tk2 = typeKey(c);
-    return `<div class="ann-row"><span class="nm"><span class="badge ${tk2 === 'W' ? 'rar-W' : ''}">${typeL(primaryType(c))}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[tk2]}</span></div>`;
+    const acc = accentOf(c);
+    const bCls = acc === 'dual' ? 'b-dual' : acc === 'w' ? 'b-w' : acc === 'lt' ? 'b-lt' : acc === 'intl' ? 'b-intl' : '';
+    return `<div class="ann-row"><span class="nm"><span class="badge ${bCls}">${acc === 'dual' ? L('雙棲', 'Dual') : typeL(primaryType(c))}</span> ${esc(nm(c))}</span><span class="vl">${L('每週', '/wk')} +${WEEKLY_RANGE[typeKey(c)]}</span></div>`;
   }).join('');
   $('annTotal').textContent = L(`約 +${est}／週`, `~+${est}/week`);
   let note = L(`陣容乘數 ×${lineupMult().toFixed(2)}，之後每週開始時持續進帳，還有 ${remainTicks} 次發酵機會（含活動日湧入）。`,
@@ -1149,13 +1180,15 @@ function fillPhoto(el, photo, name) {
 }
 function showSpeakerCard(c, rosterEntry) {
   const fromColl = !!rosterEntry;
-  $('cardModal').className = `modal${typeKey(c) === 'W' ? ' rar-W' : ''}`;
+  const acc = accentOf(c);
+  $('cardModal').className = `modal${acc ? ' acc-' + acc : ''}`;
   $('cardEyebrow').textContent = fromColl ? L('📇 講者卡', '📇 Speaker Card') : L('🎉 抽中講者卡', '🎉 Speaker Card Drawn!');
   fillPhoto($('cardPhoto'), c.photo, nm(c));
   $('cardName').textContent = nm(c);
-  const badges = c.types.map(t => `<span class="badge ${t === 'workshop' ? 'rar-W' : ''}">${typeL(t)}</span>`);
+  const badges = c.types.map(t => `<span class="badge ${t === 'workshop' ? 'b-w' : t === 'lightning' ? 'b-lt' : ''}">${typeL(t)}</span>`);
+  if (acc === 'dual') badges.unshift(`<span class="badge b-dual">${L('🌗 雙棲', '🌗 Dual')}</span>`);
   c.cats.forEach(k => badges.push(`<span class="badge">${catL(k)}</span>`));
-  if (c.intl) badges.push(`<span class="badge intl">${L('🌐 國際講者', '🌐 International')}</span>`);
+  if (c.intl) badges.push(`<span class="badge b-intl">${L('🌐 國際講者', '🌐 International')}</span>`);
   $('cardBadges').innerHTML = badges.join('');
   $('cardTalk').innerHTML = `${L('《', '“')}${esc(tk(c))}${L('》', '”')}${tt(c) ? `<br>${esc(tt(c))}` : ''}`;
   const dual = c.types.length > 1 ? L('（雙棲卡：同時計入兩種講者名額！）', ' (Dual card: counts for both speaker slots!)') : '';
@@ -1197,8 +1230,8 @@ function renderCollection() {
   $('collStCount').textContent = S.staff.length ? `×${S.staff.length}` : '';
   $('collSpeakers').innerHTML = S.roster.map((r, i) => {
     const c = SPEAKER_CARDS[r.idx];
-    const cls = typeKey(c) === 'W' ? 'w' : '';
-    return `<div class="mini ${cls}" data-i="${i}">
+    const acc = accentOf(c);
+    return `<div class="mini ${acc ? 'acc-' + acc : ''}" data-i="${i}">
       ${miniPh(c.photo, nm(c))}
       <div class="nm">${esc(nm(c))}</div>
       <div class="st2 ${r.announced ? 'pub' : ''}">${r.announced ? L('✓ 已公布', '✓ Announced') : L('未公布', 'Unannounced')}</div>
@@ -1298,17 +1331,14 @@ function currentPool() { return wheelMode === 'speaker' ? S.speakerPool : S.staf
 function poolName(i) { return wheelMode === 'speaker' ? nm(SPEAKER_CARDS[i]) : STAFF_CARDS[i].name; }
 function segFill(i, poolIdx) {
   if (wheelMode === 'staff') return i % 2 ? '#1A1A1A' : '#111111';
-  const t = typeKey(SPEAKER_CARDS[poolIdx]);
-  if (t === 'W') return 'rgba(192,132,252,0.16)';
-  if (t === 'N') return '#161616';
+  const a = accentOf(SPEAKER_CARDS[poolIdx]);
+  if (a) return ACCENT_FILL[a];
   return i % 2 ? '#1A1A1A' : '#111111';
 }
 function labelColor(poolIdx) {
   if (wheelMode === 'staff') return '#FFFFFF';
-  const t = typeKey(SPEAKER_CARDS[poolIdx]);
-  if (t === 'W') return '#C084FC';
-  if (t === 'N') return '#AAAAAA';
-  return '#FFFFFF';
+  const a = accentOf(SPEAKER_CARDS[poolIdx]);
+  return a ? ACCENT_INK[a] : '#FFFFFF';
 }
 function sizeCanvas() {
   const rect = wheelCanvas.getBoundingClientRect();
@@ -1573,6 +1603,13 @@ function applyLang() {
   $('staffSub').textContent = L('每 3 位 +1 AP', 'every 3 → +1 AP');
   $('promoSub').textContent = L('2d6＋公布加成', '2d6 + bonus');
   $('binderT').textContent = L('🃏 卡冊（點卡片看詳情）', '🃏 Card Binder (tap to view)');
+  const legendHTML =
+    `<span class="lg-w">Workshop</span>` +
+    `<span class="lg-lt">Lightning</span>` +
+    `<span class="lg-intl">${L('國際講者', 'International')}</span>` +
+    `<span class="lg-dual">${L('雙棲', 'Dual')}</span>`;
+  $('legendBinder').innerHTML = legendHTML;
+  $('legendLineup').innerHTML = legendHTML;
   $('lineupT').textContent = L('🎤 講者陣容', '🎤 Speaker Lineup');
   $('logT').textContent = L('📓 籌備日誌', '📓 Organizer Log');
   $('binderClose').textContent = L('關閉', 'Close');
