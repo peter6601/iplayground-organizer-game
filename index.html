@@ -249,6 +249,11 @@
   .log p.good { color: var(--neon); }
   .log p.bad { color: var(--red); }
 
+  /* ── 結算成就徽章 ── */
+  .fin-ach { display: flex; align-items: center; margin: 4px 0; padding: 6px 10px; border-radius: 8px;
+    background: rgba(255,216,77,.12); border: 1px solid rgba(255,216,77,.5);
+    color: var(--sun); font-size: 12.5px; font-weight: 800; text-align: left; line-height: 1.5; }
+
   /* ── gacha 卡（移植自講者抽抽樂，邊框光暈依標籤色系） ── */
   #cardOverlay { background: rgba(0,0,0,.78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
   /* 左圖右文寬卡（比照 iOS 版）：左欄直式頭像、右欄資訊＋按鈕 */
@@ -640,6 +645,7 @@
     <div class="art-slot" id="finArt"></div>
     <div class="grade" id="finGrade"></div>
     <p class="desc" id="finDesc"></p>
+    <div id="finAchievements"></div>
     <div class="score-rows" id="finScores"></div>
     <div class="slogan" id="finSlogan"></div>
     <div class="cta-row">
@@ -762,7 +768,7 @@ function d6() { return 1 + Math.floor(Math.random() * 6); }
 function dice(n) { const r = []; for (let i = 0; i < n; i++) r.push(d6()); return r; }
 function sum(a) { return a.reduce((x, y) => x + y, 0); }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-function clampReg() { S.reg = Math.max(0, Math.min(REG_CAP, S.reg)); }
+function clampReg() { S.reg = Math.max(0, S.reg); }   /* 上限開放：REG_CAP 只是滿員成就門檻 */
 
 function weeklyApBase() { return Math.min(5, apBaseStart() + Math.floor(S.staff.length / 3)) + (selfStaffRecruited() ? 1 : 0); }
 function countType(t) { return S.roster.filter(r => SPEAKER_CARDS[r.idx].types.includes(t)).length; }
@@ -1516,6 +1522,33 @@ $('collStaff').addEventListener('click', e => {
   const idx = S.staff[+m.dataset.i]; if (idx != null) showStaffCard(STAFF_CARDS[idx], true);
 });
 
+/* ═══════════ 成就（對照 iOS 版 earnedAchievements） ═══════════ */
+function earnedAchievements() {
+  const out = [];
+  if (S.reg > REG_CAP) out.push('soldOut');
+  if (STAFF_CARDS.length && S.staff.length === STAFF_CARDS.length) out.push('allStaff');
+  const rosterSet = new Set(S.roster.map(r => r.idx));
+  const hasAll = t => {
+    const all = SPEAKER_CARDS.map((c, i) => c.types.includes(t) ? i : -1).filter(i => i >= 0);
+    return all.length > 0 && all.every(i => rosterSet.has(i));
+  };
+  if (hasAll('workshop')) out.push('allWorkshop');
+  if (hasAll('lightning')) out.push('allLightning');
+  if (hasAll('regular')) out.push('allRegular');
+  if (rosterSet.size === SPEAKER_CARDS.length) out.push('allSpeakers');
+  return out;
+}
+function achievementLabel(a) {
+  switch (a) {
+    case 'soldOut': return L(`🏆 爆場！突破 ${REG_CAP} 人滿員（最終 ${S.reg} 人）`, `🏆 Sold out and beyond! Past ${REG_CAP} (final: ${S.reg})`);
+    case 'allStaff': return L('🙌 全員到齊：蒐集全部工作人員！', '🙌 Full crew: every staff member collected!');
+    case 'allWorkshop': return L('🛠 Workshop 大滿貫：蒐集全部 Workshop 講者！', '🛠 Workshop grand slam: every workshop speaker collected!');
+    case 'allLightning': return L('⚡ Lightning 大滿貫：蒐集全部 Lightning 講者！', '⚡ Lightning grand slam: every lightning speaker collected!');
+    case 'allRegular': return L('🎤 一般講者大滿貫：蒐集全部一般講者！', '🎤 Regular grand slam: every regular speaker collected!');
+    case 'allSpeakers': return L('👑 傳說收藏家：蒐集所有講者！（這真的發生了？！）', '👑 Legendary collector: EVERY speaker collected! (How?!)');
+  }
+}
+
 /* ═══════════ 結算 ═══════════ */
 function finale() {
   agendaTick(L('活動日湧入', 'Event-day rush'));
@@ -1527,6 +1560,8 @@ function finale() {
   const rows = [];
   $('finEyebrow').textContent = L('活動日', 'Event Day');
   $('finRestart').textContent = L('回到首頁 →', 'Back to title →');
+  $('finAchievements').innerHTML = earnedAchievements()
+    .map(a => `<div class="fin-ach">${achievementLabel(a)}</div>`).join('');
 
   const reqOk = regular >= 3 && ws >= 1 && lt >= 1;
   const firstFail = localStorage.getItem('ipg_boost') !== '1';
@@ -1803,8 +1838,8 @@ function confettiFrame() {
 function render() {
   $('timeL').innerHTML = L(`⏳ 時間 · 第 <b>${S.week}</b> / ${TOTAL_WEEKS} 週`, `⏳ Time · Week <b>${S.week}</b> / ${TOTAL_WEEKS}`);
   $('timeFill').style.width = `${(S.week / TOTAL_WEEKS) * 100}%`;
-  $('crowdL').innerHTML = L(`🎟 會眾 · <b>${S.reg}</b> / ${REG_CAP}（及格線 ${REG_FAIL}）`, `🎟 Crowd · <b>${S.reg}</b> / ${REG_CAP} (pass: ${REG_FAIL})`);
-  $('crowdFill').style.width = `${(S.reg / REG_CAP) * 100}%`;
+  $('crowdL').innerHTML = L(`🎟 會眾 · <b>${S.reg}</b>（及格線 ${REG_FAIL}）`, `🎟 Crowd · <b>${S.reg}</b> (pass: ${REG_FAIL})`);
+  $('crowdFill').style.width = `${Math.min(100, (S.reg / REG_CAP) * 100)}%`;
   $('apL').textContent = L('行動點', 'AP');
   const base = Math.max(weeklyApBase(), S.ap);
   $('apPips').innerHTML = Array.from({ length: base }, (_, i) =>
