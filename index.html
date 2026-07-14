@@ -85,6 +85,8 @@
   .side-btn { display: flex; align-items: center; gap: 8px; background: var(--panel-2); color: var(--soft); border: 1px solid #2a2a2a;
     border-radius: 10px; padding: 11px 12px; font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; text-align: left; }
   .side-btn:hover { border-color: var(--neon-dim); color: var(--ink); }
+  .side-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .side-btn:disabled:hover { border-color: #2a2a2a; color: var(--soft); }
   .side-btn .ico { color: var(--neon); }
   .side-note { margin-top: auto; font-size: 11px; color: var(--muted); line-height: 1.5; }
   .side-note .warn { color: var(--gold); }
@@ -160,9 +162,15 @@
   .coll-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
   .coll-sub + .coll-sub { margin-top: 14px; }
   .coll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-bottom: 6px; }
-  .mini { background: var(--panel-2); border: 1px solid #262626; border-radius: 10px; padding: 9px 6px 7px; text-align: center;
+  .mini { position: relative; background: var(--panel-2); border: 1px solid #262626; border-radius: 10px; padding: 9px 6px 7px; text-align: center;
     cursor: pointer; transition: border-color .15s, transform .1s; }
   .mini:hover { border-color: var(--neon-dim); transform: translateY(-2px); }
+  /* v1.3 深度專訪：⭐ 徽章、選人面板不可選狀態 */
+  .mini .iv-star { position: absolute; top: 4px; right: 5px; font-size: 13px; line-height: 1; filter: drop-shadow(0 0 5px rgba(255,216,77,.85)); }
+  .mini.iv-done .ph, .mini.iv-self .ph { border-color: var(--sun); }
+  .mini.iv-locked { opacity: .55; cursor: default; }
+  .mini.iv-locked:hover { border-color: #262626; transform: none; }
+  .mini .st2.ivnote { color: var(--sun); }
   .mini .ph { width: 52px; height: 52px; border-radius: 10px; margin: 0 auto 6px; overflow: hidden; background: #000;
     display: grid; place-items: center; border: 2px solid #333; }
   .mini .ph img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
@@ -476,6 +484,7 @@
     <button class="cmd" id="actStaff"><span id="actStaffL"></span><small id="staffSub"></small></button>
     <button class="cmd" id="actPromo"><span id="actPromoL"></span><small id="promoSub"></small></button>
     <button class="cmd" id="actAnnounce"><span id="actAnnounceL"></span><small id="announceSub"></small></button>
+    <button class="cmd" id="actInterview"><span id="actInterviewL"></span><small id="interviewSub"></small></button>
     <button class="cmd endw" id="endWeek"><span id="endWeekL"></span><small id="endWeekSub"></small></button>
   </div>
 
@@ -642,6 +651,17 @@
   </div>
 </div>
 
+<!-- 深度專訪：選擇對象面板（卡冊樣式） -->
+<div class="overlay" id="interviewOverlay">
+  <div class="drawer">
+    <p class="eyebrow" id="interviewT"></p>
+    <p class="coll-sub" id="interviewHint"></p>
+    <div class="coll-grid" id="interviewGrid"></div>
+    <p class="coll-empty" id="interviewEmpty" style="display:none;"></p>
+    <div class="btn-row"><button class="btn ghost" id="interviewClose"></button></div>
+  </div>
+</div>
+
 <!-- 結算 -->
 <div class="overlay" id="finaleOverlay">
   <div class="modal finale">
@@ -767,6 +787,7 @@ function newGame() {
     lastEventId: null,
     lastLightEventId: null,
     usedLightIds: [],
+    interviewDone: false,
     over: false,
   };
 }
@@ -828,6 +849,7 @@ function d3() { return 1 + Math.floor(Math.random() * 3); }
 const WEEKLY_BASE = { R: 2, W: 1, N: 0 };
 const WEEKLY_RANGE = { R: '3~5', W: '2~4', N: '1~3' };
 const WEEKLY_AVG = { R: 4, W: 3, N: 2 };
+const INTERVIEW_BONUS = 2;   // v1.3 深度專訪升 ⭐：每週發酵固定 +2（吃陣容乘數）。過強→改 1；過弱→改 1d3+1
 function weeklyRoll(card) { return WEEKLY_BASE[typeKey(card)] + d3(); }
 function announceHint(card) {
   return L(`公布議程後：每週 +${WEEKLY_RANGE[typeKey(card)]} 報名，持續發酵到活動日`,
@@ -842,14 +864,14 @@ function lineupMult() {
 function estimateWeekly() {
   const ann = S.roster.filter(r => r.announced);
   if (!ann.length) return 0;
-  return Math.round(ann.reduce((s, r) => { const c = SPEAKER_CARDS[r.idx]; return s + WEEKLY_AVG[typeKey(c)] * (isSelfSpeaker(c) ? 2 : 1); }, 0) * lineupMult());
+  return Math.round(ann.reduce((s, r) => { const c = SPEAKER_CARDS[r.idx]; return s + (WEEKLY_AVG[typeKey(c)] + (r.interviewed ? INTERVIEW_BONUS : 0)) * (isSelfSpeaker(c) ? 2 : 1); }, 0) * lineupMult());
 }
 function agendaTick(label) {
   const ann = S.roster.filter(r => r.announced);
   if (!ann.length) return 0;
   const m = lineupMult();
   let raw = 0;
-  ann.forEach(r => { const c = SPEAKER_CARDS[r.idx]; let v = weeklyRoll(c); if (isSelfSpeaker(c)) v *= 2; raw += v; r.contrib += v; });
+  ann.forEach(r => { const c = SPEAKER_CARDS[r.idx]; let v = weeklyRoll(c); if (r.interviewed) v += INTERVIEW_BONUS; if (isSelfSpeaker(c)) v *= 2; raw += v; r.contrib += v; });
   const gain = Math.round(raw * m);
   S.reg += gain; clampReg();
   log(L(`📈 ${label}：${ann.length} 位已公布講者持續發酵，報名 +${gain}（陣容乘數 ×${m.toFixed(2)}）`,
@@ -956,6 +978,7 @@ let curFinish = null, ackResolve = null, typeTimer = null;
 function say(text, opts = {}) {
   return new Promise(resolve => {
     msgBusy = true;
+    if (typeof render === 'function') render();   // 訊息期間即時視覺鎖住行動列與側欄
     $('msgTag').textContent = opts.tag || '';
     $('msgChoices').innerHTML = '';
     $('msgAdv').style.display = 'none';
@@ -1335,7 +1358,7 @@ async function runQuizVisitEvent(ev, tag, name) {
   const correct = chosen === targetIdx;
   if (correct) {
     S.speakerPool = S.speakerPool.filter(i => i !== targetIdx);
-    S.roster.push({ idx: targetIdx, announced: false, contrib: 0 });
+    S.roster.push({ idx: targetIdx, announced: false, contrib: 0, interviewed: false });
     log(L(`🎭 神秘講者 <b>${esc(nm(target))}</b> 加入陣容！（免費、不佔上限）`,
           `🎭 Mystery speaker <b>${esc(nm(target))}</b> joins the lineup! (free, no limit)`), 'good');
     if (isSelfSpeaker(target)) log(L('🪞 而且竟然就是總召本人！公布後每週報名 ×2', '🪞 ...and it turns out to be the Chief! ×2 weekly signups once announced'), 'good');
@@ -1348,6 +1371,151 @@ async function runQuizVisitEvent(ev, tag, name) {
                 `🙈 They smile, shake their head, and leave — it was ${nm(target)}. (No penalty — but get to know them.)`), { tag });
     sceneOverride = null; currentEventArt = null; renderScene(); render();
     showSpeakerCard(target, null, true);   // 卡冊檢視模式：讓玩家看到正解卡面
+  }
+}
+
+/* ═══════════ v1.3 深度專訪 ═══════════ */
+/* 可專訪對象＝已入手、未升級、且非本人卡 */
+function eligibleInterviewTargets() {
+  return S.roster.map((r, i) => i).filter(i => !S.roster[i].interviewed && !isSelfSpeaker(SPEAKER_CARDS[S.roster[i].idx]));
+}
+function canInterview() {
+  return !S.over && !spinning && !msgBusy && !S.interviewDone && eligibleInterviewTargets().length > 0;
+}
+/* 題型可用性防呆 */
+function plainIntro(c) { return ((lang === 'en' && c.intro_en) ? c.intro_en : (c.intro || '')).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
+function maskName(text, c) {
+  const cands = [c.name, c.name_en, ...nameTokens(c.name), ...nameTokens(c.name_en)].filter(s => s && s.length >= 2);
+  [...new Set(cands)].sort((a, b) => b.length - a.length).forEach(s => {
+    text = text.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '███');
+  });
+  return text;
+}
+function introExcerpt(c) {
+  const m = maskName(plainIntro(c), c);
+  return m.length > 60 ? m.slice(0, 60).trim() + '…' : m;
+}
+function interviewTypes(c) {
+  const t = [];
+  if (tk(c)) t.push('talk');
+  if (c.cats && c.cats.length && (CAT_KEYS.length - c.cats.length) >= 3) t.push('cat');
+  if (plainIntro(c).length >= 8) t.push('intro');
+  if (c.sessions && c.sessions.length) t.push('session');
+  return t;
+}
+const DAY_OPTS = [
+  { key: 'Day 1',    label: { zh: 'Day 1', en: 'Day 1' } },
+  { key: 'Day 2',    label: { zh: 'Day 2', en: 'Day 2' } },
+  { key: 'WS Day 1', label: { zh: 'Workshop Day 1', en: 'Workshop Day 1' } },
+  { key: 'WS Day 2', label: { zh: 'Workshop Day 2', en: 'Workshop Day 2' } },
+];
+function distractorLabels(c, mapFn, correctLabel) {
+  const others = SPEAKER_CARDS.filter(o => o !== c);
+  const sameTag = shuffle(others.filter(o => o.cats.some(k => c.cats.includes(k))));
+  const rest = shuffle(others);
+  const out = [];
+  for (const o of [...sameTag, ...rest]) {
+    const t = mapFn(o);
+    if (t && t !== correctLabel && !out.includes(t)) out.push(t);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+function buildChoiceQ(prompt, correctLabel, distractors) {
+  const opts = [{ label: correctLabel, correct: true }, ...distractors.slice(0, 3).map(l => ({ label: l, correct: false }))];
+  return { prompt, options: shuffle(opts), answerText: correctLabel };
+}
+function buildInterviewQuestion(c, type) {
+  if (type === 'cat') {
+    const correctCat = shuffle(c.cats)[0];
+    const wrong = shuffle(CAT_KEYS.filter(k => !c.cats.includes(k))).slice(0, 3).map(catL);
+    return buildChoiceQ(L(`${nm(c)} 的議程屬於哪個主題分類？`, `Which topic tag is ${nm(c)}'s talk?`), catL(correctCat), wrong);
+  }
+  if (type === 'intro') {
+    const correct = introExcerpt(c);
+    return buildChoiceQ(L(`哪一段自介是 ${nm(c)} 的？（名字已遮罩）`, `Which bio belongs to ${nm(c)}? (name masked)`),
+      correct, distractorLabels(c, introExcerpt, correct));
+  }
+  if (type === 'session') {
+    const daySet = new Set((c.sessions || []).map(s => s.day));
+    const opts = DAY_OPTS.map(d => ({ label: d.label[lang] || d.label.zh, correct: daySet.has(d.key) }));
+    const answerText = DAY_OPTS.filter(d => daySet.has(d.key)).map(d => d.label[lang] || d.label.zh).join(' / ');
+    return { prompt: L(`${nm(c)} 在哪個場次登場？`, `On which day does ${nm(c)} take the stage?`), options: shuffle(opts), answerText };
+  }
+  // talk（預設）
+  const correct = tk(c);
+  return buildChoiceQ(L(`以下哪個是 ${nm(c)} 的議程題目？`, `Which talk title is ${nm(c)}'s?`),
+    correct, distractorLabels(c, tk, correct));
+}
+function buildInterviewQuestions(c) {
+  const types = shuffle(interviewTypes(c));
+  let chosen;
+  if (types.length >= 2) chosen = types.slice(0, 2);
+  else if (types.length === 1) chosen = [types[0], types[0]];   // 候選 <2 → 同型兩題（不同干擾）
+  else chosen = ['talk', 'talk'];
+  return chosen.map(t => buildInterviewQuestion(c, t));
+}
+function openInterviewPanel() {
+  if (!canInterview()) return;
+  renderInterviewPanel();
+  $('interviewOverlay').classList.add('show');
+}
+function renderInterviewPanel() {
+  const grid = $('interviewGrid');
+  grid.innerHTML = S.roster.map((r, i) => {
+    const c = SPEAKER_CARDS[r.idx];
+    const acc = accentOf(c);
+    const self = isSelfSpeaker(c);
+    const locked = self || r.interviewed;
+    const note = self ? L('🪞 不用訪，你最懂你自己', '🪞 No need — you know yourself best')
+      : r.interviewed ? L('⭐ 已深度專訪', '⭐ Interviewed') : L('可專訪', 'Available');
+    return `<div class="mini ${acc ? 'acc-' + acc : ''}${locked ? ' iv-locked' : ''}${r.interviewed ? ' iv-done' : ''}${self ? ' iv-self' : ''}" ${locked ? '' : `data-i="${i}"`}>
+      ${r.interviewed ? '<div class="iv-star">⭐</div>' : ''}${miniPh(c.photo, nm(c))}
+      <div class="nm">${esc(nm(c))}</div>
+      <div class="st2 ${locked ? 'ivnote' : ''}">${note}</div>
+    </div>`;
+  }).join('');
+  const none = eligibleInterviewTargets().length === 0;
+  $('interviewEmpty').style.display = none ? '' : 'none';
+  $('interviewEmpty').textContent = L('目前沒有可專訪的對象（都升級了或只剩本人卡）。', 'No one left to interview (all done, or only your own card remains).');
+}
+$('interviewGrid').addEventListener('click', e => {
+  const m = e.target.closest('.mini[data-i]'); if (!m) return;
+  const i = +m.dataset.i;
+  $('interviewOverlay').classList.remove('show');
+  runInterview(i);
+});
+async function runInterview(ri) {
+  const r = S.roster[ri]; if (!r || r.interviewed) return;
+  const c = SPEAKER_CARDS[r.idx];
+  S.interviewDone = true;   // 一次嘗試（成功或失敗都算用掉）
+  render();
+  const tag = L(`🎙 深度專訪 · ${nm(c)}`, `🎙 Interview · ${nm(c)}`);
+  const qs = buildInterviewQuestions(c);
+  await say(L(`🎙 你把 ${nm(c)} 請來坐下深聊。答對 ${qs.length} 題證明你真的懂他，他就願意為你多拼一點！`,
+              `🎙 You sit ${nm(c)} down for a deep chat. Ace all ${qs.length} questions to prove you truly know them — and they'll go the extra mile!`), { tag });
+  let allCorrect = true;
+  for (let qi = 0; qi < qs.length; qi++) {
+    const q = qs[qi];
+    let picked = null;
+    await say(`Q${qi + 1}. ${q.prompt}`, { tag, choices: q.options.map(o => ({ label: o.label, run() { picked = o; } })) });
+    const ok = !!(picked && picked.correct);
+    if (!ok) allCorrect = false;
+    await say(ok ? L('✅ 答對！', '✅ Correct!') : L(`❌ 正解是：「${q.answerText}」`, `❌ The answer: "${q.answerText}"`), { tag });
+  }
+  if (allCorrect) {
+    r.interviewed = true;
+    log(L(`⭐ 深度專訪成功：${esc(nm(c))} 升級！公布後每週發酵 +${INTERVIEW_BONUS}`,
+          `⭐ Interview aced: ${esc(nm(c))} leveled up! +${INTERVIEW_BONUS} signups/week once announced`), 'good');
+    await say(L(`⭐ 完美！${nm(c)} 大受感動，答應為你多拼一點——公布後每週發酵 +${INTERVIEW_BONUS}！`,
+                `⭐ Perfect! ${nm(c)} is genuinely moved and commits to more — +${INTERVIEW_BONUS} weekly signups once announced!`), { tag });
+    render();
+    showSpeakerCard(c, r);
+  } else {
+    log(L(`🎙 深度專訪失敗：${esc(nm(c))} 婉拒了（下週可再試同一位）`,
+          `🎙 Interview flopped: ${esc(nm(c))} passed (retry next week)`), 'bad');
+    await say(L('🙇 訪綱沒做好，講者婉拒了……下週可以再試一次。', '🙇 Your prep fell short — they politely declined. You can try again next week.'), { tag });
+    render();
   }
 }
 
@@ -1368,6 +1536,7 @@ async function startWeek() {
   S.ap = weeklyApBase();
   S.drawsThisWeek = 0;
   S.speakerDrawLimit = 3;
+  S.interviewDone = false;   // 深度專訪：每週限 1 次嘗試，跨週重置
   S.promoHalved = S.promoHalvedNextWeek;
   S.promoHalvedNextWeek = false;
 
@@ -1421,7 +1590,7 @@ function actInvite() {
   const winnerIdx = pickCard(candidates, i => isSelfSpeaker(SPEAKER_CARDS[i]));
   spinWheel('speaker', winnerIdx, () => {
     S.speakerPool = S.speakerPool.filter(i => i !== winnerIdx);
-    S.roster.push({ idx: winnerIdx, announced: false, contrib: 0 });
+    S.roster.push({ idx: winnerIdx, announced: false, contrib: 0, interviewed: false });
     const c = SPEAKER_CARDS[winnerIdx];
     log(L(`🎤 邀請成功：<b>${esc(nm(c))}</b>（${typeBadges(c)}）${usedFree ? ' · 免費' : ''}`,
           `🎤 Invited: <b>${esc(nm(c))}</b> (${typeBadges(c)})${usedFree ? ' · free' : ''}`), 'good');
@@ -1627,6 +1796,7 @@ function showSpeakerCard(c, rosterEntry, preview) {
   const badges = c.types.map(t => `<span class="badge ${t === 'workshop' ? 'b-w' : t === 'lightning' ? 'b-lt' : ''}">${typeL(t)}</span>`);
   if (acc === 'dual') badges.unshift(`<span class="badge b-dual">${L('🌗 雙棲', '🌗 Dual')}</span>`);
   if (isSelf) badges.unshift(`<span class="badge b-dual">${L('🪞 本人卡 · 總召親自登台', '🪞 It\'s You · The Chief on stage')}</span>`);
+  if (rosterEntry && rosterEntry.interviewed) badges.unshift(`<span class="badge b-dual">${L('⭐ 已深度專訪', '⭐ Interviewed')}</span>`);
   c.cats.forEach(k => badges.push(`<span class="badge">${catL(k)}</span>`));
   if (c.intl) badges.push(`<span class="badge b-intl">${L('🌐 國際講者', '🌐 International')}</span>`);
   $('cardBadges').innerHTML = badges.join('');
@@ -1637,11 +1807,12 @@ function showSpeakerCard(c, rosterEntry, preview) {
     <div class="card-session">${s.day ? `<span class="d">${esc(s.day)}</span>` : ''}${s.time ? `<span class="tm">${esc(s.time)}</span>` : ''}<span class="t">${esc((lang === 'en' && s.title_en) ? s.title_en : s.title)}</span></div>`).join('');
   const dual = c.types.length > 1 ? L('（雙棲卡：同時計入兩種講者名額！）', ' (Dual card: counts for both speaker slots!)') : '';
   const selfNote = isSelf ? L('　🪞 本人加成：每週報名 ×2！', ' 🪞 Self bonus: ×2 weekly signups!') : '';
+  const ivNote = (rosterEntry && rosterEntry.interviewed) ? L(`　⭐ 已深度專訪 · 每週發酵 +${INTERVIEW_BONUS}`, ` ⭐ Interviewed · +${INTERVIEW_BONUS} signups/week`) : '';
   $('cardEffect').textContent = (fromColl
     ? (rosterEntry.announced
         ? L(`✓ 已公布 · 至今帶來 ${rosterEntry.contrib} 名報名${dual}`, `✓ Announced · ${rosterEntry.contrib} signups so far${dual}`)
         : L(`尚未公布 · ${announceHint(c)}${dual}`, `Not announced yet · ${announceHint(c)}${dual}`))
-    : announceHint(c) + dual) + selfNote;
+    : announceHint(c) + dual) + selfNote + ivNote;
   $('cardOk').textContent = (fromColl || preview) ? L('關閉', 'Close') : L('收下 →', 'Take it →');
   $('cardOverlay').classList.add('show');
 }
@@ -1682,8 +1853,8 @@ function renderCollection() {
   $('collSpeakers').innerHTML = S.roster.map((r, i) => {
     const c = SPEAKER_CARDS[r.idx];
     const acc = accentOf(c);
-    return `<div class="mini ${acc ? 'acc-' + acc : ''}" data-i="${i}">
-      ${miniPh(c.photo, nm(c))}
+    return `<div class="mini ${acc ? 'acc-' + acc : ''}${r.interviewed ? ' iv-done' : ''}" data-i="${i}">
+      ${r.interviewed ? '<div class="iv-star">⭐</div>' : ''}${miniPh(c.photo, nm(c))}
       <div class="nm">${esc(nm(c))}</div>
       <div class="st2 ${r.announced ? 'pub' : ''}">${r.announced ? L('✓ 已公布', '✓ Announced') : L('未公布', 'Unannounced')}</div>
     </div>`;
@@ -2052,7 +2223,13 @@ function render() {
   $('actStaff').disabled = !canStaff();
   $('actPromo').disabled = !canPromo();
   $('actAnnounce').disabled = !canAnnounce();
+  $('actInterview').disabled = !canInterview();
+  $('interviewSub').textContent = S.interviewDone ? L('本週已專訪', 'used this week') : L('每週 1 次', '1× per week');
   $('endWeek').disabled = spinning || S.over || msgBusy;
+  const sideLock = msgBusy || spinning;   // 專訪/事件敘事期間鎖側欄——做功課要在行動前
+  $('sbBinder').disabled = sideLock;
+  $('sbLineup').disabled = sideLock;
+  $('sbLog').disabled = sideLock;
   $('endWeekL').textContent = S.week >= TOTAL_WEEKS ? L('🎪 迎接活動日', '🎪 Event day!') : L('⏭ 結束本週', '⏭ End week');
   $('endWeekSub').textContent = S.week >= TOTAL_WEEKS ? L('結算！', 'Final tally!') : L(`第 ${S.week} 週`, `week ${S.week}`);
   const remain = S.speakerDrawLimit - S.drawsThisWeek;
@@ -2080,8 +2257,13 @@ function applyLang() {
   $('actStaffL').textContent = L('🙋 招募人手', '🙋 Recruit');
   $('actPromoL').textContent = L('📣 宣傳售票', '📣 Promote');
   $('actAnnounceL').textContent = L('📋 公布議程', '📋 Announce');
+  $('actInterviewL').textContent = L('🎙 深度專訪', '🎙 Interview');
   $('staffSub').textContent = L('每 3 位 +1 AP', 'every 3 → +1 AP');
   $('promoSub').textContent = L('2d6＋公布加成', '2d6 + bonus');
+  $('interviewT').textContent = L('🎙 深度專訪 · 選擇對象', '🎙 Deep Interview · Choose a Speaker');
+  $('interviewHint').textContent = L('免費、每週 1 次。答對 2 題就讓他升 ⭐——公布後每週發酵 +2。翻卡冊做功課要趁現在！',
+    'Free, once per week. Ace 2 questions to earn a ⭐ — +2 weekly signups once announced. Do your homework in the Binder first!');
+  $('interviewClose').textContent = L('關閉', 'Close');
   $('binderT').textContent = L('🃏 卡冊（點卡片看詳情）', '🃏 Card Binder (tap to view)');
   const legendHTML =
     `<span class="lg-w">Workshop</span>` +
@@ -2168,14 +2350,16 @@ $('actInvite').addEventListener('click', actInvite);
 $('actStaff').addEventListener('click', actStaff);
 $('actPromo').addEventListener('click', actPromo);
 $('actAnnounce').addEventListener('click', actAnnounce);
+$('actInterview').addEventListener('click', openInterviewPanel);
 $('endWeek').addEventListener('click', endWeek);
-$('sbBinder').addEventListener('click', () => $('binderOverlay').classList.add('show'));
-$('sbLineup').addEventListener('click', () => $('lineupOverlay').classList.add('show'));
-$('sbLog').addEventListener('click', () => $('logOverlay').classList.add('show'));
+$('sbBinder').addEventListener('click', () => { if (!msgBusy && !spinning) $('binderOverlay').classList.add('show'); });
+$('sbLineup').addEventListener('click', () => { if (!msgBusy && !spinning) $('lineupOverlay').classList.add('show'); });
+$('sbLog').addEventListener('click', () => { if (!msgBusy && !spinning) $('logOverlay').classList.add('show'); });
 $('binderClose').addEventListener('click', () => $('binderOverlay').classList.remove('show'));
 $('lineupClose').addEventListener('click', () => $('lineupOverlay').classList.remove('show'));
 $('logClose').addEventListener('click', () => $('logOverlay').classList.remove('show'));
-['binderOverlay', 'lineupOverlay', 'logOverlay'].forEach(id => {
+$('interviewClose').addEventListener('click', () => $('interviewOverlay').classList.remove('show'));
+['binderOverlay', 'lineupOverlay', 'logOverlay', 'interviewOverlay'].forEach(id => {
   $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.remove('show'); });
 });
 
