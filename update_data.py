@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""從 iPlayground SessionData 重抓議程 / 講者 / 工作人員資料，更新 index.html 內嵌卡池。
+"""從 iPlayground SessionData 重抓議程 / 講者 / 工作人員資料，更新 data.js 卡池。
 
 用法：python3 update_data.py
 議程或名單有異動時跑一次即可。
@@ -175,13 +175,13 @@ def main():
     js = ("const SPEAKER_CARDS = " + json.dumps(speakers, ensure_ascii=False, separators=(",", ":"))
           + ";\nconst STAFF_CARDS = " + json.dumps(staffs, ensure_ascii=False, separators=(",", ":")) + ";")
 
-    with open("index.html", encoding="utf-8") as f:
+    with open("data.js", encoding="utf-8") as f:
         html = f.read()
     new = re.sub(r"/\*__DATA_START__\*/.*?/\*__DATA_END__\*/",
                  "/*__DATA_START__*/\n" + js + "\n/*__DATA_END__*/", html, flags=re.S)
     if new == html:
-        raise SystemExit("找不到資料 marker，index.html 未更新")
-    with open("index.html", "w", encoding="utf-8") as f:
+        raise SystemExit("找不到資料 marker，data.js 未更新")
+    with open("data.js", "w", encoding="utf-8") as f:
         f.write(new)
     print(f"更新完成：{len(speakers)} 位講者、{len(staffs)} 位工作人員")
 

@@ -26,9 +26,18 @@
 
 ## 開發
 
-單檔 `index.html`，無相依、無 build。直接開檔案或任何靜態伺服器即可。
+純靜態、無相依、無 build，用傳統 `<script src>` 載入，直接開 `index.html` 或丟任何靜態伺服器（Vercel 等）即可：
 
-議程異動時更新卡池資料：
+| 檔案 | 內容 |
+|---|---|
+| `index.html` | 頁面骨架與所有 overlay 標記 |
+| `style.css` | 全部樣式 |
+| `data.js` | 卡池資料（`SPEAKER_CARDS` / `STAFF_CARDS`，由 `update_data.py` 產生，勿手改） |
+| `game.js` | 遊戲邏輯 |
+
+> `data.js` 先於 `game.js` 載入，兩者共用同一份 global scope（classic script），所以 `game.js` 直接讀得到卡池。
+
+議程異動時更新卡池資料（會改寫 `data.js`）：
 
 ```bash
 python3 update_data.py
