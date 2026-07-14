@@ -73,6 +73,16 @@ no text, no letters, no watermark, landscape 16:9
 | `volunteer` | 志工大量報名 | A crowd of enthusiastic anime-style volunteers in matching neon staff tees raising hands, recruitment holograms overhead |
 | `bento` | 便當廠商加菜 | A luxurious high-tech bento box opening with glowing gourmet food and steam-light effects, chopsticks raised in celebration |
 
+## 三之二、v1.2 新主事件圖（3 張）— `EVENT_IMAGES`
+
+| key | 檔名建議 | Prompt（接在共用前綴後） |
+|---|---|---|
+| `apple_framework` | ev_apple_framework.png | A surprise midnight framework launch: a giant glowing keynote hologram lighting up the night sky over the city, developers on rooftops looking up from their laptops in awe, timelines exploding with notifications |
+| `venue_change` | ev_venue_change.png | Venue hall renovation chaos: staff carrying boxes and cables out of a conference hall wrapped in construction holo-tape, a sad "under renovation" drone sign, organizer sighing with a floor plan hologram |
+| `price_drama` | ev_price_drama.png | Online pricing debate: a giant holographic comment thread splitting a crowd into two glowing camps, angry and supportive emoji projectiles flying, one calm organizer typing a long reply in the middle |
+
+（神秘講者來訪不需生圖——遊戲用講者照片剪影；輕事件一律無圖。）
+
 ## 四、其他可選
 
 | 用途 | 檔名建議 | Prompt |
