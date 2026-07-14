@@ -111,6 +111,16 @@ no text, no letters, no watermark, landscape 16:9
 | `lt_apple_store` | 新品開賣排隊 | A glowing flagship tech store at dawn with a long orderly queue, a shiny product hologram rotating above the entrance |
 | `lt_makeup_day` | 颱風假補班日 | Exhausted office workers on a gray drizzly morning commute, rain-slick streets, one flickering dim neon sign, collective sigh energy |
 
+## 三之四、v1.3 深度專訪圖（1 張）— `INTERVIEW_FAIL_IMAGE`
+
+> 深度專訪的 quiz show 背景沿用「猜猜樂 OG」那張（`quiz_og`，見下表四）——點講者開訪→整場問答顯示。
+> **成功不另生圖**：⭐ 講者卡翻卡（＋規劃中的彩帶）就是獎勵；這裡只需一張「失敗＝講者婉拒」圖。
+> 建議與 `quiz_og` 同一 seed／同構圖（舞台＋巨大問號＋A/B/C/D 面板），切換才順、失敗感才對比得出來。
+
+| key | 檔名建議 | Prompt（接在共用前綴後） |
+|---|---|---|
+| `interview_fail` | interview_fail.png | Deep interview gone wrong on the same quiz-show stage: a speaker holo-figure politely raising one hand to decline and turning away with an awkward apologetic smile, the giant neon question mark above fizzling out into gray static, the four A/B/C/D answer panels going dark one by one, the lone host-organizer left under a cooling blue-gray spotlight holding a dimmed interview cue-card, deflated tragicomic mood |
+
 ## 四、其他可選
 
 | 用途 | 檔名建議 | Prompt |

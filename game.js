@@ -17,6 +17,7 @@ const ACTION_IMAGES = {
 };
 const INTRO_IMAGE = 'images/intro.jpg';   // 開場（委員會任命）
 const INTERVIEW_IMAGE = 'images/quiz_og.jpg';   // 深度專訪：quiz show 場景背景（點講者開訪時跳出，整場問答期間顯示）
+const INTERVIEW_FAIL_IMAGE = 'images/interview_fail.jpg';   // 深度專訪失敗（講者婉拒）；成功不另生圖＝⭐ 卡＋彩帶
 const EVENT_IMAGES = {   // 事件敘事時場景切換成對應圖（key = 事件 id）
   quiet: 'images/ev_quiet.jpg', sponsor: 'images/ev_sponsor.jpg', designate: 'images/ev_designate.jpg',
   cfp_cold: 'images/ev_cfp_cold.jpg', self_submit: 'images/ev_self_submit.jpg', boost_share: 'images/ev_boost_share.jpg',
@@ -567,8 +568,16 @@ async function runLightEventNarrative(le) {
   sceneOverride = null;
   currentEventArt = EVENT_IMAGES[le.id] ? le.id : null;   // 有圖切換場景，缺圖維持季節場景
   renderScene();
-  await say(le.text[lang] || le.text.zh, { tag: L(`第 ${S.week} 週 · 快訊`, `Week ${S.week} · Flash`) });
-  if (le.apply) le.apply();
+  const reg0 = S.reg, ap0 = S.ap;
+  if (le.apply) le.apply();          // 先套用（含 log），才能把影響一併寫進快訊
+  const dReg = S.reg - reg0, dAp = S.ap - ap0;
+  const sign = n => (n > 0 ? '+' : '−') + Math.abs(n);
+  let fx = '';
+  if (dReg !== 0) fx = L(`報名 ${sign(dReg)}`, `${sign(dReg)} signups`);
+  else if (dAp !== 0) fx = L(`本週行動點 ${sign(dAp)}`, `${sign(dAp)} AP`);
+  const flavor = le.text[lang] || le.text.zh;
+  const msg = fx ? (lang === 'zh' ? `${flavor}（${fx}）` : `${flavor} (${fx})`) : flavor;
+  await say(msg, { tag: L(`第 ${S.week} 週 · 快訊`, `Week ${S.week} · Flash`) });
   currentEventArt = null;   // 快訊結束回季節場景
   renderScene(); render();
 }
@@ -825,9 +834,11 @@ async function runInterview(ri) {
                 `⭐ Perfect! ${nm(c)} is genuinely moved and commits to more — +${INTERVIEW_BONUS} weekly signups once announced!`), { tag });
     sceneOverride = null; renderScene(); render();   // 回季節場景
     showSpeakerCard(c, r);
+    if (!reducedMotion) { burstConfetti(); setTimeout(burstConfetti, 550); }   // ⭐ 成功慶祝（不另生圖）
   } else {
     log(L(`🎙 深度專訪失敗：${esc(nm(c))} 婉拒了（下週可再試同一位）`,
           `🎙 Interview flopped: ${esc(nm(c))} passed (retry next week)`), 'bad');
+    if (INTERVIEW_FAIL_IMAGE) { sceneOverride = `<img src="${INTERVIEW_FAIL_IMAGE}" alt="">`; renderScene(); }   // 場景切到「講者婉拒」圖
     await say(L('🙇 訪綱沒做好，講者婉拒了……下週可以再試一次。', '🙇 Your prep fell short — they politely declined. You can try again next week.'), { tag });
     sceneOverride = null; renderScene(); render();   // 回季節場景
   }
