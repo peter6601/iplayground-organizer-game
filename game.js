@@ -431,7 +431,7 @@ const EVENTS = [
     name: { zh: '講者臨時取消', en: 'Speaker Cancellation' },
     desc: { zh: '', en: '' }, apply() {} },
   /* ── v1.2 新主事件 ── */
-  { id: 'quiz_visit', phase: 'any', kind: 'good', icon: '🎭', cond: () => S.speakerPool.length > 0,
+  { id: 'quiz_visit', phase: 'any', kind: 'good', icon: '🎭', weight: 3, cond: () => S.speakerPool.length > 0,
     name: { zh: '神秘講者來訪', en: 'A Mystery Speaker Drops By' },
     desc: { zh: '有位講者路過會場，想看看你這個總召夠不夠了解社群……猜出他是誰，他就答應站台！',
             en: "A speaker drops by to size you up — guess who they are, and they'll join your lineup!" } },
@@ -529,9 +529,10 @@ function eventPhaseMatch(evPhase, cur) {
 }
 function eventWeight(ev) {
   const kind = eventKind(ev);
-  if (difficulty === 'easy') return kind === 'good' ? 2 : kind === 'bad' ? 0.5 : 1;
-  if (difficulty === 'hard') return kind === 'good' ? 0.5 : kind === 'bad' ? 2 : 1;
-  return 1;
+  const w = ev.weight || 1;   // 個別事件出現率加成（招牌事件用；預設 1）
+  if (difficulty === 'easy') return (kind === 'good' ? 2 : kind === 'bad' ? 0.5 : 1) * w;
+  if (difficulty === 'hard') return (kind === 'good' ? 0.5 : kind === 'bad' ? 2 : 1) * w;
+  return w;
 }
 function diffName() { return { easy: L('低', 'Easy'), normal: L('中', 'Normal'), hard: L('高', 'Hard') }[difficulty]; }
 
