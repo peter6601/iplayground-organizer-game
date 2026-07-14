@@ -16,6 +16,7 @@ const ACTION_IMAGES = {
   fail_quiet: 'images/end_fail_quiet.jpg',
 };
 const INTRO_IMAGE = 'images/intro.jpg';   // 開場（委員會任命）
+const INTERVIEW_IMAGE = 'images/quiz_og.jpg';   // 深度專訪：quiz show 場景背景（點講者開訪時跳出，整場問答期間顯示）
 const EVENT_IMAGES = {   // 事件敘事時場景切換成對應圖（key = 事件 id）
   quiet: 'images/ev_quiet.jpg', sponsor: 'images/ev_sponsor.jpg', designate: 'images/ev_designate.jpg',
   cfp_cold: 'images/ev_cfp_cold.jpg', self_submit: 'images/ev_self_submit.jpg', boost_share: 'images/ev_boost_share.jpg',
@@ -800,7 +801,9 @@ async function runInterview(ri) {
   const r = S.roster[ri]; if (!r || r.interviewed) return;
   const c = SPEAKER_CARDS[r.idx];
   S.interviewDone = true;   // 一次嘗試（成功或失敗都算用掉）
-  render();
+  sceneOverride = INTERVIEW_IMAGE ? `<img src="${INTERVIEW_IMAGE}" alt="">` : null;   // 場景切成 quiz show 背景
+  currentEventArt = null;
+  renderScene(); render();
   const tag = L(`🎙 深度專訪 · ${nm(c)}`, `🎙 Interview · ${nm(c)}`);
   const qs = buildInterviewQuestions(c);
   await say(L(`🎙 你把 ${nm(c)} 請來坐下深聊。答對 ${qs.length} 題證明你真的懂他，他就願意為你多拼一點！`,
@@ -820,13 +823,13 @@ async function runInterview(ri) {
           `⭐ Interview aced: ${esc(nm(c))} leveled up! +${INTERVIEW_BONUS} signups/week once announced`), 'good');
     await say(L(`⭐ 完美！${nm(c)} 大受感動，答應為你多拼一點——公布後每週發酵 +${INTERVIEW_BONUS}！`,
                 `⭐ Perfect! ${nm(c)} is genuinely moved and commits to more — +${INTERVIEW_BONUS} weekly signups once announced!`), { tag });
-    render();
+    sceneOverride = null; renderScene(); render();   // 回季節場景
     showSpeakerCard(c, r);
   } else {
     log(L(`🎙 深度專訪失敗：${esc(nm(c))} 婉拒了（下週可再試同一位）`,
           `🎙 Interview flopped: ${esc(nm(c))} passed (retry next week)`), 'bad');
     await say(L('🙇 訪綱沒做好，講者婉拒了……下週可以再試一次。', '🙇 Your prep fell short — they politely declined. You can try again next week.'), { tag });
-    render();
+    sceneOverride = null; renderScene(); render();   // 回季節場景
   }
 }
 
