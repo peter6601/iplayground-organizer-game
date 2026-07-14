@@ -666,7 +666,7 @@ async function runQuizVisitEvent(ev, tag, name) {
   const options = buildQuizNameOptions(targetIdx);
 
   // 場景切成全黑剪影
-  sceneOverride = `<img class="scene-sil" src="${esc(target.photo || '')}" alt="">`;
+  sceneOverride = `<div class="quiz-sil"><img src="${esc(target.photo || '')}" alt=""></div>`;
   renderScene();
 
   let chosen = null;
@@ -677,7 +677,7 @@ async function runQuizVisitEvent(ev, tag, name) {
 
   // 剪影 0.4s 過渡點亮
   msgBusy = true; render();
-  sceneOverride = `<img class="scene-reveal" src="${esc(target.photo || '')}" alt="">`;
+  sceneOverride = `<div class="quiz-sil reveal"><img src="${esc(target.photo || '')}" alt=""></div>`;
   renderScene();
   await wait(650);
   const correct = chosen === targetIdx;

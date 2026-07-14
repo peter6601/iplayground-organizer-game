@@ -52,11 +52,19 @@
   .scene { position: relative; flex: 1; border-radius: 12px; overflow: hidden; border: 1px solid #1e1e1e; background: #101418; }
   .scene-art, .scene-art svg, .scene-art img { width: 100%; display: block; }
   .scene-art img { object-fit: cover; aspect-ratio: 23/12; }
-  /* 神秘講者來訪：剪影 → 點亮 */
-  .scene-art .scene-sil { filter: brightness(0); }
-  .scene-art .scene-reveal { animation: sceneLight .5s ease forwards; }
-  @keyframes sceneLight { from { filter: brightness(0); } to { filter: none; } }
-  @media (prefers-reduced-motion: reduce) { .scene-art .scene-reveal { animation: none; } }
+  /* 神秘講者來訪：剪影＝舞台聚光下的直式人像（霓虹雙色調，看得出人形認不出臉；純 brightness(0) 全黑、寬幅裁切又過曝/雜亂）→ 點亮 */
+  .scene-art { position: relative; aspect-ratio: 23/12; }   /* 自帶比例，放非替換元素（剪影 div）也不塌 */
+  .scene-art .quiz-sil { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #171c0d 0%, #050505 74%); }
+  .scene-art .quiz-sil img { width: 34%; height: auto; aspect-ratio: 4/5; object-fit: cover; object-position: center 20%; display: block;
+    border-radius: 10px; box-shadow: 0 0 42px rgba(215,255,0,.12);
+    filter: blur(5px) grayscale(1) brightness(1) contrast(1000%) sepia(1) hue-rotate(22deg) saturate(5); transform: scale(1.04); }
+  .scene-art .quiz-sil.reveal img { animation: sceneLight .5s ease forwards; }
+  @keyframes sceneLight {
+    from { filter: blur(5px) grayscale(1) brightness(1) contrast(1000%) sepia(1) hue-rotate(22deg) saturate(5); transform: scale(1.04); }
+    to   { filter: none; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .scene-art .quiz-sil.reveal img { animation: none; filter: none; transform: none; } }
   .msgwin { position: absolute; left: 10px; right: 10px; bottom: 10px; background: rgba(5,5,5,.86); border: 1px solid var(--neon-dim);
     border-radius: 10px; padding: 9px 13px 8px; min-height: 62px; cursor: pointer; user-select: none; }
   .msg-tag { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--neon); margin-bottom: 3px; min-height: 12px; }
