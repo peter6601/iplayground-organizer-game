@@ -73,7 +73,7 @@ no text, no letters, no watermark, landscape 16:9
 | `volunteer` | 志工大量報名 | A crowd of enthusiastic anime-style volunteers in matching neon staff tees raising hands, recruitment holograms overhead |
 | `bento` | 便當廠商加菜 | A luxurious high-tech bento box opening with glowing gourmet food and steam-light effects, chopsticks raised in celebration |
 
-## 三之二、v1.2 新主事件圖（3 張）— `EVENT_IMAGES`
+## 三之二、v1.2 新主事件圖（3＋神秘講者開場 1 張）— `EVENT_IMAGES`
 
 | key | 檔名建議 | Prompt（接在共用前綴後） |
 |---|---|---|
@@ -81,7 +81,11 @@ no text, no letters, no watermark, landscape 16:9
 | `venue_change` | ev_venue_change.png | Venue hall renovation chaos: staff carrying boxes and cables out of a conference hall wrapped in construction holo-tape, a sad "under renovation" drone sign, organizer sighing with a floor plan hologram |
 | `price_drama` | ev_price_drama.png | Online pricing debate: a giant holographic comment thread splitting a crowd into two glowing camps, angry and supportive emoji projectiles flying, one calm organizer typing a long reply in the middle |
 
-（神秘講者來訪不需生圖——遊戲用講者照片剪影。）
+神秘講者來訪的**猜題剪影**用講者本人照片、不需生圖；但可選一張**開場封面**（開場旁白「有位講者路過會場…」時顯示，之後才切到講者剪影猜題）：
+
+| key | 檔名建議 | Prompt（接在共用前綴後） |
+|---|---|---|
+| `quiz_visit`（開場封面） | ev_quiz_visit.png | A mysterious guest speaker arriving at the venue at night: a single fully backlit silhouette figure walking in through a glowing neon entrance gate, face and identity hidden in shadow, a giant glowing question mark hovering above them, the curious organizer peeking from the side, a dramatic spotlight cutting through light mist, intriguing playful game-show mystery mood |
 
 ## 三之三、v1.2 輕事件圖（19 張，選配）— `EVENT_IMAGES`
 
