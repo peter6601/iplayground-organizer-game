@@ -81,7 +81,35 @@ no text, no letters, no watermark, landscape 16:9
 | `venue_change` | ev_venue_change.png | Venue hall renovation chaos: staff carrying boxes and cables out of a conference hall wrapped in construction holo-tape, a sad "under renovation" drone sign, organizer sighing with a floor plan hologram |
 | `price_drama` | ev_price_drama.png | Online pricing debate: a giant holographic comment thread splitting a crowd into two glowing camps, angry and supportive emoji projectiles flying, one calm organizer typing a long reply in the middle |
 
-（神秘講者來訪不需生圖——遊戲用講者照片剪影；輕事件一律無圖。）
+（神秘講者來訪不需生圖——遊戲用講者照片剪影。）
+
+## 三之三、v1.2 輕事件圖（19 張，選配）— `EVENT_IMAGES`
+
+> 輕事件**沒圖也完全成立**（訊息窗快訊）；有圖則同主事件切換場景。
+> 建議生成優先序：先做戲劇性高的（🎙 專訪影片、🐙 GitHub 當機、🥵 熱浪、🎤 偶像人潮），其餘隨緣。
+> 檔名照 key：`lt_coffee.png` → 我壓縮接上。
+
+| key | 事件 | Prompt（接在共用前綴後） |
+|---|---|---|
+| `lt_coffee` | 前總召喝咖啡 | Two organizers chatting in a cozy neon café at night, the senior one passing over glowing holographic notes with a knowing smile, steam rising from cyber-style coffee cups |
+| `lt_nostalgia` | 老照片回憶殺 | A floating holographic photo album showing warm old conference memories, hands reaching toward the glowing vintage photos amid a dark cyber city |
+| `lt_studygroup` | 講者自組讀書會 | Speakers gathered around a table piled with floating holo-books and slide projections, cozy late-night study vibes, warm lamp glow mixing with neon |
+| `lt_uni_group` | 大學社團包團 | A cheerful group of university students with backpacks marching together at night, each holding a glowing ticket, campus gate behind them |
+| `lt_threads_slides` | 講者曬投影片 | A speaker at a desk at midnight polishing a glowing slide deck hologram, social feed reaction icons floating up from a phone beside the keyboard |
+| `lt_volunteer_fight` | 志工鬧不合 | Two volunteers arguing over a floor-plan hologram with sparks flying between their speech bubbles, a third mediator sweating between them |
+| `lt_scam` | 假票券詐騙 | A shady hooded figure in a back alley offering glitching counterfeit holo-tickets, red warning icons flashing, wary passersby |
+| `lt_interview_video` | 專訪影片上線 | A podcast interview studio with mics and cameras, a floating video player hologram with hearts and likes rising like bubbles |
+| `lt_speaker_cue` | 講者互 cue | Two speakers in different corners of the city looking at their phones and grinning, connected by a single glowing thread of light across the skyline |
+| `lt_company_tickets` | 公司包票 | An office team celebrating around a desk where a fan of glowing tickets is spread out, confetti and cheers in a neon-lit workspace |
+| `lt_heatwave` | 熱浪來襲 | A melting-hot city street with visible heat shimmer, people wilting under neon parasols, a thermometer hologram spiking into the red |
+| `lt_mrt` | 捷運新站開通 | A futuristic metro station gate opening in a burst of light, commuters streaming out toward a glowing conference venue in the distance |
+| `lt_rain` | 午後雷陣雨 | A heavy summer downpour over neon streets, umbrellas glowing softly, rain reflections everywhere, calm and moody |
+| `lt_fire_drill` | 消防安檢日 | Safety inspectors with clipboards and scanning drones sweeping a conference hall with red scan beams, staff standing by patiently |
+| `lt_sunny` | 久違的放晴日 | A rare bright clear morning over the futuristic venue, people looking up and smiling, fresh sunlight mixing with soft neon accents |
+| `lt_idol_crowd` | 偶像簽售人潮 | A massive queue with lightsticks outside the next-door exhibition hall, a few curious fans drifting toward the conference venue's glowing sign |
+| `lt_github_down` | GitHub 大當機 | A giant glitching red error hologram looming over an office skyline while relaxed developers lean back happily scrolling their phones |
+| `lt_apple_store` | 新品開賣排隊 | A glowing flagship tech store at dawn with a long orderly queue, a shiny product hologram rotating above the entrance |
+| `lt_makeup_day` | 颱風假補班日 | Exhausted office workers on a gray drizzly morning commute, rain-slick streets, one flickering dim neon sign, collective sigh energy |
 
 ## 四、其他可選
 
@@ -90,6 +118,7 @@ no text, no letters, no watermark, landscape 16:9
 | 首頁滿版背景（`SCENE_IMAGES.title`） | scene_title.png | Title screen key art: the futuristic conference venue at night from a low dramatic angle, giant glowing neon signage, holographic light beams sweeping the sky, rain-slicked reflective plaza, awe-inspiring and inviting — leave the center area visually calm for UI text overlay |
 | 開場（委員會任命） | intro.png | A committee of anime-style characters pointing at the surprised protagonist, "it's you" moment, futuristic meeting room with holographic conference posters |
 | 網站 OG 分享圖 | og.png | Game key visual: the futuristic venue at dusk with neon signage glowing, a giant holographic wheel of speaker cards spinning above it, light beams and floating festival banners |
+| 猜猜樂 OG（獨立遊戲用） | quiz_og.png | Quiz game key visual: a mysterious speaker silhouette standing under a spotlight with a giant glowing neon question mark above, four answer buttons floating around, playful game-show energy |
 
 ## 接圖 SOP
 
